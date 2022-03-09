@@ -1,3 +1,11 @@
+import "/client/Renderer.js";
+import * as CANNON from "https://pmndrs.github.io/cannon-es/dist/cannon-es.js";
+import '/client/Input.js'
+import '/client/PlayerController.js'
+import '/common/PacketEncoder.js'
+import '/common/PacketDecoder.js'
+import '/common/World.js'
+
 var renderer = null;
 var input = null;
 var PacketEncoder = null;
@@ -36,17 +44,7 @@ function renderTick(now) {
   requestAnimationFrame(renderTick);
 }
 
-requirejs.config({
-  paths: {
-    common: '../common',
-    client: '../client'
-  }
-});
-
 // initalize engine
-requirejs(['Renderer', 'Input', 'PlayerController', 'common/PacketEncoder', 'common/PacketDecoder', 'common/World'], 
-function(   Renderer,   Input,   PlayerController,   PacketEncoder,          PacketDecoder,          World) {
-  import * as CANNON;
   
   glCanvas = document.getElementById("glCanvas");
 
@@ -64,7 +62,6 @@ function(   Renderer,   Input,   PlayerController,   PacketEncoder,          Pac
   playerController = new PlayerController(input);
 
   document.getElementById("joinButton").removeAttribute("class");
-});
 
 
 // prepare world & start game & render loop

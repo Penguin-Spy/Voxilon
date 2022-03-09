@@ -1,4 +1,4 @@
-define(function() {
+module.exports = function Input() {
   //(event) => {
   //  this.keyDown(event.keyCode);
   //}
@@ -139,4 +139,4 @@ define(function() {
       this.currentKeys[16] = pressed;
     }
   }
-})
+}

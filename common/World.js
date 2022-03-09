@@ -1,3 +1,6 @@
+import * as CANNON from 'cannon-es'
+import 
+
 define(['cannon-es', 'common/Quaternion', "common/CelestialBody", "common/Mesh", "client/Texture"],
 function(CANNON, Quaternion, CelestialBody, Mesh, Texture) {
   return class World {
