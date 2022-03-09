@@ -1,0 +1,114 @@
+@font-face {
+  font-family: 'ibmbios8';
+  src: url("./IBM_BIOS.woff") format("woff");
+  font-weight: normal;
+  font-style: normal;
+}
+html, body {
+  margin: 0 !important;
+  padding: 0 !important;
+  height: 100%;
+  overflow: hidden;
+  font-family: ibmbios8, monospace;
+  color: #ffffff;
+  background-color:#131313;
+}
+input, button {
+  font-family: ibmbios8, monospace;
+}
+.container {
+  position: relative;
+}
+#mainMenu{
+  position: absolute;
+  top: 25%;
+  left: 50%;
+  width: 100%;
+  transform: translate(-50%, -50%);
+  z-index: 1;
+  text-align: center;
+  font-family: ibmbios8, monospace;
+}
+h1 {
+  font-size: 6em;
+  font-weight: normal;
+  margin: 0;
+  text-shadow: 6px 6px 0 #555;
+}
+h2 {
+  font-size: 2em;
+  font-weight: normal;
+  margin: 0;
+}
+#mainMenu input {
+  font-size: 1em;
+}
+#mainMenu button {
+  font-size: 1em;
+}
+button.invisible {
+  opacity: 0;
+  pointer-events: none;
+}
+
+#glCanvas {
+  position: relative;
+  background-color:#131313;
+  height: 100%;
+  width: 100%;
+}
+#controls, #chat {
+  bottom: 5px;
+  left: 0;
+  position: absolute;
+  width: 100%;
+}
+.up {
+  bottom: 20px;
+  left: 25px;
+  position: absolute;
+}
+.down {
+  bottom: 0px;
+  left: 25px;
+  position: absolute;
+}
+.left {
+  bottom: 0px;
+  left: 0px;
+  position: absolute;
+}
+.right {
+  bottom: 0px;
+  left: 50px;
+  position: absolute;
+}
+#chat #inputMessage {
+  bottom: 20px;
+  left: 100px;
+  position: absolute;
+}
+#chat #sendButton {
+  bottom: 0px;
+  left: 100px;
+  position: absolute;
+}
+#chat #messages {
+  bottom: 40px;
+  left: 0px;
+  position: absolute;
+  color: #ffffff
+}
+#disconnected {
+  bottom: 5px;
+  left: 400px;
+  position: absolute;
+  width: 100%;
+}
+
+#debug {
+  top: 5px;
+  left: 0;
+  position: absolute;
+  width: 100%;
+}
