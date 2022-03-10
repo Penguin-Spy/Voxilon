@@ -14,21 +14,26 @@ export default class Input {
     left: "KeyA",
     right: "KeyD",
     up: "Space",
-    down: "LeftShift"
+    down: "ShiftLeft"
   };
 
   // Current unbounded X/Y pos of the mouse
-  mouseX = 0;
-  mouseY = 0;
+  mouseX;
+  mouseY;
 
   // Private variables for tracking touch input
-  #oldMouseX = 0;
-  #oldMouseY = 0;
+  oldMouseX;
+  oldMouseY;
 
-  #canvas = null;
+  #canvas;
 
   
   constructor(canvas) {
+    this.mouseX = 0
+    this.mouseY = 0
+    this.oldMouseX = 0
+    this.oldMouseY = 0
+    
     this.#canvas = canvas;
 
     canvas.requestPointerLock = canvas.requestPointerLock ||
@@ -54,14 +59,14 @@ export default class Input {
     // Allows for input.controlMap.forward but not input.controlMap.bruh
     this.controlMap = new Proxy(this.controlMap, {
       set: function (target, prop, value) {
-        if(target[prop]) {
+        if(target[prop] != undefined) {
           target[prop] = value
         } else {
           throw new ReferenceError(`Unknown control '${prop}' (cannot be set to '${value}')`)
         }
       },
       get: function (target, prop) {
-        if(target[prop]) {
+        if(target[prop] != undefined) {
           return Reflect.get(...arguments);
         }
         throw new ReferenceError(`Unknown control '${prop}'`)
@@ -71,7 +76,7 @@ export default class Input {
     // Allows for input["forward"] or input.forward = true
     return new Proxy(this, {
       get: function (target, prop) {
-        if(target[prop]) {
+        if(target[prop] != undefined) {
           return Reflect.get(...arguments);
         } else if(target.controlMap[prop]) {
           return target.#currentKeys[target.controlMap[prop]] || false
@@ -80,7 +85,7 @@ export default class Input {
         }
       },
       set: function (target, prop, value) {
-        if(target[prop]) {
+        if(target[prop] != undefined) {
           return Reflect.set(...arguments);
         } else if(target.controlMap[prop]) {
           if(typeof(value) === "boolean") {
@@ -106,12 +111,12 @@ export default class Input {
     }
   }
 
-  #handleMouseMove(event) {
+  #handleMouseMove = (event) => {
     this.mouseX += event.movementX;
     this.mouseY += event.movementY;
   }
 
-  #handleTouch(event) {
+  #handleTouch = (event) => {
     console.log(event)
     if (event.touches) {
       this.mouseSpeedX = this.oldTouchX - event.touches[0].pageX;
@@ -133,14 +138,14 @@ export default class Input {
   }
 
   // --- READING CURRENT INPUTS ---
-  get mouseDX() {
-    returnVal = this.mouseX - this.#oldMouseX;
-    this.#oldMouseX = this.mouseX;
+  mouseDX() {
+    const returnVal = this.mouseX - this.oldMouseX;
+    this.oldMouseX = this.mouseX;
     return returnVal;
   }
-  get mouseDY() {
-    returnVal = this.mouseY - this.#oldMouseY;
-    this.#oldMouseY = this.mouseY;
+  mouseDY() {
+    const returnVal = this.mouseY - this.oldMouseY;
+    this.oldMouseY = this.mouseY;
     return returnVal;
   }
 }

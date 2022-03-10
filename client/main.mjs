@@ -1,23 +1,11 @@
-import "./client/Renderer.js";
-import * as CANNON from "https://pmndrs.github.io/cannon-es/dist/cannon-es.js";
-import './client/Input.js'
-import './client/PlayerController.js'
-import './common/PacketEncoder.js'
-import './common/PacketDecoder.js'
-import './common/World.js'
+import Renderer from './client/Renderer.mjs'
+import Input from './client/Input.mjs'
+import PlayerController from './client/PlayerController.mjs'
+import PacketEncoder from './common/PacketEncoder.mjs'
+import PacketDecoder from './common/PacketDecoder.mjs'
+import World from './common/World.mjs'
 
-
-var renderer = null;
-var input = null;
-var PacketEncoder = null;
-var PacketDecoder = null;
-var world = null;
-
-var ourBodyID = null;
-
-var socket = null;
-
-var debug = {
+let debug = {
   fps: document.getElementById("debug.fps"), 
   pos: document.getElementById("debug.pos"),
   mouse: document.getElementById("debug.mouse")
@@ -28,7 +16,7 @@ window.addEventListener('resize', () => {
   renderer.resize(window.innerWidth, window.innerHeight);
 });
 
-var then = 0;
+let then = 0;
 function renderTick(now) {
   now *= 0.001;  // convert to seconds
   const deltaTime = now - then;
@@ -47,26 +35,32 @@ function renderTick(now) {
 
 // initalize engine
   
-  glCanvas = document.getElementById("glCanvas");
 
-  input = new Input();
-  input.bindToCanvas(glCanvas);
+let ourBodyID = null;
 
-  renderer = new Renderer();
-  renderer.init(glCanvas);
+let socket = null;
 
-  window.PacketEncoder = PacketEncoder;
-  window.PacketDecoder = PacketDecoder;
+let glCanvas = document.getElementById("glCanvas");
 
-  world = new World();
+let input = new Input(glCanvas);
 
-  playerController = new PlayerController(input);
+let renderer = new Renderer();
+renderer.init(glCanvas);
 
-  document.getElementById("joinButton").removeAttribute("class");
+window.PacketEncoder = PacketEncoder;
+window.PacketDecoder = PacketDecoder;
+
+let world = new World();
+window.world = world  // debugging
+
+const playerController = new PlayerController(input);
+
+document.getElementById("joinButton").removeAttribute("class");
 
 
 // prepare world & start game & render loop
 function start(username, bodyID) {
+  try {
   ourBodyID = bodyID
   playerController.attach(world.getBody(ourBodyID));
   renderer.attach(world.getBody(ourBodyID));
@@ -79,6 +73,10 @@ function start(username, bodyID) {
   document.getElementById("chat").hidden = false;
   document.getElementById("debug").hidden = false;
   document.getElementsByTagName("title")[0].textContent = `${username} - Voxilon`
+
+    } catch(e) {
+      alert(`${e}\n${e.fileName}:${e.lineNumber}`)
+    }
 }
 
 // idk how to write a game
@@ -86,26 +84,26 @@ var ticks = 0;
 var tickTimeout;
 
 function tick() {
+    try {
   tickTimeout = setTimeout(tick, 1000/60);
   playerController.tick();
   ticks++;
   if(ticks % 6 == 0) {
-    try {
-  movePacket = PacketEncoder.moveBody(ourBodyID, playerController.posDelta, new Float64Array([0,0,0]));
-  socket.send(movePacket);
+      const movePacket = PacketEncoder.moveBody(ourBodyID, playerController.posDelta, new Float64Array([0,0,0]));
+      socket.send(movePacket);
       playerController.posDelta = {x:0, y:0, z:0}
-  rotatePacket = PacketEncoder.rotateBody(ourBodyID, playerController.body.quaternion.inverse());
-  socket.send(rotatePacket);
-
-  } catch(e) {
-    alert(`${e}\n${e.fileName}:${e.lineNumber}`)
-  }
+      const rotatePacket = PacketEncoder.rotateBody(ourBodyID, playerController.body.quaternion);
+      socket.send(rotatePacket);
   }
 
   const pos = playerController.body.position;
   debug.pos.innerHTML = `XYZ: ${pos.x.toFixed(3)}, ${pos.y.toFixed(3)}, ${pos.z.toFixed(3)}\
  | PY: ${(playerController.pitch / Math.PI * 180).toFixed(2)}, ${(playerController.yaw / Math.PI * 180).toFixed(2)}`
   
+
+    } catch(e) {
+      alert(`${e}\n${e.fileName}:${e.lineNumber}`)
+    }
 }
 
 function connect() {
@@ -165,8 +163,10 @@ function connect() {
   }
 }
 
+window.connect = connect
+
 function sendChat() {
-  message = document.getElementById("inputMessage").value;
+  let message = document.getElementById("inputMessage").value;
   message = PacketEncoder.sanitizeInput(message);
   document.getElementById("inputMessage").value = "";
   if(message.startsWith(".")) {

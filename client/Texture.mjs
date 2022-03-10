@@ -1,6 +1,11 @@
-define([], function() {
-  return function Texture(url) {
-    this.url = url;
+
+
+function isPowerOf2(value) {
+  return (value & (value - 1)) == 0;
+}
+
+export default function Texture(url) {
+  this.url = url;
     //this.glTexture
     
     this.load = (gl) => {
@@ -49,4 +54,3 @@ define([], function() {
       this.glTexture = texture;
     }
   }
-})

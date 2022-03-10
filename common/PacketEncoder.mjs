@@ -1,9 +1,8 @@
-define(function() {
-  return {
-    textEncoder: new TextEncoder(),
+export default {
+  textEncoder: new TextEncoder(),
 
     concatTypedArrays: function(a, b) { // a, b TypedArray of same type
-      var c = new (a.constructor)(a.length + b.length);
+      const c = new (a.constructor)(a.length + b.length);
       c.set(a, 0);
       c.set(b, a.length);
       return c;
@@ -24,13 +23,13 @@ define(function() {
     },
 
     connect: function(username) {
-      lengthBuffer = Uint8Array.from([username.length]);
-      bytes = this.concatTypedArrays(lengthBuffer, this.textEncoder.encode(username));
+      const lengthBuffer = Uint8Array.from([username.length]);
+      const bytes = this.concatTypedArrays(lengthBuffer, this.textEncoder.encode(username));
       return this.buildReturn(0, bytes);
     },
     addBody: function(bodyID, body, selfBody) {
-      var bytes = new Uint8Array(2 + 3*8 + 4*8 + 1 + 2 + 2);
-      var view = new DataView(bytes.buffer, bytes.byteOffset, bytes.length);
+      let bytes = new Uint8Array(2 + 3*8 + 4*8 + 1 + 2 + 2);
+      const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.length);
       view.setUint16(0, bodyID);
       view.setFloat64(2, body.position.x);
       view.setFloat64(10, body.position.y);
@@ -43,16 +42,16 @@ define(function() {
       view.setUint16(59, body.mesh.name.length);
       view.setUint16(61, body.mesh.texture.url.length);
       
-      let encodedMesh = this.textEncoder.encode(body.mesh.name);
-      let encodedTexture = this.textEncoder.encode(body.mesh.texture.url);
+      const encodedMesh = this.textEncoder.encode(body.mesh.name);
+      const encodedTexture = this.textEncoder.encode(body.mesh.texture.url);
       bytes = this.concatTypedArrays(bytes, encodedMesh);
       bytes = this.concatTypedArrays(bytes, encodedTexture);
 
       return this.buildReturn(1, bytes);
     },
     moveBody: function(bodyID, position, velocity) {
-      var bytes = new Uint8Array(2 + 3*8 + 3*8);
-      var view = new DataView(bytes.buffer, bytes.byteOffset);
+      const bytes = new Uint8Array(2 + 3*8 + 3*8);
+      const view = new DataView(bytes.buffer, bytes.byteOffset);
       //console.log(`${position.x},${position.y},${position.z}`)
       view.setUint16(0, bodyID);
       view.setFloat64(2, position.x);
@@ -64,19 +63,19 @@ define(function() {
       return this.buildReturn(2, bytes);
     },
     chat: function(message) {
-      lengthBuffer = Uint8Array.from([message.length]);
-      let bytes = this.concatTypedArrays(lengthBuffer, this.textEncoder.encode(message));
+      const lengthBuffer = Uint8Array.from([message.length]);
+      const bytes = this.concatTypedArrays(lengthBuffer, this.textEncoder.encode(message));
       return this.buildReturn(3, bytes);
     },
     removeBody: function(bodyID) {
-      var bytes = new Uint8Array(2);
-      var view = new DataView(bytes.buffer, bytes.byteOffset);
+      const bytes = new Uint8Array(2);
+      const view = new DataView(bytes.buffer, bytes.byteOffset);
       view.setUint16(0, bodyID);
       return this.buildReturn(4, bytes);
     },
     rotateBody: function(bodyID, quaternion) {
-      var bytes = new Uint8Array(2 + 4*8);
-      var view = new DataView(bytes.buffer, bytes.byteOffset);
+      const bytes = new Uint8Array(2 + 4*8);
+      const view = new DataView(bytes.buffer, bytes.byteOffset);
       view.setUint16(0, bodyID);
       view.setFloat64(2, quaternion.w);
       view.setFloat64(10, quaternion.x);
@@ -85,4 +84,3 @@ define(function() {
       return this.buildReturn(5, bytes);
     }
   }
-})

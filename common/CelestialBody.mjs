@@ -139,9 +139,8 @@ for (var j = 0; j < Cube.faceColors.length; ++j) {
   ]
 }*/
 
-define(function() {
-  return class CelestialBody {
-    mesh
+export default class CelestialBody {
+  mesh
     rigidBody
     
     constructor(rigidBody, mesh) {
@@ -190,4 +189,3 @@ define(function() {
       
     }
   }
-})

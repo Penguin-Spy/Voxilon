@@ -24,11 +24,7 @@ const fsSource = `
     }
   `;
 
-function isPowerOf2(value) {
-  return (value & (value - 1)) == 0;
-}
-
-export function Renderer() {
+export default function Renderer() {
   this.gl;
   this.canvas;
   this.body;
@@ -217,7 +213,7 @@ export function Renderer() {
       // Rotate by camera's rotation
       mat4.multiply(modelViewMatrix,
         modelViewMatrix,
-        this.body.quaternion.toMatrix4());
+        this.body.quaternion.conjugate().toMatrix4());
 
       // invert because reasons
       mat4.invert(modelViewMatrix, modelViewMatrix);

@@ -1,8 +1,8 @@
-import * as CANNON from './common/cannon-es'
-import Quaternion from './common/Quaternion'
-import CelestialBody from './common/CelestialBody'
-import Mesh from './common/Mesh'
-import Texture from './client/Texture'
+import * as CANNON from '../common/cannon-es.mjs'
+import Quaternion from '../common/Quaternion.mjs'
+import CelestialBody from '../common/CelestialBody.mjs'
+import Mesh from '../common/Mesh.mjs'
+import Texture from '../client/Texture.mjs'
 
 export default class World {
     bodies = []
@@ -79,22 +79,28 @@ export default class World {
 
     // everthing below is bi
     moveBody = (bodyID, position, velocity) => {
-      this.bodies[bodyID].position = position;
+      if(this.bodies[bodyID]) {
+        this.bodies[bodyID].position = position;
+      }
       //this.bodies[bodyID-1].velocity = velocity;
     }
     moveBodyRelative = (bodyID, position) => {
-      let pos = this.bodies[bodyID].position
-      pos.x += position.x
-      pos.y += position.y
-      pos.z += position.z
-      this.bodies[bodyID].position = pos
+      if(this.bodies[bodyID]) {
+        let pos = this.bodies[bodyID].position
+        pos.x += position.x
+        pos.y += position.y
+        pos.z += position.z
+        this.bodies[bodyID].position = pos
+      }
     }
     rotateBody = (bodyID, quaternion) => {
-      this.bodies[bodyID].quaternion = quaternion;
+      if(this.bodies[bodyID]) {
+        this.bodies[bodyID].quaternion = quaternion;
+      }
     }
 
     removeBody = (bodyID) => {
-      delete this.bodies[bodyID];
+      this.bodies[bodyID] = undefined;
     }
 
     // Update positions
@@ -123,7 +129,7 @@ export default class World {
       this.bodies.forEach((body, id) => {
           this.session.moveBody(id, body.position, new Float64Array([0,0,0]))
 
-          this.session.rotateBody(id, body.quaternion.inverse())
+          this.session.rotateBody(id, body.quaternion)
       })
     }
 
