@@ -10,18 +10,30 @@ var fs = require('fs')
 var path = require('path')
 var express = require('express')
 var http = require('http')
-var Session = require('./server/Session.js')
+var Session = null
+//var Session = require('./server/Session.js')
 
+
+import('./Other.mjs').then((module) => {
+  const Other = module.default
+  console.log(Other(3))
+})
 
 var app = express();
 
+// Allows the client module to be imported on the root
+// required for relative include paths ('./common/World.mjs') to work on client & server
+app.get("/client.mjs", (req, res, next) => {
+  req.url = "/client/main.mjs"
+  next()
+})
+app.get("/common/cannon-es.mjs", (req, res, next) => {
+  req.url = "/client/cannon-es.mjs"
+  next()
+})
+
 // Host static client & common files
 app.use("/client", express.static("client"));
-app.get("/common/:file", async (req, res, next) => {
-  let file = await fs.readFile(path.join(__dirname, `common/${req.params.file}.js`))
-  console.log(file)
-  res.send(file.replace("module.exports", "export"))
-})
 app.use("/common", express.static("common"));
 app.use(express.static("www"));
 

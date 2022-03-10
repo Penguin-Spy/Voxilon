@@ -1,9 +1,10 @@
-import * as CANNON from 'cannon-es'
-import 
+import * as CANNON from './common/cannon-es'
+import Quaternion from './common/Quaternion'
+import CelestialBody from './common/CelestialBody'
+import Mesh from './common/Mesh'
+import Texture from './client/Texture'
 
-define(['cannon-es', 'common/Quaternion', "common/CelestialBody", "common/Mesh", "client/Texture"],
-function(CANNON, Quaternion, CelestialBody, Mesh, Texture) {
-  return class World {
+export default class World {
     bodies = []
     #physics
     session
@@ -130,4 +131,3 @@ function(CANNON, Quaternion, CelestialBody, Mesh, Texture) {
       clearTimeout(this.#tickTimeout)
     }
   }
-})

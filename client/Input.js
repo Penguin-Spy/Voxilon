@@ -1,142 +1,146 @@
-module.exports = function Input() {
-  //(event) => {
-  //  this.keyDown(event.keyCode);
-  //}
-  /*document.onkeyup = (event) => {
-    this.keyUp(event.keyCode);
-  }*/
+/*
+Handles all input for all input methods (keyboard, touch, controller?),
+as well as controls rebinding.
+Exposes named fields for each type of input, i.e. "Input.forward" instead of "Input.currentKeys[87]"
+*/
 
-  return function Input() {
-    // Array of all currently pressed keys
-    this.currentKeys = {};
+export default class Input {
+  // Array of all currently pressed keys
+  #currentKeys = {};
+  // Object mapping each control type to a KeyboardEvent.code
+  controlMap = {
+    forward: "KeyW",
+    backward: "KeyS",
+    left: "KeyA",
+    right: "KeyD",
+    up: "Space",
+    down: "LeftShift"
+  };
 
-    // Current unbounded X/Y pos of the mouse
-    this.mouseX = 0;
-    this.mouseY = 0;
+  // Current unbounded X/Y pos of the mouse
+  mouseX = 0;
+  mouseY = 0;
 
-    // Private variables for tracking touch input
-    this._oldMouseX = 0;
-    this._oldMouseY = 0;
+  // Private variables for tracking touch input
+  #oldMouseX = 0;
+  #oldMouseY = 0;
 
-    this._canvas = null;
+  #canvas = null;
 
-    this.bindToCanvas = (canvas) => {
-      this._canvas = canvas;
+  
+  constructor(canvas) {
+    this.#canvas = canvas;
 
-      canvas.requestPointerLock = canvas.requestPointerLock ||
-        canvas.mozRequestPointerLock;
+    canvas.requestPointerLock = canvas.requestPointerLock ||
+      canvas.mozRequestPointerLock;
 
-      document.exitPointerLock = document.exitPointerLock ||
-        document.mozExitPointerLock;
+    document.exitPointerLock = document.exitPointerLock ||
+      document.mozExitPointerLock;
 
-      // Hook pointer lock state change events for different browsers
-      document.addEventListener('pointerlockchange', this._lockChangeAlert, false);
-      document.addEventListener('mozpointerlockchange', this._lockChangeAlert, false);
+    // Hook pointer lock state change events for different browsers
+    document.addEventListener('pointerlockchange', this.#lockChangeAlert, false);
+    document.addEventListener('mozpointerlockchange', this.#lockChangeAlert, false);
 
-      canvas.onclick = () => {
-        canvas.requestPointerLock();
-      };
-      document.touchstart = (event) => {
-        console.log(_handleTouch)
-        this._handleTouch(event);
-      }
-      document.touchstop = (event) => {
-        console.log(_handleTouch)
-        this._handleTouch(event);
-      }
-      document.onkeydown = (event) => {
-        this._keyDown(event.keyCode);
-      }
-      document.onkeyup = (event) => {
-        this._keyUp(event.keyCode);
-      }
-    }
-
-    // --- EVENT HANDLERS ---
-    this._lockChangeAlert = () => {
-      if (document.pointerLockElement === this._canvas) {
-        document.addEventListener("mousemove", this._handleMouseMove, false);
-      } else {
-        document.removeEventListener("mousemove", this._handleMouseMove);
-        this.mouseSpeedX = 0;
-        this.mouseSpeedY = 0;
-      }
-    }
-
-    this._handleMouseMove = (event) => {
-      this.mouseX += event.movementX;
-      this.mouseY += event.movementY;
-    }
-
-    this._handleTouch = (event) => {
-      console.log(event)
-      if (event.touches) {
-        this.mouseSpeedX = this.oldTouchX - event.touches[0].pageX;
-        this.mouseSpeedY = this.oldTouchY - event.touches[0].pageY;
-
-        this.oldTouchX = event.touches[0].pageX;
-        this.oldTouchY = event.touches[0].pageY;
-
-        event.preventDefault(),
-          document.getElementById("debug-mouse").innerText = `M XY: ${this.mouseSpeedX},${this.mouseSpeedY}`;
-      }
-    }
-
-    // sets key state, NOT READING
-    this._keyDown = (keyCode) => {
-      this.currentKeys[keyCode] = true;
-    }
-    this._keyUp = (keyCode) => {
-      this.currentKeys[keyCode] = false;
-    }
-
-    // --- READING CURRENT INPUTS ---
-    this.mouseDeltaX = () => {
-      returnVal = this.mouseX - this._oldMouseX;
-      this._oldMouseX = this.mouseX;
-      return returnVal;
-    }
-    this.mouseDeltaY = () => {
-      returnVal = this.mouseY - this._oldMouseY;
-      this._oldMouseY = this.mouseY;
-      return returnVal;
-    }
+    canvas.addEventListener('click', canvas.requestPointerLock)
     
-    this.forward = (pressed) => {
-      if(pressed == null) {
-        return this.currentKeys[87];  // W
+    document.addEventListener('touchstart', this.#handleTouch)
+    document.addEventListener('touchstop', this.#handleTouch)
+    document.addEventListener('keydown', this.#handleKeyDown)
+    document.addEventListener('keyup', this.#handleKeyUp)
+
+
+    /* PROXY SHENANIGANS */
+  
+    // Allows for input.controlMap.forward but not input.controlMap.bruh
+    this.controlMap = new Proxy(this.controlMap, {
+      set: function (target, prop, value) {
+        if(target[prop]) {
+          target[prop] = value
+        } else {
+          throw new ReferenceError(`Unknown control '${prop}' (cannot be set to '${value}')`)
+        }
+      },
+      get: function (target, prop) {
+        if(target[prop]) {
+          return Reflect.get(...arguments);
+        }
+        throw new ReferenceError(`Unknown control '${prop}'`)
       }
-      this.currentKeys[87] = pressed;
-    }
-    this.backward = (pressed) => {
-      if(pressed == null) {
-        return this.currentKeys[83];  // S
+    })
+
+    // Allows for input["forward"] or input.forward = true
+    return new Proxy(this, {
+      get: function (target, prop) {
+        if(target[prop]) {
+          return Reflect.get(...arguments);
+        } else if(target.controlMap[prop]) {
+          return target.#currentKeys[target.controlMap[prop]] || false
+        } else {
+          throw new ReferenceError(`Unknown property '${prop}' of Input ${target}`)
+        }
+      },
+      set: function (target, prop, value) {
+        if(target[prop]) {
+          return Reflect.set(...arguments);
+        } else if(target.controlMap[prop]) {
+          if(typeof(value) === "boolean") {
+            target.#currentKeys[target.controlMap[prop]] = value
+          } else {
+            throw new TypeError(`Cannot set key '${prop}' of Input ${target} to '${value}'`)
+          }
+        } else {
+          throw new ReferenceError(`Unknown key '${prop}' of Input ${target} (cannot be set to '${value}')`)
+        }
       }
-      this.currentKeys[83] = pressed;
+    })
+  }
+  
+  /* EVENT HANDLERS */
+  #lockChangeAlert = () =>{
+    if (document.pointerLockElement === this.#canvas) {
+      document.addEventListener("mousemove", this.#handleMouseMove, false);
+    } else {
+      document.removeEventListener("mousemove", this.#handleMouseMove);
+      this.mouseSpeedX = 0;
+      this.mouseSpeedY = 0;
     }
-    this.left = (pressed) => {
-      if(pressed == null) {
-        return this.currentKeys[65];  // A
-      }
-      this.currentKeys[65] = pressed;
+  }
+
+  #handleMouseMove(event) {
+    this.mouseX += event.movementX;
+    this.mouseY += event.movementY;
+  }
+
+  #handleTouch(event) {
+    console.log(event)
+    if (event.touches) {
+      this.mouseSpeedX = this.oldTouchX - event.touches[0].pageX;
+      this.mouseSpeedY = this.oldTouchY - event.touches[0].pageY;
+
+      this.oldTouchX = event.touches[0].pageX;
+      this.oldTouchY = event.touches[0].pageY;
+
+      event.preventDefault()
+      document.getElementById("debug-mouse").innerText = `M XY: ${this.mouseSpeedX},${this.mouseSpeedY}`;
     }
-    this.right = (pressed) => {
-      if(pressed == null) {
-        return this.currentKeys[68];  // D
-      }
-      this.currentKeys[68] = pressed;
-    }
-    this.up = (pressed) => {
-      if(pressed == null) {
-        return this.currentKeys[32];  // Space
-      }
-      this.currentKeys[32] = pressed;
-    }
-    this.down = (pressed) => {
-      if(pressed == null) {
-        return this.currentKeys[16];  // Shift
-      }
-      this.currentKeys[16] = pressed;
-    }
+  }
+
+  #handleKeyDown = (event) => {
+    this.#currentKeys[event.code] = true
+  }
+  #handleKeyUp = (event) => {
+    this.#currentKeys[event.code] = false
+  }
+
+  // --- READING CURRENT INPUTS ---
+  get mouseDX() {
+    returnVal = this.mouseX - this.#oldMouseX;
+    this.#oldMouseX = this.mouseX;
+    return returnVal;
+  }
+  get mouseDY() {
+    returnVal = this.mouseY - this.#oldMouseY;
+    this.#oldMouseY = this.mouseY;
+    return returnVal;
   }
 }

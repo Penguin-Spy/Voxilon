@@ -1,10 +1,11 @@
-import "/client/Renderer.js";
+import "./client/Renderer.js";
 import * as CANNON from "https://pmndrs.github.io/cannon-es/dist/cannon-es.js";
-import '/client/Input.js'
-import '/client/PlayerController.js'
-import '/common/PacketEncoder.js'
-import '/common/PacketDecoder.js'
-import '/common/World.js'
+import './client/Input.js'
+import './client/PlayerController.js'
+import './common/PacketEncoder.js'
+import './common/PacketDecoder.js'
+import './common/World.js'
+
 
 var renderer = null;
 var input = null;
