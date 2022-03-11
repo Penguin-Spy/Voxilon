@@ -108,6 +108,11 @@ export default {
           y: view.getFloat64(18),
           z: view.getFloat64(26)
         },
+        angularVelocity: {
+          x: view.getFloat64(34),
+          y: view.getFloat64(42),
+          z: view.getFloat64(50)
+        }
       };
     }
   }

@@ -1,15 +1,13 @@
 /*
 this.world = our object that stores CelestialBodies
 wsServer = web socket server for this session's url
-
-
 */
 
 import ws from 'ws'
-import World from '../common/World.mjs'
 import PacketDecoder from '../common/PacketDecoder.mjs'
 import PacketEncoder from '../common/PacketEncoder.mjs'
 import Player from '../server/Player.mjs'
+import World from '../server/World.mjs'
 import CelestialBody from '../common/CelestialBody.mjs'
 
 export default class Session {
@@ -25,19 +23,12 @@ export default class Session {
     this.players = []
     this.wsServer = new ws.Server({ clientTracking: false, noServer: true })
     this.wsServer.on('connection', this.#onConnect)
-    this.world = new World(true, {
-      moveBody: (id, pos, vel) => {
-        this.broadcastPacket(PacketEncoder.moveBody(
-          id,
-          pos,
-          vel
-        ))
+    this.world = new World({
+      moveBody: (...args) => {
+        this.broadcastPacket(PacketEncoder.moveBody(...args), false, args[0])  // bodyID
       },
-      rotateBody: (id, quat) => {
-        this.broadcastPacket(PacketEncoder.rotateBody(
-          id,
-          quat
-        ))
+      rotateBody: (...args) => {
+        this.broadcastPacket(PacketEncoder.rotateBody(...args), false, args[0])
       }
     })
     this.world.addBody({ x: 0, y: 0, z: 0 }, { w: 0, x: 0, y: 0, z: 0 }, "Cube", "debug2.png")
@@ -45,9 +36,9 @@ export default class Session {
   }
 
 
-  broadcastPacket = (packet, excludePlayer) => {
+  broadcastPacket = (packet, excludePlayer, excludeBodyID) => {
     this.players.forEach(p => {
-      if (p != excludePlayer) {
+      if ((p != excludePlayer) && (p.bodyID != excludeBodyID)) {
         p.socket.send(packet);
       }
     })
@@ -114,12 +105,12 @@ export default class Session {
           })
           break;
         case "moveBody":
-          session.world.moveBodyRelative(this.player.bodyID, decodedPacket.position, decodedPacket.velocity);
-          //broadcastPacket = PacketEncoder.moveBody(this.player.bodyID, decodedPacket.position, decodedPacket.velocity);
+          session.world.moveBody(this.player.bodyID, decodedPacket.position, decodedPacket.velocity);
+          broadcastPacket = PacketEncoder.moveBody(this.player.bodyID, decodedPacket.position, decodedPacket.velocity);
           break;
         case "chat":
           // Sanitize the input (again; its done on the client too because [see below if statment])
-          let message = PacketEncoder.sanitizeInput(decodedPacket.message, false);
+          let message = decodedPacket.message//PacketEncoder.sanitizeInput(decodedPacket.message, false);
           if (message != decodedPacket.message) { // The client did not sanitize the message
             this.send(PacketEncoder.chat("[Server] Nice try."));
           }
@@ -192,15 +183,15 @@ export default class Session {
             }
           } else {
             console.log(`[${session.code}]: <${this.player.username}> ${message}`);
-            message = `&lt;${this.player.username}&gt; ${message}`;
+            message = `<${this.player.username}> ${message}`;
 
             broadcastPacket = PacketEncoder.chat(message);
             returnPacket = broadcastPacket;
           }
           break;
         case "rotateBody":
-          session.world.rotateBody(this.player.bodyID, decodedPacket.quaternion);
-          broadcastPacket = PacketEncoder.rotateBody(this.player.bodyID, decodedPacket.quaternion);
+          session.world.rotateBody(this.player.bodyID, decodedPacket.quaternion, decodedPacket.angularVelocity);
+          broadcastPacket = PacketEncoder.rotateBody(this.player.bodyID, decodedPacket.quaternion, decodedPacket.angularVelocity);
           break;
         default:
           // in the future this should inform the client (and perhaps the player)

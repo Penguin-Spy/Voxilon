@@ -35,8 +35,9 @@ export default class PlayerController {
   }
 
   #updatePos() {
+    try {
     const moveSpeed = this.moveSpeed * 0.05;
-    const rotationMatrix = this.body.quaternion.conjugate().toMatrix(true);
+    const rotationMatrix = this.body.quaternion.toMatrix(true);
     if (this.input.forward) {  // -Z = 0 yaw = forward (determined by how matrix multiplication works)
       this.posDelta.x -= rotationMatrix[2][0] * moveSpeed;
       this.posDelta.y -= rotationMatrix[2][1] * moveSpeed;
@@ -66,6 +67,10 @@ export default class PlayerController {
       this.posDelta.y -= rotationMatrix[1][1] * moveSpeed;
       this.posDelta.z -= rotationMatrix[1][2] * moveSpeed;
     }
+      
+  } catch(e) {
+    alert(`${e}\n${e.fileName}:${e.lineNumber}`)
+  }
   }
 
   #updateRotation() {
@@ -94,6 +99,6 @@ export default class PlayerController {
     }
 
     // Apply rotation
-    this.body.quaternion = Quaternion.fromEuler(0, this.pitch, this.yaw).conjugate();
+    this.body.quaternion = Quaternion.fromEuler(0, this.pitch, this.yaw);
   }
 }

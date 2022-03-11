@@ -1,3 +1,5 @@
+import Quaternion from '../common/Quaternion.mjs'
+
 const Cube = {
   vertexPositions: [
     // Front face
@@ -147,6 +149,13 @@ export default class CelestialBody {
     // may be undefined (if client root body)
       this.rigidBody = rigidBody
       this.mesh = mesh
+
+      try {
+        rigidBody.quaternion.toMatrix4 = Quaternion.prototype.toMatrix4
+        rigidBody.quaternion.toMatrix = Quaternion.prototype.toMatrix
+      } catch(e) {
+        alert(e.message)
+      }
     }
 
     get position() {
@@ -163,7 +172,16 @@ export default class CelestialBody {
         this.rigidBody.position = value
       }
     }
-
+  get velocity() {
+    return this.rigidBody.velocity
+  }
+  set velocity(value) {
+    this.rigidBody.velocity.set(
+      value.x,
+      value.y,
+      value.z
+    )
+  }
 
     get quaternion() {
       return this.rigidBody.quaternion
@@ -184,6 +202,16 @@ export default class CelestialBody {
         this.rigidBody.quaternion.w = value.w
       }
     }
+  get angularVelocity() {
+    return this.rigidBody.angularVelocity
+  }
+  set angularVelocity(value) {
+    this.rigidBody.angularVelocity.set(
+      value.x,
+      value.y,
+      value.z
+    )
+  }
 
     update = () => {
       

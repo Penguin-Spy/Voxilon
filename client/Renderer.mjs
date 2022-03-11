@@ -24,6 +24,16 @@ const fsSource = `
     }
   `;
 
+let toMatrix4 = function(a){
+  var b=this.w,c=this.x,d=this.y,e=this.z,f=b*c,g=b*d;b*=e;
+  var l=c*c,m=c*d;
+  c*=e;
+  var n=d*d;d*=e;e*=e;
+  return a?
+      [[1-2*(n+e),2*(m-b),2*(c+g),0],[2*(m+b),1-2*(l+e),2*(d-f),0],[2*(c-g),2*(d+f),1-2*(l+n),0],[0,0,0,1]]
+    : [1-2*(n+e),2*(m-b),2*(c+g),0,2*(m+b),1-2*(l+e),2*(d-f),0,2*(c-g),2*(d+f),1-2*(l+n),0,0,0,0,1]
+}
+
 export default function Renderer() {
   this.gl;
   this.canvas;
@@ -213,7 +223,7 @@ export default function Renderer() {
       // Rotate by camera's rotation
       mat4.multiply(modelViewMatrix,
         modelViewMatrix,
-        this.body.quaternion.conjugate().toMatrix4());
+        this.body.quaternion.toMatrix4());
 
       // invert because reasons
       mat4.invert(modelViewMatrix, modelViewMatrix);

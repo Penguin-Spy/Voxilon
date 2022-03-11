@@ -10,7 +10,12 @@
             integrity="sha512-zhHQR0/H5SEBL3Wn6yYSaTTZej12z0hVZKOv3TwCUXT1z5qeqGcXJLLrbERYRScEDDpYIJhPC1fk31gqR783iQ=="
             crossorigin="anonymous" defer>
     </script>
-    <script src="client.mjs" type="module"></script>
+    <script>
+      "use strict";
+      (async function () {
+        window.Voxilon = await import('./client.mjs');
+      })();
+    </script>
   </head>
   <body>
     <div class="container">
@@ -18,8 +23,8 @@
         <h1>Voxilon</h1>
         <h2>The Physics Update!</h2>
         <input id="username" placeholder="Username" onkeydown="if(event.keyCode == 13) document.getElementById('gameCode').focus();">
-        <input id="gameCode" placeholder="Game code" oninput="this.value = this.value.toUpperCase()" onkeydown="if(event.keyCode == 13) connect();" value="">
-        <button id="joinButton" class="invisible" type="button" onclick="connect()">Join</button><br>
+        <input id="gameCode" placeholder="Game code" oninput="this.value = this.value.toUpperCase()" onkeydown="if(event.keyCode == 13) Voxilon.connect();" value="">
+        <button id="joinButton" class="invisible" type="button" onclick="Voxilon.connect()">Join</button><br>
         <span>Type a username in the 1st box, literally anything in the 2nd, then click "Join"<br>Then click to look with mouse & use WASD+Shift/Space to move</span>
       </div>
       <canvas id="glCanvas">Your browser does not support the HTML5 canvas.
@@ -30,19 +35,19 @@ Please upgrade to a modern browser.</canvas>
         <span id="debug.mouse">M XY: 0,0</span><br>
       </div>
       <div id="controls" hidden>
-        <button class="up" onmousedown="input.forward(true)" onmouseup="input.forward(false)" ontouchstart="input.forward(true)" ontouchstop="input.forward(false)" type="button">↑</button>
-        <button class="left" onmousedown="input.left(true)" onmouseup="input.left(false)" ontouchstart="input.left(true)" ontouchstop="input.left(false)" type="button">←</button>
-        <button class="down" onmousedown="input.backward(true)" onmouseup="input.backward(false)" ontouchstart="input.backward(true)" ontouchstop="input.backward(false)" type="button">↓</button>
-        <button class="right" onmousedown="input.right(true)" onmouseup="input.right(false)" ontouchstart="input.right(true)" ontouchstop="input.right(false)" type="button">→</button>
+        <button class="up" onmousedown="Voxilon.input.forward = true" onmouseup="Voxilon.input.forward = false" ontouchstart="Voxilon.input.forward = true" ontouchstop="Voxilon.input.forward = false" type="button">↑</button>
+        <button class="left" onmousedown="Voxilon.input.left = true" onmouseup="Voxilon.input.left = false" ontouchstart="Voxilon.input.left = true" ontouchstop="Voxilon.input.left = false" type="button">←</button>
+        <button class="down" onmousedown="Voxilon.input.backward =true" onmouseup="Voxilon.input.backward = false" ontouchstart="Voxilon.input.backward = true" ontouchstop="Voxilon.input.backward = false" type="button">↓</button>
+        <button class="right" onmousedown="Voxilon.input.right = true" onmouseup="Voxilon.input.right = false" ontouchstart="Voxilon.input.right = true" ontouchstop="Voxilon.input.right = false" type="button">→</button>
       </div>
       <div id="chat" hidden>
-        <input id="inputMessage" type="text" placeholder="Message" onkeydown="if(event.keyCode == 13) sendChat();">
-        <button id="sendButton" onclick="sendChat()" type="button">Send</button>
+        <input id="inputMessage" type="text" placeholder="Message" onkeydown="if(event.keyCode == 13) Voxilon.sendChat();">
+        <button id="sendButton" onclick="Voxilon.sendChat()" type="button">Send</button>
         <span id="messages"></span>
       </div>
       <div id="disconnected" hidden>
         You have been disconnected from the server.<br>
-        <button type="button" onclick="connect()">Reconnect</button>
+        <button type="button" onclick="Voxilon.connect()">Reconnect</button>
       </div>
     </div>
   </body>
