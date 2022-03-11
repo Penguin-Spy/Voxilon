@@ -1,14 +1,11 @@
-var renderer = null;
-var input = null;
-var PacketEncoder = null;
-var PacketDecoder = null;
-var world = null;
+import Renderer from './client/Renderer.mjs'
+import Input from './client/Input.mjs'
+import PlayerController from './client/PlayerController.mjs'
+import PacketEncoder from './common/PacketEncoder.mjs'
+import PacketDecoder from './common/PacketDecoder.mjs'
+import World from './client/World.mjs'
 
-var ourBodyID = null;
-
-var socket = null;
-
-var debug = {
+let debug = {
   fps: document.getElementById("debug.fps"), 
   pos: document.getElementById("debug.pos"),
   mouse: document.getElementById("debug.mouse")
@@ -19,7 +16,7 @@ window.addEventListener('resize', () => {
   renderer.resize(window.innerWidth, window.innerHeight);
 });
 
-var then = 0;
+let then = 0;
 function renderTick(now) {
   now *= 0.001;  // convert to seconds
   const deltaTime = now - then;
@@ -31,44 +28,31 @@ function renderTick(now) {
   try {
 	  renderer.render(world, deltaTime);
   } catch(e) {
-    alert(`${e}\n${e.fileName}:${e.lineNumber}`)
+    alert(`${e.name} while rendering:\n${e.message}\n${e.fileName}:${e.lineNumber}`)
   }
   requestAnimationFrame(renderTick);
 }
 
-requirejs.config({
-  paths: {
-    common: '../common',
-    client: '../client'
-  }
-});
-
 // initalize engine
-requirejs(['Renderer', 'Input', 'PlayerController', 'common/PacketEncoder', 'common/PacketDecoder', 'common/World'], 
-function(   Renderer,   Input,   PlayerController,   PacketEncoder,          PacketDecoder,          World) {
-  import * as CANNON;
   
-  glCanvas = document.getElementById("glCanvas");
 
-  input = new Input();
-  input.bindToCanvas(glCanvas);
+let ourBodyID = null;
+let socket = null;
+let glCanvas = document.getElementById("glCanvas");
 
-  renderer = new Renderer();
-  renderer.init(glCanvas);
+let input = new Input(glCanvas);
 
-  window.PacketEncoder = PacketEncoder;
-  window.PacketDecoder = PacketDecoder;
+let renderer = new Renderer();
+renderer.init(glCanvas);
 
-  world = new World();
 
-  playerController = new PlayerController(input);
+let world
+const playerController = new PlayerController(input);
 
-  document.getElementById("joinButton").removeAttribute("class");
-});
-
+document.getElementById("joinButton").removeAttribute("class");
 
 // prepare world & start game & render loop
-function start(username, bodyID) {
+function start(username, bodyID) { try {
   ourBodyID = bodyID
   playerController.attach(world.getBody(ourBodyID));
   renderer.attach(world.getBody(ourBodyID));
@@ -81,44 +65,47 @@ function start(username, bodyID) {
   document.getElementById("chat").hidden = false;
   document.getElementById("debug").hidden = false;
   document.getElementsByTagName("title")[0].textContent = `${username} - Voxilon`
+
+  } catch(e) {
+    alert(`${e.name} while starting:\n${e.message}\n${e.fileName}:${e.lineNumber}`)
+  }
 }
 
 // idk how to write a game
 var ticks = 0;
 var tickTimeout;
 
-function tick() {
+function tick() { try {
   tickTimeout = setTimeout(tick, 1000/60);
   playerController.tick();
   ticks++;
-  if(ticks % 6 == 0) {
-    try {
-  movePacket = PacketEncoder.moveBody(ourBodyID, playerController.posDelta, new Float64Array([0,0,0]));
-  socket.send(movePacket);
-      playerController.posDelta = {x:0, y:0, z:0}
-  rotatePacket = PacketEncoder.rotateBody(ourBodyID, playerController.body.quaternion.inverse());
-  socket.send(rotatePacket);
 
-  } catch(e) {
-    alert(`${e}\n${e.fileName}:${e.lineNumber}`)
+  let force = {
+    x: input.forward ? 100 : (input.backward ? -100 : 0),
+    y: input.up ? 100 : (input.down ? -0 : 0),
+    z: input.right ? 100 : (input.left ? -100 : 0)
   }
-  }
+  world.getBody(ourBodyID).rigidBody.applyForce(force)
+  //world.moveBodyRelative(ourBodyID, playerController.posDelta)
+      //playerController.posDelta = {x:0, y:0, z:0}
+  //world.rotateBody(ourBodyID, playerController.body.quaternion)
 
   const pos = playerController.body.position;
   debug.pos.innerHTML = `XYZ: ${pos.x.toFixed(3)}, ${pos.y.toFixed(3)}, ${pos.z.toFixed(3)}\
  | PY: ${(playerController.pitch / Math.PI * 180).toFixed(2)}, ${(playerController.yaw / Math.PI * 180).toFixed(2)}`
   
+  } catch(e) {
+    alert(`${e.name} while ticking:\n${e.message}\n${e.fileName}:${e.lineNumber}`)
+  }
 }
 
-function connect() {
-  try {
-  // reset world (for reconnect)
-  world.bodies = [];
+function connect() { try {
 
   const gameCode = document.getElementById("gameCode").value;
   const username = document.getElementById("username").value;
 
   socket = new WebSocket(`wss://${window.location.host}/session/${gameCode}`);
+
   socket.onmessage = async function(event) {
     if (event.data instanceof Blob) {
       let arrayBuffer = await event.data.arrayBuffer();
@@ -140,7 +127,7 @@ function connect() {
           world.removeBody(decodedPacket.bodyID);
           break;
         case "rotateBody":
-          world.rotateBody(decodedPacket.bodyID, decodedPacket.quaternion);
+          world.rotateBody(decodedPacket.bodyID, decodedPacket.quaternion, decodedPacket.angularVelocity);
           break;
         default:
           console.log(`[Error]: Unknown receive packet type: ${decodedPacket.typeByte}\nData:`);
@@ -152,8 +139,17 @@ function connect() {
   }
 
   socket.onopen = (event) => {
-    // only runs once
     socket.send(PacketEncoder.connect(username));
+    
+    // reset world (for reconnect)
+    world = new World({
+      moveBody: (...args) => {
+        socket.send(PacketEncoder.moveBody(...args))
+      },
+      rotateBody: (...args) => {
+        socket.send(PacketEncoder.rotateBody(...args))
+      }
+    });
   }
 
   socket.onclose = (event) => {
@@ -163,13 +159,13 @@ function connect() {
   }
 
   } catch(e) {
-    alert(`${e}\n${e.fileName}:${e.lineNumber}`)
+    alert(`${e.name} while connecting:\n${e.message}\n${e.fileName}:${e.lineNumber}`)
   }
 }
 
 function sendChat() {
-  message = document.getElementById("inputMessage").value;
-  message = PacketEncoder.sanitizeInput(message);
+  let message = document.getElementById("inputMessage").value;
+  //message = PacketEncoder.sanitizeInput(message);
   document.getElementById("inputMessage").value = "";
   if(message.startsWith(".")) {
     let result = false
@@ -193,15 +189,21 @@ function sendChat() {
       recieveChat(result)
     }
   } else {
-    chatPacket = PacketEncoder.chat(message);
+    const chatPacket = PacketEncoder.chat(message);
     socket.send(chatPacket); 
   }
 }
 
 function recieveChat(message) {
-  chatMessages.innerHTML += message + "<br>";
-  if(chatMessages.childElementCount > 9) {
-    chatMessages.removeChild(chatMessages.childNodes[0]); // #text
-    chatMessages.removeChild(chatMessages.childNodes[0]); // <br>
-  }
+  const messageSpan = document.createElement('span');
+  messageSpan.appendChild(document.createTextNode(message));
+  messageSpan.appendChild(document.createElement('br'));
+  chatMessages.appendChild(messageSpan);
+  setTimeout(() => {
+    console.log("removing message")
+    console.log(messageSpan)
+    chatMessages.removeChild(messageSpan)
+  }, 10 * 1000)
 }
+
+export { input, world, sendChat, connect };

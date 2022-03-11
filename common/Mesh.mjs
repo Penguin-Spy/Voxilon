@@ -1,4 +1,4 @@
-meshes = {
+const meshes = {
   "Cube": {
     name: "Cube",
     vertexPositions: [
@@ -140,9 +140,7 @@ meshes = {
 }
 
 
-define([], function() {
-  return function Mesh(meshName, texture) {
-    // make copy of mesh
+export default function Mesh(meshName, texture) {    // make copy of mesh
     let mesh = JSON.parse(JSON.stringify(meshes[meshName]));
     this.name = mesh.name;
     this.vertexPositions = mesh.vertexPositions
@@ -155,4 +153,3 @@ define([], function() {
       this.body = body;
     }*/
   }
-})

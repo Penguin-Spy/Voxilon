@@ -1,13 +1,11 @@
-define(["common/Quaternion"],
-function(Quaternion) {
-  return {
-    textDecoder: new TextDecoder(),
+export default {
+  textDecoder: new TextDecoder(),
 
     decode: function(arrayBuffer) {
-      let view = new DataView(arrayBuffer);
-      let type = view.getUint8(0);
+      const view = new DataView(arrayBuffer);
+      const type = view.getUint8(0);
 
-      let packetBytes = new Uint8Array(arrayBuffer, 1);
+      const packetBytes = new Uint8Array(arrayBuffer, 1);
       switch(type) {
         case 0:
           return this.connect(packetBytes);
@@ -27,22 +25,18 @@ function(Quaternion) {
             typeByte: type
           }
       }
-      // switch on 1st byte
-      // return decoded packet via this.TYPE(bytes)
-      // using this decoded data does a switch on packet.type string
-      return null;
     },
 
     connect: function(bytes) {
-      var view = new DataView(bytes.buffer, bytes.byteOffset, bytes.length);
-      length = view.getUint8(0);
+      const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.length);
+      const length = view.getUint8(0);
       return {
         type: "connect",
         username: this.textDecoder.decode(bytes.slice(1, 1+length))
       }
     },
     addBody: function(bytes) {
-      var view = new DataView(bytes.buffer, bytes.byteOffset, bytes.length);
+      const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.length);
       let position = {
         x: view.getFloat64(2),
         y: view.getFloat64(10),
@@ -71,7 +65,7 @@ function(Quaternion) {
       };
     },
     moveBody: function(bytes) {
-      var view = new DataView(bytes.buffer, bytes.byteOffset);
+      const view = new DataView(bytes.buffer, bytes.byteOffset);
       let position = {
         x: view.getFloat64(2),
         y: view.getFloat64(10),
@@ -89,32 +83,36 @@ function(Quaternion) {
       };
     },
     chat: function(bytes) {
-      var view = new DataView(bytes.buffer, bytes.byteOffset, bytes.length);
-      length = view.getUint8(0);
+      const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.length);
+      let length = view.getUint8(0);
       return {
         type: "chat",
         message: this.textDecoder.decode(bytes.slice(1, 1+length))
       }
     },
     removeBody: function(bytes) {
-      var view = new DataView(bytes.buffer, bytes.byteOffset, bytes.length);
+      const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.length);
       return {
         type: "removeBody",
         bodyID: view.getUint16(0)
       }
     },
     rotateBody: (bytes) => {
-      var view = new DataView(bytes.buffer, bytes.byteOffset);
-      quaternion = new Quaternion({
-        w: view.getFloat64(2),
-        x: view.getFloat64(10),
-        y: view.getFloat64(18),
-        z: view.getFloat64(26)});
+      const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.length);
       return {
         type: "rotateBody",
         bodyID: view.getUint16(0),
-        quaternion: quaternion,
+        quaternion: {
+          w: view.getFloat64(2),
+          x: view.getFloat64(10),
+          y: view.getFloat64(18),
+          z: view.getFloat64(26)
+        },
+        angularVelocity: {
+          x: view.getFloat64(34),
+          y: view.getFloat64(42),
+          z: view.getFloat64(50)
+        }
       };
     }
   }
-})
