@@ -112,3 +112,28 @@ button.invisible {
   position: absolute;
   width: 100%;
 }
+
+#gui {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  z-index: 2;
+  line-height: 1;
+}
+
+#gui.solidBackground {
+  background: black;
+}
+
+#gui .logo {
+  white-space: pre;
+  font-size: 8px;
+}
+
+#gui .item {
+  margin-top: 2em;
+}
+
+#gui .item .indent {
+  margin-left: 2em;
+}

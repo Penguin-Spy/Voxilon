@@ -66,20 +66,19 @@ export default {
     },
     moveBody: function(bytes) {
       const view = new DataView(bytes.buffer, bytes.byteOffset);
-      let position = {
-        x: view.getFloat64(2),
-        y: view.getFloat64(10),
-        z: view.getFloat64(18)
-      }
-      let velocity = new Float64Array(3);
-      velocity[0] = view.getFloat64(26);
-      velocity[1] = view.getFloat64(34);
-      velocity[2] = view.getFloat64(42);
       return {
         type: "moveBody",
         bodyID: view.getUint16(0),
-        position: position,
-        velocity: velocity
+        position: {
+          x: view.getFloat64(2),
+          y: view.getFloat64(10),
+          z: view.getFloat64(18)
+        },
+        velocity: {
+          x: view.getFloat64(26),
+          y: view.getFloat64(34),
+          z: view.getFloat64(42)
+        }
       };
     },
     chat: function(bytes) {
