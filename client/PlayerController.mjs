@@ -3,7 +3,7 @@ import Quaternion from '../common/Quaternion.mjs'
 export default class PlayerController {
   body
   input
-  posDelta
+  moveVector
   lookSpeed
   moveSpeed
   yaw
@@ -13,7 +13,7 @@ export default class PlayerController {
     this.body = null;
     this.input = input;
 
-    this.posDelta = { x: 0, y: 0, z: 0 }
+    this.moveVector = { x: 0, y: 0, z: 0 }
 
     this.lookSpeed = 1;
     this.moveSpeed = 1;
@@ -36,36 +36,37 @@ export default class PlayerController {
 
   #updatePos() {
     try {
-    const moveSpeed = this.moveSpeed * 0.05;
+    this.moveVector = { x: 0, y: 0, z: 0 }
+    const moveSpeed = this.moveSpeed * 50;
     const rotationMatrix = this.body.quaternion.toMatrix(true);
     if (this.input.forward) {  // -Z = 0 yaw = forward (determined by how matrix multiplication works)
-      this.posDelta.x -= rotationMatrix[2][0] * moveSpeed;
-      this.posDelta.y -= rotationMatrix[2][1] * moveSpeed;
-      this.posDelta.z -= rotationMatrix[2][2] * moveSpeed;
+      this.moveVector.x -= rotationMatrix[2][0] * moveSpeed;
+      this.moveVector.y -= rotationMatrix[2][1] * moveSpeed;
+      this.moveVector.z -= rotationMatrix[2][2] * moveSpeed;
     } else if (this.input.backward) {
-      this.posDelta.x += rotationMatrix[2][0] * moveSpeed;
-      this.posDelta.y += rotationMatrix[2][1] * moveSpeed;
-      this.posDelta.z += rotationMatrix[2][2] * moveSpeed;
+      this.moveVector.x += rotationMatrix[2][0] * moveSpeed;
+      this.moveVector.y += rotationMatrix[2][1] * moveSpeed;
+      this.moveVector.z += rotationMatrix[2][2] * moveSpeed;
     }
 
     if (this.input.right) {
-      this.posDelta.x += rotationMatrix[0][0] * moveSpeed;
-      this.posDelta.y += rotationMatrix[0][1] * moveSpeed;
-      this.posDelta.z += rotationMatrix[0][2] * moveSpeed;
+      this.moveVector.x += rotationMatrix[0][0] * moveSpeed;
+      this.moveVector.y += rotationMatrix[0][1] * moveSpeed;
+      this.moveVector.z += rotationMatrix[0][2] * moveSpeed;
     } else if (this.input.left) {
-      this.posDelta.x -= rotationMatrix[0][0] * moveSpeed;
-      this.posDelta.y -= rotationMatrix[0][1] * moveSpeed;
-      this.posDelta.z -= rotationMatrix[0][2] * moveSpeed;
+      this.moveVector.x -= rotationMatrix[0][0] * moveSpeed;
+      this.moveVector.y -= rotationMatrix[0][1] * moveSpeed;
+      this.moveVector.z -= rotationMatrix[0][2] * moveSpeed;
     }
 
     if (this.input.up) {
-      this.posDelta.x += rotationMatrix[1][0] * moveSpeed;
-      this.posDelta.y += rotationMatrix[1][1] * moveSpeed;
-      this.posDelta.z += rotationMatrix[1][2] * moveSpeed;
+      this.moveVector.x += rotationMatrix[1][0] * moveSpeed;
+      this.moveVector.y += rotationMatrix[1][1] * moveSpeed;
+      this.moveVector.z += rotationMatrix[1][2] * moveSpeed;
     } else if (this.input.down) {
-      this.posDelta.x -= rotationMatrix[1][0] * moveSpeed;
-      this.posDelta.y -= rotationMatrix[1][1] * moveSpeed;
-      this.posDelta.z -= rotationMatrix[1][2] * moveSpeed;
+      this.moveVector.x -= rotationMatrix[1][0] * moveSpeed;
+      this.moveVector.y -= rotationMatrix[1][1] * moveSpeed;
+      this.moveVector.z -= rotationMatrix[1][2] * moveSpeed;
     }
       
   } catch(e) {

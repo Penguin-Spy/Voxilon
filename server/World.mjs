@@ -65,7 +65,7 @@ export default class World {
       }
       //this.bodies[bodyID-1].velocity = velocity;
     }
-    moveBodyRelative = (bodyID, position) => {
+    /*moveBodyRelative = (bodyID, position) => {
       if(this.bodies[bodyID]) {
         let pos = this.bodies[bodyID].position
         pos.x += position.x
@@ -73,7 +73,7 @@ export default class World {
         pos.z += position.z
         this.bodies[bodyID].position = pos
       }
-    }
+    }*/
     rotateBody = (bodyID, quaternion, angularVelocity) => {
       if(this.bodies[bodyID]) {
         this.bodies[bodyID].quaternion = quaternion;

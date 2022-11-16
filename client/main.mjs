@@ -80,12 +80,13 @@ function tick() { try {
   playerController.tick();
   ticks++;
 
-  let force = {
+  /*let force = {
     x: input.forward ? 100 : (input.backward ? -100 : 0),
     y: input.up ? 100 : (input.down ? -0 : 0),
     z: input.right ? 100 : (input.left ? -100 : 0)
-  }
-  world.getBody(ourBodyID).rigidBody.applyForce(force)
+  }*/
+  //world.getBody(ourBodyID).rigidBody.applyForce(force)
+  world.getBody(ourBodyID).rigidBody.applyForce(playerController.moveVector)
   //world.moveBodyRelative(ourBodyID, playerController.posDelta)
       //playerController.posDelta = {x:0, y:0, z:0}
   //world.rotateBody(ourBodyID, playerController.body.quaternion)
@@ -110,6 +111,7 @@ function connect() { try {
     if (event.data instanceof Blob) {
       let arrayBuffer = await event.data.arrayBuffer();
       let decodedPacket = PacketDecoder.decode(arrayBuffer);
+      //world.queuePacket(decodedPacket);
       switch(decodedPacket.type) {
         case "addBody":
           world.setBody(decodedPacket.bodyID, decodedPacket.position, decodedPacket.quaternion, decodedPacket.meshName, decodedPacket.textureUrl, decodedPacket.selfBody);
