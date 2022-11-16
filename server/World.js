@@ -1,8 +1,8 @@
 import * as CANNON from 'cannon-es'
-import Quaternion from '../common/Quaternion.mjs'
-import CelestialBody from '../common/CelestialBody.mjs'
-import Mesh from '../common/Mesh.mjs'
-import Texture from '../client/Texture.mjs'
+import Quaternion from '../common/Quaternion.js'
+import CelestialBody from '../common/CelestialBody.js'
+import Mesh from '../common/Mesh.js'
+import Texture from '../client/Texture.js'
 
 export default class World {
     bodies = []

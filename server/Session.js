@@ -4,11 +4,11 @@ wsServer = web socket server for this session's url
 */
 
 import ws from 'ws'
-import PacketDecoder from '../common/PacketDecoder.mjs'
-import PacketEncoder from '../common/PacketEncoder.mjs'
-import Player from '../server/Player.mjs'
-import World from '../server/World.mjs'
-import CelestialBody from '../common/CelestialBody.mjs'
+import PacketDecoder from '../common/PacketDecoder.js'
+import PacketEncoder from '../common/PacketEncoder.js'
+import Player from '../server/Player.js'
+import World from '../server/World.js'
+import CelestialBody from '../common/CelestialBody.js'
 
 export default class Session {
   #world

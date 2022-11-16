@@ -34,13 +34,13 @@ let toMatrix4 = function(a){
     : [1-2*(n+e),2*(m-b),2*(c+g),0,2*(m+b),1-2*(l+e),2*(d-f),0,2*(c-g),2*(d+f),1-2*(l+n),0,0,0,0,1]
 }
 
-export default function Renderer() {
-  this.gl;
+export default class Renderer {
+  /*this.gl;
   this.canvas;
   this.body;
-  this.programInfo;
+  this.programInfo;*/
 
-  this.init = (canvas) => {
+  constructor(canvas) {
     this.canvas = canvas;
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
@@ -80,7 +80,7 @@ export default function Renderer() {
     //this.texture = this._loadTexture(this.gl, "spirit.jpg");
   }
 
-  this.resize = (width, height) => {
+  resize = (width, height) => {
     if (this.canvas) {
       this.canvas.width = width;
       this.canvas.height = height;
@@ -93,7 +93,7 @@ export default function Renderer() {
   }
 
   // Initialize a shader program, so WebGL knows how to draw our data
-  this._initShaderProgram = (gl, vsSource, fsSource) => {
+  _initShaderProgram = (gl, vsSource, fsSource) => {
     const vertexShader = this._loadShader(gl, gl.VERTEX_SHADER, vsSource);
     const fragmentShader = this._loadShader(gl, gl.FRAGMENT_SHADER, fsSource);
 
@@ -114,7 +114,7 @@ export default function Renderer() {
 
   // creates a shader of the given type, uploads the source and
   // compiles it.
-  this._loadShader = (gl, type, source) => {
+  _loadShader = (gl, type, source) => {
     const shader = gl.createShader(type);
 
     // Send the source to the shader object
@@ -134,7 +134,7 @@ export default function Renderer() {
   }
 
   // create the vertex buffers and color/texture buffer for a mesh
-  this._createBuffers = (gl, mesh) => {
+  _createBuffers = (gl, mesh) => {
     const positionBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
     gl.bufferData(gl.ARRAY_BUFFER,
@@ -166,7 +166,7 @@ export default function Renderer() {
     };
   }
 
-  this._drawScene = (gl, programInfo, bodies) => {
+  _drawScene = (gl, programInfo, bodies) => {
     gl.clearColor(0.0, 0.0, 0.0, 1.0);  // Clear to black, fully opaque
     gl.clearDepth(1.0);                 // Clear everything
     gl.enable(gl.DEPTH_TEST);           // Enable depth testing
@@ -310,7 +310,7 @@ export default function Renderer() {
     // render starfield (this should be a shader but be quiet)
   }
 
-  this.render = (world, deltaTime) => {
+  render = (world, deltaTime) => {
 
     // Draw the scene
     this._drawScene(this.gl, this.programInfo, world.bodies);
@@ -318,7 +318,7 @@ export default function Renderer() {
     //this.squareRotation += deltaTime;
   }
 
-  this.attach = (body) => {
+  attach = (body) => {
     this.body = body;
   }
 

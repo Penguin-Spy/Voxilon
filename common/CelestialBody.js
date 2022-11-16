@@ -1,4 +1,4 @@
-import Quaternion from '../common/Quaternion.mjs'
+import Quaternion from '../common/Quaternion.js'
 
 const Cube = {
   vertexPositions: [
