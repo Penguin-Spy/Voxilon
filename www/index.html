@@ -1,127 +1,23 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
-    <title>Voxilon</title>
-    <link rel="icon" type="image/png" href="/favicon.png">
-    <link href="style.css" rel="stylesheet" type="text/css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gl-matrix/2.8.1/gl-matrix-min.js"
-            integrity="sha512-zhHQR0/H5SEBL3Wn6yYSaTTZej12z0hVZKOv3TwCUXT1z5qeqGcXJLLrbERYRScEDDpYIJhPC1fk31gqR783iQ=="
-            crossorigin="anonymous" defer>
-    </script>
-    <style>
-      /* Basic page style before external css has loaded */
-      .container { height: 100% }
-    </style>
-  </head>
-  <body>
-    <div class="container">
-      <div id="gui">
-        <!--<div id="loading">
-          <div class="logo">
-  <span> ___        ___ ________      ___      ___ ___  ___       ________  _________</span>
-  <span>|\  \      /  /|\   __  \    |\  \    /  /|\  \|\  \     |\   __  \|\   ___  \</span>
-  <span>\ \  \    /  / | \  \|\  \   \ \  \  /  / | \  \ \  \    | \  \|\  \ \  \\ \  \</span>
-  <span> \ \  \  /  / / \ \  \\\  \   \ \  \/  / / \ \  \ \  \    \ \  \\\  \ \  \\ \  \</span>
-  <span>  \ \  \/  / /   \ \  \\\  \   \/      \/   \ \  \ \  \    \ \  \\\  \ \  \\ \  \</span>
-  <span>   \ \    / /     \ \  \_\  \  /   /\   \    \ \  \ \  \____\ \  \_\  \ \  \\ \  \</span>
-  <span>    \ \__/ /       \ \_______\/___/ /\ __\    \ \__\ \_______\ \_______\ \__\\ \__\</span>
-  <span>     \|__|/         \|_______||___|/ \|__|     \|__|\|_______|\|_______|\|__| \|__|</span>
-          </div>
-          <div class="item" hidden>
-            <span>bios name</span><br>
-            <span>processor</span><br>
-            <span class="indent">stats</span>
-          </div>
-          <div class="item" hidden>
-            <span>graphics card</span><br>
-            <span class="indent">stats</span>
-          </div>
-          <div class="item" hidden>
-            <span>Memory</span><br>
-            <span class="indent">HIMEM is testing extended memory <span id="memory">0</span>/256MB</span>
-          </div>
-          <div class="item" hidden>
-            <span>USB</span><br>
-            <span class="indent">yep there's a keyboard</span>
-          </div>
-          <div id="modules" class="item" hidden>
-            <span>Loading modules</span><br>
-            <span class="indent" hidden>module 1</span><br>
-            <span class="indent" hidden>module 2</span><br>
-            <span class="indent" hidden>module 3</span>
-          </div>
-          <script>
-            let gui = document.getElementById("gui")
-            let modules = document.getElementById("modules")
-            function showItem(i, elem) {
-              if(elem.children.length > i) {
-                if(elem.children[i].tagName === "BR") i += 1
-                elem.children[i].removeAttribute("hidden")
-                console.log(125 * i)
-                setTimeout(() => showItem(i+1, elem), 125 * i)
-              } else {
-                if(elem != modules) {
-                  showItem(1, modules)
-                } else {
-                  gui.setAttribute("hidden", "")
-                }
-              }
-            }
-            showItem(0, gui)
-          </script>
-        </div>-->
-        <!--<div id="mainMenu">
-          <h1>Voxilon</h1>
-          <h2>The WebRTC Update!</h2>
-          <div id="menu_main">
-            <button class="big" onclick="alert('load')">Singleplayer</button><br>
-            <button class="big" onclick="alert('join')">Multiplayer</button><br>
-            <button class="big" onclick="alert('settings')">Settings</button>
-          </div>
-          <div id="menu_load" hidden>
-            <span>create world/load existing world</span>
-          </div>
-          <div id="menu_join" hidden>
-            <span>Notice: multiplayer hasn't been rewritten yet</span>
-            <input id="username" placeholder="Username" onkeydown="if(event.keyCode == 13) document.getElementById('gameCode').focus();">
-            <input id="gameCode" placeholder="Game code" oninput="this.value = this.value.toUpperCase()" onkeydown="if(event.keyCode == 13) Voxilon.connect();" value="">
-            <button id="joinButton" class="invisible" type="button" onclick="Voxilon.connect()">Join</button><br>
-            <span>Type a username in the 1st box, literally anything in the 2nd, then click "Join"<br>Then click to look with mouse & use WASD+Shift/Space to move</span>
-          </div>
-          <div id="menu_settings" hidden>
-            lmao u think u get settings?! you don't even have a game yet!!
-          </div>
-        </div>-->
-        <!--<div id="debug" hidden>
-          <span id="debug.fps">FPS: N/A</span><br>
-          <span id="debug.pos">XYZ: 0,0,0 | PY: 0,0</span><br>
-          <span id="debug.mouse">M XY: 0,0</span><br>
-        </div>
-        <div id="controls" hidden>
-          <button class="up" onmousedown="Voxilon.input.forward = true" onmouseup="Voxilon.input.forward = false" ontouchstart="Voxilon.input.forward = true" ontouchstop="Voxilon.input.forward = false" type="button">↑</button>
-          <button class="left" onmousedown="Voxilon.input.left = true" onmouseup="Voxilon.input.left = false" ontouchstart="Voxilon.input.left = true" ontouchstop="Voxilon.input.left = false" type="button">←</button>
-          <button class="down" onmousedown="Voxilon.input.backward =true" onmouseup="Voxilon.input.backward = false" ontouchstart="Voxilon.input.backward = true" ontouchstop="Voxilon.input.backward = false" type="button">↓</button>
-          <button class="right" onmousedown="Voxilon.input.right = true" onmouseup="Voxilon.input.right = false" ontouchstart="Voxilon.input.right = true" ontouchstop="Voxilon.input.right = false" type="button">→</button>
-        </div>
-        <div id="chat" hidden>
-          <input id="inputMessage" type="text" placeholder="Message" onkeydown="if(event.keyCode == 13) Voxilon.sendChat();">
-          <button id="sendButton" onclick="Voxilon.sendChat()" type="button">Send</button>
-          <span id="messages"></span>
-        </div>
-        <div id="disconnected" hidden>
-          You have been disconnected from the server.<br>
-          <button type="button" onclick="Voxilon.connect()">Reconnect</button>
-        </div>-->
-      </div>
-      <canvas id="glCanvas">Your browser does not support the HTML5 canvas.
+<html><head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+  <title>Voxilon</title>
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link href="style.css" rel="stylesheet" type="text/css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gl-matrix/2.8.1/gl-matrix-min.js"
+          integrity="sha512-zhHQR0/H5SEBL3Wn6yYSaTTZej12z0hVZKOv3TwCUXT1z5qeqGcXJLLrbERYRScEDDpYIJhPC1fk31gqR783iQ=="
+          crossorigin="anonymous" defer>
+  </script>
+</head><body>
+  <div class="container">
+    <div id="gui"></div>
+    <canvas id="glCanvas">Your browser does not support the HTML5 canvas.
 Please upgrade to a modern browser.</canvas>
-    </div>
-    <script>"use strict";
-      (async function () {
-        window.Voxilon = await import('./client.js');
-      })();
-    </script>
-  </body>
-</html>
+  </div>
+  <script>"use strict";
+    (async function () {
+      window.Voxilon = await import('./client.js');
+    })();
+  </script>
+</body></html>

@@ -22,83 +22,26 @@ input, button {
 .container {
   position: relative;
 }
-#glCanvas {
-  position: relative;
-  background-color:#131313;
-  height: 100%;
-  width: 100%;
-}
-
-
-/* old gui styles */
-#controls, #chat {
-  bottom: 5px;
-  left: 0;
-  position: absolute;
-  width: 100%;
-}
-.up {
-  bottom: 20px;
-  left: 25px;
-  position: absolute;
-}
-.down {
-  bottom: 0px;
-  left: 25px;
-  position: absolute;
-}
-.left {
-  bottom: 0px;
-  left: 0px;
-  position: absolute;
-}
-.right {
-  bottom: 0px;
-  left: 50px;
-  position: absolute;
-}
-#chat #inputMessage {
-  bottom: 20px;
-  left: 100px;
-  position: absolute;
-}
-#chat #sendButton {
-  bottom: 0px;
-  left: 100px;
-  position: absolute;
-}
-#chat #messages {
-  bottom: 40px;
-  left: 0px;
-  position: absolute;
-  color: #ffffff
-}
-#disconnected {
-  bottom: 5px;
-  left: 400px;
-  position: absolute;
-  width: 100%;
-}
-
-#debug {
-  top: 5px;
-  left: 0;
-  position: absolute;
-  width: 100%;
-}
-
-/* ----- GUI STYLES ----- */
 #gui {
   position: absolute;
   width: 100%;
   height: 100%;
   z-index: 2;
+  user-select: none;
+  pointer-events: none;
   
   line-height: 1;
   font-family: ibmbios8, monospace;
   
   display: flex;
 }
+#glCanvas {
+  position: relative;
+  height: 100%;
+  width: 100%;
+}
+
+/* ----- GUI STYLES ----- */
 .gui-mainFrame {
   z-index: 1;
   
@@ -109,6 +52,9 @@ input, button {
 
   flex-direction: column;
   align-items: center;
+}
+.gui-mainFrame:not(:empty) {
+  pointer-events: initial;
 }
 
 
@@ -135,18 +81,6 @@ button.back {
 button.invisible {
   opacity: 0;
   pointer-events: none;
-}
-
-/* loading screen */
-#gui .logo {
-  white-space: pre;
-  font-size: 8px;
-}
-#gui .item {
-  margin-top: 2em;
-}
-#gui .item .indent {
-  margin-left: 2em;
 }
 
 /* Main Menu */

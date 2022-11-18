@@ -164,7 +164,7 @@ export default class CelestialBody {
     return this.rigidBody.position
   }
   set position(value) {
-    if (isNaN(value.x) || isNaN(value.y) || isNaN(value.z)) throw new TypeError(`setting body position to NaN (${value.x},${value.y},${value.z})`)
+    //if (isNaN(value.x) || isNaN(value.y) || isNaN(value.z)) throw new TypeError(`setting body position to NaN (${value.x},${value.y},${value.z})`)
     if (this.rigidBody.position.set) {
       this.rigidBody.position.set(
         value.x,
@@ -179,7 +179,7 @@ export default class CelestialBody {
     return this.rigidBody.velocity
   }
   set velocity(value) {
-    if (isNaN(value.x) || isNaN(value.y) || isNaN(value.z)) throw new TypeError(`setting body velocity to NaN (${value.x},${value.y},${value.z})`)
+    //if (isNaN(value.x) || isNaN(value.y) || isNaN(value.z)) throw new TypeError(`setting body velocity to NaN (${value.x},${value.y},${value.z})`)
     this.rigidBody.velocity.set(
       value.x,
       value.y,
@@ -192,7 +192,7 @@ export default class CelestialBody {
   }
 
   set quaternion(value) {
-    if (isNaN(value.x) || isNaN(value.y) || isNaN(value.z) || isNaN(value.w)) throw new TypeError(`setting body quaternion to NaN (${value.x},${value.y},${value.z},${value.w})`)
+    //if (isNaN(value.x) || isNaN(value.y) || isNaN(value.z) || isNaN(value.w)) throw new TypeError(`setting body quaternion to NaN (${value.x},${value.y},${value.z},${value.w})`)
     if (this.rigidBody.quaternion.set) {
       this.rigidBody.quaternion.set(
         value.x,
@@ -211,7 +211,7 @@ export default class CelestialBody {
     return this.rigidBody.angularVelocity
   }
   set angularVelocity(value) {
-    if (isNaN(value.x) || isNaN(value.y) || isNaN(value.z)) throw new TypeError(`setting body anglularVelocity to NaN (${value.x},${value.y},${value.z})`)
+    //if (isNaN(value.x) || isNaN(value.y) || isNaN(value.z)) throw new TypeError(`setting body anglularVelocity to NaN (${value.x},${value.y},${value.z})`)
     this.rigidBody.angularVelocity.set(
       value.x,
       value.y,

@@ -13,6 +13,7 @@ app.get("/client.js", (req, res, next) => {
 // Host static client & common files
 app.use("/client", express.static("client"));
 app.use("/common", express.static("common"));
+app.use("/assets", express.static("assets"));
 app.use("/directLink", express.static("directLink"));
 app.use(express.static("www"));
 

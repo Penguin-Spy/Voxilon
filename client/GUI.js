@@ -18,21 +18,24 @@ export default class GUI {
     this.loadView(initialView)
   }
 
+  // removes the current screen from the mainFrame
+  clearScreen() {
+    this.mainFrame.replaceChildren()
+    delete this.mainFrame.dataset.screen
+    delete this.mainFrame.dataset.view
+  }
+
   // loads the specified view of the current screen
   // does not modify this.history in any way!
   loadView(view) {
     this.mainFrame.replaceChildren() // remove previous view
     this.mainFrame.dataset.view = view
 
-    console.groupCollapsed("loadView")
-
     // create all elements & put them in this.mainFrame
     for (const element of this.screen[view]) {
       const node = document.createElement(element.$ ?? 'div')
-      console.group(`element<${element.$}>`)
 
       for (const k in element) {
-        console.log(k, element[k])
         switch (k) {
           case "$": break;
           case "content":
@@ -50,10 +53,7 @@ export default class GUI {
 
       // add the node to the main frame
       this.mainFrame.appendChild(node)
-
-      console.groupEnd()
     }
-    console.groupEnd()
   }
 
   // moves the main view forward in the navigation history

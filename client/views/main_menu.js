@@ -9,7 +9,6 @@ export default {
       $: 'button', content: "Singleplayer",
       class: 'big',
       action: function() {
-        console.log(this)
         this.forward("singleplayer")
       }
     }, {
@@ -40,9 +39,7 @@ export default {
       type: "file", accept: ".vox"
     }, {
       $: 'button', class: "big back", content: "Back",
-      action: function() {
-        this.back()
-      }
+      action: function() { this.back() }
     }
   ],
   new_universe: [
@@ -52,17 +49,13 @@ export default {
     {
       $: 'button', class: "big", content: "Start",
       action: function() {
-        console.log("start!!", this)
         this.actions.directLink({
           name: "new world"
         })
-        debugger
       }
     }, {
       $: 'button', class: "big back", content: "Back",
-      action: function() {
-        this.back()
-      }
+      action: function() { this.back() }
     }
   ]
 }

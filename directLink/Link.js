@@ -2,23 +2,22 @@ import World from '../common/World.js'
 import Quaternion from '../common/Quaternion.js'
 
 export default class Link {
-  constructor() {
+  constructor(client, worldOptions) {
+    this.client = client
+    /* 
+    worldOptions = {
+      type: 'file',
+      file: [object File]
+    }
+    */
+
     // create/load world
-    this.world
+    this.world = new World()
 
     // create Integrated server
   }
 
-  // starts the game
-  start() {
-    console.log("woah starting!!")
-  }
-
   /* --- Link interface methods --- */
-
-  tick() {
-    // ticks the physics engine and then the Server (crafting machines, belts, vehicles, etc.)
-  }
 
   /* Player body movement */
   /*playerMoveRelative(vector) { }

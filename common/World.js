@@ -24,6 +24,11 @@ export default class World {
 
   get bodies() { return this._bodies }
 
+  addBody(celestialBody) {
+    this._physics.addBody(celestialBody.rigidBody)
+    return this._bodies.push(celestialBody)
+  }
+
   /*setBody = (bodyID, position, quaternion, meshType, textureUrl, selfBody) => {
     let mesh;
     if (!selfBody) {
@@ -52,12 +57,12 @@ export default class World {
   };*/
 
   // bi
-  getBody = bodyID => {
+  getBody(bodyID) {
     return this._bodies[bodyID]
   };
 
   // everthing below is bi
-  moveBody = (bodyID, position, velocity) => {
+  moveBody(bodyID, position, velocity) {
     if (this._bodies[bodyID]) {
       this._bodies[bodyID].position = position;
       this._bodies[bodyId].velocity = velocity
@@ -73,17 +78,17 @@ export default class World {
         this.bodies[bodyID].position = pos
       }
     }*/
-  rotateBody = (bodyID, quaternion, angularVelocity) => {
+  rotateBody(bodyID, quaternion, angularVelocity) {
     if (this._bodies[bodyID]) {
       this._bodies[bodyID].quaternion = quaternion;
       this._bodies[bodyID].angularVelocity = angularVelocity;
     }
   };
 
-  removeBody = bodyID => {
+  removeBody(bodyID) {
     delete this._bodies[bodyID];
   };
-  tick = () => {
+  tick() {
     this._physics.fixedStep()
 
     /*if (this.rootBody) {

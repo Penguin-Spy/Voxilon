@@ -49,7 +49,6 @@ export default class Renderer {
     });
 
     this.gl = canvas.getContext("webgl");
-    console.log(this.gl);
     if (this.gl == null) {
       alert("webgl getContext failed. ");
     }
@@ -313,12 +312,10 @@ export default class Renderer {
     // render starfield (this should be a shader but be quiet)
   }
 
-  render = (world, deltaTime) => {
-
+  render = (world) => {
     // Draw the scene
     this._drawScene(this.gl, this.programInfo, world.bodies);
 
-    //this.squareRotation += deltaTime;
   }
 
   attach = (body) => {
