@@ -2,7 +2,6 @@ import Renderer from '/client/Renderer.js'
 import Input from '/client/Input.js'
 import GUI from '/client/GUI.js'
 import PlayerController from '/client/PlayerController.js'
-import PlayerBody from '/common/bodies/Player.js'
 
 import main_menu from '/client/views/main_menu.js'
 
@@ -23,38 +22,28 @@ const gui = new GUI($("#gui"));
 const playerController = new PlayerController(input);
 
 gui.loadScreen(main_menu, "title", { directLink, networkLink })
+const debugFrame = gui.addFrame("gui-debug")
 
-let tickTimeout, renderRequest //, then = 0
+let renderRequest, then = 0
 
 // ticks the physics engine and then the Server (crafting machines, belts, vehicles, etc.)
-function tick() {
-  tickTimeout = setTimeout(tick, 1000 / 60)
+function animate(now) {
+  const deltaTime = (now - then) / 1000;
+  then = now;
+  debugFrame.innerText = `FPS: ${(1/deltaTime).toFixed(2)}`
 
-  playerController.tick();
-  playerBody.rigidBody.applyForce(playerController.moveVector)
-
-  link.world.tick()
-}
-
-function render(now) {
-  /*now *= 0.001  // convert to seconds
-  const deltaTime = now - then
-  then = now
-  const fps = 1 / deltaTime*/
+  playerController.update(deltaTime)
+  link.world.step(deltaTime)
 
   renderer.render(link.world)
-
-  renderRequest = requestAnimationFrame(render)
-
+  renderRequest = requestAnimationFrame(animate)
 }
 
-let playerBody, testbody
-function start() {
-  playerBody = new PlayerBody()
-  link.world.addBody(playerBody)
 
-  playerController.attach(playerBody)
-  renderer.attach(playerBody)
+let testbody, testbody2
+function start() {
+  playerController.attach(link)
+  renderer.attach(link.playerBody)
 
   gui.clearScreen()
 
@@ -65,16 +54,24 @@ function start() {
   })
   const mesh = new Mesh("Cube", new Texture("debug.png"))
   testbody = new CelestialBody(rigidbody, mesh)
-  testbody.position = { x: 7, y: 1, z: -2 }
+  testbody.position = { x: 2, y: 2, z: -7 }
   link.world.addBody(testbody)
+
+  const rigidbody2 = new CANNON.Body({
+    mass: 1, // kg
+    shape: new CANNON.Sphere(1),
+    type: CANNON.Body.STATIC,
+
+  })
+  testbody2 = new CelestialBody(rigidbody2, mesh)
+  testbody2.position = { x: -2, y: 2, z: -7 }
+  link.world.addBody(testbody2)
   /**/
 
-  tick()
-  requestAnimationFrame(render)
+  requestAnimationFrame(animate)
 }
 
 function stop() {
-  clearTimeout(tickTimeout)
   cancelAnimationFrame(renderRequest)
 }
 
@@ -89,10 +86,7 @@ async function directLink(worldOptions) {
   }
 
   console.info("Starting direct link")
-  link = new linkModules.direct({
-    playerController,
-    renderer
-  }, worldOptions)
+  link = new linkModules.direct(worldOptions)
 
   start()
 }
@@ -103,14 +97,9 @@ async function networkLink(gameCode) {
   }
 
   console.info("Starting network link")
-  link = new linkModules.network({
-    playerController,
-    renderer
-  })
+  link = new linkModules.network(gameCode)
 
   start()
 }
 
-
-
-export { renderer, input, gui, playerController, playerBody, testbody, link };
+export { renderer, input, gui, playerController, testbody, testbody2, link };

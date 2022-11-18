@@ -57,6 +57,9 @@ input, button {
   pointer-events: initial;
 }
 
+.gui-debug {
+  position: absolute;
+}
 
 /* common styles */
 .gui-mainFrame input {

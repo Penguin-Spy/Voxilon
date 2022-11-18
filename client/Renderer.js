@@ -1,3 +1,8 @@
+import Quaternion from '../common/Quaternion.js'
+function toMatrix4(quat) {
+  return Quaternion.prototype.toMatrix4.call(quat)
+}
+
 const vsSource = `
     attribute vec4 aVertexPosition;
     attribute vec2 aTextureCoord;
@@ -24,15 +29,6 @@ const fsSource = `
     }
   `;
 
-let toMatrix4 = function(a) {
-  var b = this.w, c = this.x, d = this.y, e = this.z, f = b * c, g = b * d; b *= e;
-  var l = c * c, m = c * d;
-  c *= e;
-  var n = d * d; d *= e; e *= e;
-  return a ?
-    [[1 - 2 * (n + e), 2 * (m - b), 2 * (c + g), 0], [2 * (m + b), 1 - 2 * (l + e), 2 * (d - f), 0], [2 * (c - g), 2 * (d + f), 1 - 2 * (l + n), 0], [0, 0, 0, 1]]
-    : [1 - 2 * (n + e), 2 * (m - b), 2 * (c + g), 0, 2 * (m + b), 1 - 2 * (l + e), 2 * (d - f), 0, 2 * (c - g), 2 * (d + f), 1 - 2 * (l + n), 0, 0, 0, 0, 1]
-}
 
 export default class Renderer {
   /*this.gl;
@@ -209,12 +205,12 @@ export default class Renderer {
       // Rotate by body's rotation
       mat4.multiply(modelViewMatrix,
         modelViewMatrix,
-        renderBody.quaternion.toMatrix4());
+        toMatrix4(renderBody.rigidBody.quaternion));
       mat4.invert(modelViewMatrix, modelViewMatrix);
 
       // Translate by bodies offset from camera
       let thisPos = this.body.position
-      let renderPos = renderBody.position
+      let renderPos = renderBody.rigidBody.position
       mat4.translate(modelViewMatrix,
         modelViewMatrix, [
           thisPos.x - renderPos.x,
@@ -225,7 +221,7 @@ export default class Renderer {
       // Rotate by camera's rotation
       mat4.multiply(modelViewMatrix,
         modelViewMatrix,
-        this.body.quaternion.toMatrix4());
+        toMatrix4(this.body.quaternion));
 
       // invert because reasons
       mat4.invert(modelViewMatrix, modelViewMatrix);

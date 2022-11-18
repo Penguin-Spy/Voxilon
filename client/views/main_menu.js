@@ -9,7 +9,10 @@ export default {
       $: 'button', content: "Singleplayer",
       class: 'big',
       action: function() {
-        this.forward("singleplayer")
+        //this.forward("singleplayer")
+        this.actions.directLink({
+          name: "new world"
+        })
       }
     }, {
       $: 'button', content: "Multiplayer",

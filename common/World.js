@@ -3,15 +3,31 @@ import Quaternion from '../common/Quaternion.js';
 import CelestialBody from '../common/CelestialBody.js';
 //import Mesh from '../common/Mesh.js';
 
+const dt = 1 / 60
+
 export default class World {
-  _bodies = []
-  _physics
   //tickTimeout
 
   constructor() {
+    this._bodies = []
+    this.accumulator = 0
+
     this._physics = new CANNON.World({
       gravity: new CANNON.Vec3(0, -9.82, 0) // m/s²
     });
+
+    const physicsMaterial = new CANNON.Material("slipperyMaterial");
+    const physicsContactMaterial = new CANNON.ContactMaterial(physicsMaterial,
+      physicsMaterial,
+      {
+        friction: 0.0, // friction coefficient
+        restitution: 0.3  // restitution}
+      }
+    );
+    // We must add the contact materials to the world
+    this._physics.addContactMaterial(physicsContactMaterial);
+
+
     const groundBody = new CANNON.Body({
       type: CANNON.Body.STATIC,
       shape: new CANNON.Plane()
@@ -23,6 +39,7 @@ export default class World {
   }
 
   get bodies() { return this._bodies }
+  //get stepped() { return this._stepped }
 
   addBody(celestialBody) {
     this._physics.addBody(celestialBody.rigidBody)
@@ -87,9 +104,21 @@ export default class World {
 
   removeBody(bodyID) {
     delete this._bodies[bodyID];
-  };
-  tick() {
+  }
+  step(frameTime) {
+    /*this.accumulator += frameTime
+
+    let substeps = 0
+    while (this.accumulator >= dt && substeps < 10) {
+      this._physics.internalStep(dt)
+      this.accumulator -= dt
+      substeps++
+    }*/
+
+    //this._physics.step(1 / 60, frameTime/1000)
     this._physics.fixedStep()
+
+
 
     /*if (this.rootBody) {
       // rootBody.id is not a field of CelestialBody, it's set in world.setBody(selfBody=true)

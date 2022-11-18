@@ -9,6 +9,13 @@ export default class GUI {
     this.root.replaceChildren(this.mainFrame) // this removes the loading/"failed to load" message
   }
 
+  addFrame(frameClass) {
+    const frame = document.createElement("div")
+    frame.setAttribute("class", frameClass)
+    this.root.appendChild(frame)
+    return frame
+  }
+
   // sets the current screen & displays the specified view
   // optionally provides the screen the specified actions
   loadScreen(screen, initialView, actions) {
