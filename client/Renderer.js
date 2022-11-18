@@ -24,14 +24,14 @@ const fsSource = `
     }
   `;
 
-let toMatrix4 = function(a){
-  var b=this.w,c=this.x,d=this.y,e=this.z,f=b*c,g=b*d;b*=e;
-  var l=c*c,m=c*d;
-  c*=e;
-  var n=d*d;d*=e;e*=e;
-  return a?
-      [[1-2*(n+e),2*(m-b),2*(c+g),0],[2*(m+b),1-2*(l+e),2*(d-f),0],[2*(c-g),2*(d+f),1-2*(l+n),0],[0,0,0,1]]
-    : [1-2*(n+e),2*(m-b),2*(c+g),0,2*(m+b),1-2*(l+e),2*(d-f),0,2*(c-g),2*(d+f),1-2*(l+n),0,0,0,0,1]
+let toMatrix4 = function(a) {
+  var b = this.w, c = this.x, d = this.y, e = this.z, f = b * c, g = b * d; b *= e;
+  var l = c * c, m = c * d;
+  c *= e;
+  var n = d * d; d *= e; e *= e;
+  return a ?
+    [[1 - 2 * (n + e), 2 * (m - b), 2 * (c + g), 0], [2 * (m + b), 1 - 2 * (l + e), 2 * (d - f), 0], [2 * (c - g), 2 * (d + f), 1 - 2 * (l + n), 0], [0, 0, 0, 1]]
+    : [1 - 2 * (n + e), 2 * (m - b), 2 * (c + g), 0, 2 * (m + b), 1 - 2 * (l + e), 2 * (d - f), 0, 2 * (c - g), 2 * (d + f), 1 - 2 * (l + n), 0, 0, 0, 0, 1]
 }
 
 export default class Renderer {
@@ -44,6 +44,9 @@ export default class Renderer {
     this.canvas = canvas;
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
+    window.addEventListener('resize', () => {
+      this.resize(window.innerWidth, window.innerHeight);
+    });
 
     this.gl = canvas.getContext("webgl");
     console.log(this.gl);

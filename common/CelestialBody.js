@@ -56,35 +56,35 @@ const Cube = {
   ],
   textureCoords: [
     // Front
-    0.0,  0.0,
-    1.0,  0.0,
-    1.0,  1.0,
-    0.0,  1.0,
+    0.0, 0.0,
+    1.0, 0.0,
+    1.0, 1.0,
+    0.0, 1.0,
     // Back
-    0.0,  0.0,
-    1.0,  0.0,
-    1.0,  1.0,
-    0.0,  1.0,
+    0.0, 0.0,
+    1.0, 0.0,
+    1.0, 1.0,
+    0.0, 1.0,
     // Top
-    0.0,  0.0,
-    1.0,  0.0,
-    1.0,  1.0,
-    0.0,  1.0,
+    0.0, 0.0,
+    1.0, 0.0,
+    1.0, 1.0,
+    0.0, 1.0,
     // Bottom
-    0.0,  0.0,
-    1.0,  0.0,
-    1.0,  1.0,
-    0.0,  1.0,
+    0.0, 0.0,
+    1.0, 0.0,
+    1.0, 1.0,
+    0.0, 1.0,
     // Right
-    0.0,  0.0,
-    1.0,  0.0,
-    1.0,  1.0,
-    0.0,  1.0,
+    0.0, 0.0,
+    1.0, 0.0,
+    1.0, 1.0,
+    0.0, 1.0,
     // Left
-    0.0,  0.0,
-    1.0,  0.0,
-    1.0,  1.0,
-    0.0,  1.0,
+    0.0, 0.0,
+    1.0, 0.0,
+    1.0, 1.0,
+    0.0, 1.0,
   ]
 }
 // Convert the array of colors into a table for all the vertices.
@@ -142,42 +142,44 @@ for (var j = 0; j < Cube.faceColors.length; ++j) {
 }*/
 
 export default class CelestialBody {
-  mesh
-    rigidBody
-    
-    constructor(rigidBody, mesh) {
+  /*
+    mesh:      optional, rendering mesh (model & texture)
+    rigidBody: optional, CannonJS physics body
+  */
+
+  constructor(rigidBody, mesh) {
     // may be undefined (if client root body)
-      this.rigidBody = rigidBody
-      this.mesh = mesh
+    this.rigidBody = rigidBody
+    this.mesh = mesh
 
-      try {
-        rigidBody.quaternion.toMatrix4 = Quaternion.prototype.toMatrix4
-        rigidBody.quaternion.toMatrix = Quaternion.prototype.toMatrix
-      } catch(e) {
-        alert(e.message)
-      }
+    try {
+      rigidBody.quaternion.toMatrix4 = Quaternion.prototype.toMatrix4
+      rigidBody.quaternion.toMatrix = Quaternion.prototype.toMatrix
+    } catch (e) {
+      console.error(e)
     }
+  }
 
-    get position() {
-      return this.rigidBody.position
+  get position() {
+    return this.rigidBody.position
+  }
+  set position(value) {
+    if (isNaN(value.x) || isNaN(value.y) || isNaN(value.z)) throw new TypeError(`setting body position to NaN (${value.x},${value.y},${value.z})`)
+    if (this.rigidBody.position.set) {
+      this.rigidBody.position.set(
+        value.x,
+        value.y,
+        value.z
+      )
+    } else {
+      this.rigidBody.position = value
     }
-    set position(value) {
-    if(isNaN(value.x) || isNaN(value.y) || isNaN(value.z)) throw new TypeError(`setting body position to NaN (${value.x},${value.y},${value.z})`)
-      if(this.rigidBody.position.set) {
-        this.rigidBody.position.set(
-          value.x,
-          value.y,
-          value.z
-        )
-      } else {
-        this.rigidBody.position = value
-      }
-    }
+  }
   get velocity() {
     return this.rigidBody.velocity
   }
   set velocity(value) {
-    if(isNaN(value.x) || isNaN(value.y) || isNaN(value.z)) throw new TypeError(`setting body velocity to NaN (${value.x},${value.y},${value.z})`)
+    if (isNaN(value.x) || isNaN(value.y) || isNaN(value.z)) throw new TypeError(`setting body velocity to NaN (${value.x},${value.y},${value.z})`)
     this.rigidBody.velocity.set(
       value.x,
       value.y,
@@ -185,31 +187,31 @@ export default class CelestialBody {
     )
   }
 
-    get quaternion() {
-      return this.rigidBody.quaternion
+  get quaternion() {
+    return this.rigidBody.quaternion
+  }
+
+  set quaternion(value) {
+    if (isNaN(value.x) || isNaN(value.y) || isNaN(value.z) || isNaN(value.w)) throw new TypeError(`setting body quaternion to NaN (${value.x},${value.y},${value.z},${value.w})`)
+    if (this.rigidBody.quaternion.set) {
+      this.rigidBody.quaternion.set(
+        value.x,
+        value.y,
+        value.z,
+        value.w
+      )
+    } else {
+      this.rigidBody.quaternion.x = value.x
+      this.rigidBody.quaternion.y = value.y
+      this.rigidBody.quaternion.z = value.z
+      this.rigidBody.quaternion.w = value.w
     }
-    
-    set quaternion(value) {
-    if(isNaN(value.x) || isNaN(value.y) || isNaN(value.z) || isNaN(value.w)) throw new TypeError(`setting body quaternion to NaN (${value.x},${value.y},${value.z},${value.w})`)
-      if(this.rigidBody.quaternion.set) {
-        this.rigidBody.quaternion.set(
-          value.x,
-          value.y,
-          value.z,
-          value.w
-        )
-      } else {
-        this.rigidBody.quaternion.x = value.x
-        this.rigidBody.quaternion.y = value.y
-        this.rigidBody.quaternion.z = value.z
-        this.rigidBody.quaternion.w = value.w
-      }
-    }
+  }
   get angularVelocity() {
     return this.rigidBody.angularVelocity
   }
   set angularVelocity(value) {
-    if(isNaN(value.x) || isNaN(value.y) || isNaN(value.z)) throw new TypeError(`setting body anglularVelocity to NaN (${value.x},${value.y},${value.z})`)
+    if (isNaN(value.x) || isNaN(value.y) || isNaN(value.z)) throw new TypeError(`setting body anglularVelocity to NaN (${value.x},${value.y},${value.z})`)
     this.rigidBody.angularVelocity.set(
       value.x,
       value.y,
@@ -217,7 +219,7 @@ export default class CelestialBody {
     )
   }
 
-    update = () => {
-      
-    }
+  update = () => {
+
   }
+}

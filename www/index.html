@@ -10,13 +10,6 @@
             integrity="sha512-zhHQR0/H5SEBL3Wn6yYSaTTZej12z0hVZKOv3TwCUXT1z5qeqGcXJLLrbERYRScEDDpYIJhPC1fk31gqR783iQ=="
             crossorigin="anonymous" defer>
     </script>
-    <script>
-      "use strict";
-      (async function () {
-        window.Voxilon = await import('./client.js');
-      })();
-    </script>
-
     <style>
       /* Basic page style before external css has loaded */
       .container { height: 100% }
@@ -101,7 +94,7 @@
             lmao u think u get settings?! you don't even have a game yet!!
           </div>
         </div>-->
-        <div id="debug" hidden>
+        <!--<div id="debug" hidden>
           <span id="debug.fps">FPS: N/A</span><br>
           <span id="debug.pos">XYZ: 0,0,0 | PY: 0,0</span><br>
           <span id="debug.mouse">M XY: 0,0</span><br>
@@ -120,10 +113,15 @@
         <div id="disconnected" hidden>
           You have been disconnected from the server.<br>
           <button type="button" onclick="Voxilon.connect()">Reconnect</button>
-        </div>
+        </div>-->
       </div>
       <canvas id="glCanvas">Your browser does not support the HTML5 canvas.
 Please upgrade to a modern browser.</canvas>
     </div>
+    <script>"use strict";
+      (async function () {
+        window.Voxilon = await import('./client.js');
+      })();
+    </script>
   </body>
 </html>

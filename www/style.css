@@ -17,56 +17,20 @@ html, body {
 input, button {
   font-family: ibmbios8, monospace;
 }
+
+
 .container {
   position: relative;
 }
-#mainMenu{
-  position: absolute;
-  top: 25%;
-  left: 50%;
-  width: 100%;
-  transform: translate(-50%, -50%);
-  z-index: 1;
-  text-align: center;
-  font-family: ibmbios8, monospace;
-}
-h1 {
-  font-size: 6em;
-  font-weight: normal;
-  margin: 0;
-  text-shadow: 6px 6px 0 #555;
-}
-h2 {
-  font-size: 2em;
-  font-weight: normal;
-  margin: 0 0 24px;
-}
-#mainMenu input {
-  font-size: 1em;
-}
-#mainMenu button {
-  font-size: 1em;
-}
-button.invisible {
-  opacity: 0;
-  pointer-events: none;
-}
-button.big {
-  color: white;
-  border: white solid 4px;
-  margin: 6px 6px 10px;
-  padding: 6px 12px;
-  background-color: transparent;
-  cursor: pointer;
-  box-shadow: 4px 4px 0 #555;
-}
-
 #glCanvas {
   position: relative;
   background-color:#131313;
   height: 100%;
   width: 100%;
 }
+
+
+/* old gui styles */
 #controls, #chat {
   bottom: 5px;
   left: 0;
@@ -123,27 +87,77 @@ button.big {
   width: 100%;
 }
 
+/* ----- GUI STYLES ----- */
 #gui {
   position: absolute;
   width: 100%;
   height: 100%;
   z-index: 2;
+  
   line-height: 1;
+  font-family: ibmbios8, monospace;
+  
+  display: flex;
+}
+.gui-mainFrame {
+  z-index: 1;
+  
+  display: flex;
+  margin: auto;
+  height: 75%;
+  min-width: 650px;
+
+  flex-direction: column;
+  align-items: center;
 }
 
-#gui.solidBackground {
-  background: black;
+
+/* common styles */
+.gui-mainFrame input {
+  font-size: 1em;
+}
+.gui-mainFrame button {
+  font-size: 1em;
+}
+button.big {
+  color: white;
+  border: white solid 4px;
+  margin: 6px 6px 10px;
+  padding: 6px 12px;
+  background-color: transparent;
+  cursor: pointer;
+  box-shadow: 4px 4px 0 #555;
+}
+button.back {
+  align-self: baseline;
+  margin-top: 32px;
+}
+button.invisible {
+  opacity: 0;
+  pointer-events: none;
 }
 
+/* loading screen */
 #gui .logo {
   white-space: pre;
   font-size: 8px;
 }
-
 #gui .item {
   margin-top: 2em;
 }
-
 #gui .item .indent {
   margin-left: 2em;
+}
+
+/* Main Menu */
+.gui-mainFrame[data-screen="main_menu"] h1 {
+  font-size: 6em;
+  font-weight: normal;
+  margin: 0;
+  text-shadow: 6px 6px 0 #555;
+}
+.gui-mainFrame[data-screen="main_menu"] h2 {
+  font-size: 2em;
+  font-weight: normal;
+  margin: 0 0 24px;
 }

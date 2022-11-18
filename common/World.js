@@ -1,36 +1,33 @@
 import * as CANNON from 'https://pmndrs.github.io/cannon-es/dist/cannon-es.js';
 import Quaternion from '../common/Quaternion.js';
 import CelestialBody from '../common/CelestialBody.js';
-import Mesh from '../common/Mesh.js';
-import Texture from '../client/Texture.js';
+//import Mesh from '../common/Mesh.js';
 
 export default class World {
-  bodies = [];
-  rootBody; // The one body this ClientWorld manages & sends packets about
-  #physics;
-  session;
-  #tickTimeout;
+  _bodies = []
+  _physics
+  //tickTimeout
 
-  constructor(session) {
-    this.session = session;
-    this.#physics = new CANNON.World({
+  constructor() {
+    this._physics = new CANNON.World({
       gravity: new CANNON.Vec3(0, -9.82, 0) // m/s²
     });
     const groundBody = new CANNON.Body({
-      type: CANNON.Body.STATIC, // can also be achieved by setting the mass to 0
+      type: CANNON.Body.STATIC,
       shape: new CANNON.Plane()
     });
     groundBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0); // make it face up
-    this.#physics.addBody(groundBody);
+    this._physics.addBody(groundBody);
 
-    this.tick();
+    //this.tick();
   }
 
-  // clientside
-  setBody = (bodyID, position, quaternion, meshType, textureUrl, selfBody) => {
+  get bodies() { return this._bodies }
+
+  /*setBody = (bodyID, position, quaternion, meshType, textureUrl, selfBody) => {
     let mesh;
     if (!selfBody) {
-      mesh = new Mesh(meshType, new Texture(textureUrl));
+      //mesh = new Mesh(meshType, new Texture(textureUrl));
     }
     const sphereBody = new CANNON.Body({
       mass: 1, // kg
@@ -45,31 +42,25 @@ export default class World {
       quaternion.z,
       quaternion.w
     );
-    this.#physics.addBody(sphereBody);
+    this._physics.addBody(sphereBody);
 
-    this.bodies[bodyID] = new CelestialBody(sphereBody, mesh);
+    this._bodies[bodyID] = new CelestialBody(sphereBody, mesh);
     if (selfBody) {
       this.rootBody = this.bodies[bodyID];
       this.rootBody.id = bodyID;
     }
-  };
+  };*/
 
   // bi
   getBody = bodyID => {
-    return this.bodies[bodyID];
+    return this._bodies[bodyID]
   };
-
-  // packet queue
-  /*queuePacket = (decodedPacket) => {
-    alert(decodedPacket.type)
-    #packetQueue[decodedPacket.type]
-    
-  }*/
 
   // everthing below is bi
   moveBody = (bodyID, position, velocity) => {
-    if (this.bodies[bodyID]) {
-      this.bodies[bodyID].position = position;
+    if (this._bodies[bodyID]) {
+      this._bodies[bodyID].position = position;
+      this._bodies[bodyId].velocity = velocity
     }
     //this.bodies[bodyID-1].velocity = velocity;
   };
@@ -83,21 +74,19 @@ export default class World {
       }
     }*/
   rotateBody = (bodyID, quaternion, angularVelocity) => {
-    if (this.bodies[bodyID]) {
-      this.bodies[bodyID].quaternion = quaternion;
-      this.bodies[bodyID].angularVelocity = angularVelocity;
+    if (this._bodies[bodyID]) {
+      this._bodies[bodyID].quaternion = quaternion;
+      this._bodies[bodyID].angularVelocity = angularVelocity;
     }
   };
 
   removeBody = bodyID => {
-    delete this.bodies[bodyID];
+    delete this._bodies[bodyID];
   };
   tick = () => {
-    this.#tickTimeout = setTimeout(this.tick, 1000 / 60);
+    this._physics.fixedStep()
 
-    this.#physics.fixedStep();
-
-    if (this.rootBody) {
+    /*if (this.rootBody) {
       // rootBody.id is not a field of CelestialBody, it's set in world.setBody(selfBody=true)
       this.session.moveBody(
         this.rootBody.id,
@@ -109,10 +98,6 @@ export default class World {
         this.rootBody.quaternion,
         this.rootBody.angularVelocity
       );
-    }
-  };
-
-  close = () => {
-    clearTimeout(this.#tickTimeout);
-  };
+    }*/
+  }
 }

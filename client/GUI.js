@@ -1,132 +1,70 @@
-function $(name, options) {
-  const node = document.createElement(name)
-  if (typeof options === "string") {
-    node.innerHTML = options
-  } else {
-    for (const opt in options) {
-      if (opt === "content") {
-        node.innerHTML = options[opt]
-      } else if (opt === "click") {
-        node.addEventListener('click', options[opt])
-      } else {
-        node.setAttribute(opt, options[opt])
-      }
-    }
-  }
-  return node
-}
-
-
 export default class GUI {
   constructor(parentNode) {
     this.root = parentNode
-
     this.history = []
 
-    /*const mainMenu = [
-      {name: "h1", content: "Voxilon"},
-      {name: "h2", content: "The WebRTC Update!"},
-      {name: "button", class: "big", content: "Singleplayer", click: () => {
-        alert("signleplayer clicked")
-      }},
-      {name: "button", class: "big", content: "Multiplayer", click: () => {
-        alert("Multiplayer clicked")
-      }},
-      {name: "button", class: "big", content: "Settings", click: () => {
-        alert("Settings clicked")
-      }}
-    ]*/
+    // Main frame for the currently open screen (inventory, building gui, main menu, etc.)
+    this.mainFrame = document.createElement("div")
+    this.mainFrame.setAttribute("class", "gui-mainFrame")
+    this.root.replaceChildren(this.mainFrame) // this removes the loading/"failed to load" message
   }
 
-  // Sets the root node's child, overwriting anything that was there previously
-  setRoot(node) {
-    return this.root.replaceChildren(node)
+  // sets the current screen & displays the specified view
+  // optionally provides the screen the specified actions
+  loadScreen(screen, initialView, actions) {
+    this.screen = screen
+    this.actions = actions
+    this.mainFrame.dataset.screen = screen.id
+    this.loadView(initialView)
+  }
+
+  // loads the specified view of the current screen
+  // does not modify this.history in any way!
+  loadView(view) {
+    this.mainFrame.replaceChildren() // remove previous view
+    this.mainFrame.dataset.view = view
+
+    console.groupCollapsed("loadView")
+
+    // create all elements & put them in this.mainFrame
+    for (const element of this.screen[view]) {
+      const node = document.createElement(element.$ ?? 'div')
+      console.group(`element<${element.$}>`)
+
+      for (const k in element) {
+        console.log(k, element[k])
+        switch (k) {
+          case "$": break;
+          case "content":
+            node.innerHTML = element[k]
+            break
+          case "action":
+            node.addEventListener('click', () => {
+              element.action.call(this)
+            })
+            break
+          default:
+            node.setAttribute(k, element[k])
+        }
+      }
+
+      // add the node to the main frame
+      this.mainFrame.appendChild(node)
+
+      console.groupEnd()
+    }
+    console.groupEnd()
   }
 
   // moves the main view forward in the navigation history
-  forward(node) {
-    this.history.push(this.root.firstChild)
-    this.setRoot(node)
+  forward(view) {
+    this.history.push(this.mainFrame.dataset.view)
+    this.loadView(view)
   }
 
   // moves back one node in the navigation history
   back() {
-    this.setRoot(this.history.pop())
+    this.loadView(this.history.pop())
   }
 
-  /* --- VIEW CONSTRUCTORS --- */
-  // these functions make a node that has some part of a GUI
-
-  // main menu when first opening game
-  mainMenu() {
-    const main = $("div", {
-      id: "mainMenu"
-    })
-    main.appendChild($("h1", "Voxilon"))
-    main.appendChild($("h2", "The WebRTC Update!"))
-
-    main.appendChild($("button", {
-      class: "big",
-      content: "Singleplayer",
-      click: e => this.forward(this.singleplayer())
-    }))
-    main.appendChild($("br"))
-    main.appendChild($("button", {
-      class: "big",
-      content: "Multiplayer",
-      click: e => alert("Multiplayer clicked")
-    }))
-    main.appendChild($("br"))
-    main.appendChild($("button", {
-      class: "big",
-      content: "Settings",
-      click: e => alert("Settings clicked")
-    }))
-
-    return main
-  }
-
-  singleplayer() {
-    const main = $("div", {
-      id: "mainMenu"
-    })
-    main.appendChild($("h2", "Singleplayer"))
-
-    main.appendChild($("button", {
-      class: "big",
-      content: "Create new Universe",
-      click: e => this.forward(this.newUniverse())
-    }))
-    main.appendChild($("br"))
-    main.appendChild($("input", {
-      class: "big",
-      type: "file",
-      accept: ".vox"
-    }))
-    main.appendChild($("br"))
-    main.appendChild($("button", {
-      class: "back",
-      content: "Back",
-      click: e => this.back()
-    }))
-
-    return main
-  }
-
-  newUniverse() {
-    const main = $("div", {
-      id: "mainMenu"
-    })
-
-    main.appendChild($("h2", "Create new Universe"))
-    main.appendChild($("span", "pretend there's sliders 'n stuff here"))
-    main.appendChild($("br"))
-    main.appendChild($("button", {
-      class: "back",
-      content: "Back",
-      click: e => this.back()
-    }))
-
-    return main
-  }
 }
