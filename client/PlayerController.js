@@ -7,13 +7,14 @@ export default class PlayerController {
 
     this.lookSpeed = 1
     this.moveSpeed = 1
+    this.linearDamping = 0.025
 
     // in radians
     this.yaw = 0
     this.pitch = 0
   }
 
-  // Attach this controller to the specified CelestialBody & Link
+  // Attach this controller to the specified Link
   attach(link) {
     this.link = link
   }
@@ -31,27 +32,48 @@ export default class PlayerController {
   }
 
   _updatePos(dt) {
-    let moveX = 0, moveY = 0, moveZ = 0
-    const moveSpeed = this.moveSpeed * 50;
+    let moveX = 0, moveY = 0, moveZ = 0  // relative to camera forward == -Z
+    const moveSpeed = this.moveSpeed * 20
+
+    const playerVelocity = this.link.playerBody.velocity
+    // player velocity converted to camera-forward reference frame
+    const playerVec = Quaternion.prototype.rotateVector.call(
+      this.link.playerBody.quaternion.normalize(), [playerVelocity.x, playerVelocity.y, playerVelocity.z])
+
     if (this.input.forward) {
       moveZ = -moveSpeed * dt
     } else if (this.input.backward) {
       moveZ = moveSpeed * dt
+    } else {
+      moveZ = playerVec[2] * -this.linearDamping
     }
 
     if (this.input.right) {
       moveX = moveSpeed * dt
     } else if (this.input.left) {
       moveX = -moveSpeed * dt
+    } else {
+      moveX = playerVec[0] * -this.linearDamping
     }
 
     if (this.input.up) {
       moveY = moveSpeed * dt
     } else if (this.input.down) {
       moveY = -moveSpeed * dt
+    } else {
+      moveY = playerVec[1] * -this.linearDamping
     }
 
-    this.link.playerMove(moveX, moveY, moveZ)
+    // Three.js has a better rotatevector that doesn't use arrays
+    const vec = Quaternion.prototype.rotateVector.call(
+      this.link.playerBody.quaternion.normalize().conjugate(), [moveX, moveY, moveZ])
+
+
+    this.link.playerMove({
+      x: vec[0],
+      y: vec[1],
+      z: vec[2]
+    })
   }
 
   _updateRotation() {

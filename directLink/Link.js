@@ -1,5 +1,4 @@
 import World from '../common/World.js'
-import Quaternion from '../common/Quaternion.js'
 import PlayerBody from '/common/bodies/Player.js'
 
 export default class Link {
@@ -28,31 +27,12 @@ export default class Link {
 
   /* --- Link interface methods --- */
 
-  /* Player body movement */
-  /*playerMoveRelative(vector) { }
-  playerMoveAbsolute(x, y, z) { }
-  playerRotateRelative(quaternion) { }
-  playerRotateAbsolute(quaternion) { }*/
-
-  playerMove(moveX, moveY, moveZ) {  // vector of direction to move in (relative to look direction)
-    //console.log(this._world.voxilon_stepped)
-    //if (!this._world.voxilon_stepped) { return; } // only modify the playerBody once per step
-    
-    const velocity = Quaternion.prototype.rotateVector.call(
-      this._playerBody.quaternion.normalize().conjugate(), [moveX, moveY, moveZ])
-
-    this._playerBody.velocity.x += velocity[0]
-    this._playerBody.velocity.y += velocity[1]
-    this._playerBody.velocity.z += velocity[2]
-
-    //this._world.voxilon_stepped = false
+  playerMove(velocity) {  // vector of direction to move in
+    this._playerBody.rigidBody.applyImpulse(velocity)
   }
   playerRotate(quaternion) {  // sets player's rotation
-    //if (!this._world.voxilon_stepped) { return; } // only modify the playerBody once per step
     this._playerBody.quaternion = quaternion
     this._playerBody.quaternion = this._playerBody.quaternion.normalize()
-
-    //this._world.voxilon_stepped = false
   }
 
   /* Chat */

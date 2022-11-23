@@ -1,3 +1,4 @@
+import * as CANNON from 'https://pmndrs.github.io/cannon-es/dist/cannon-es.js';
 import Quaternion from '../common/Quaternion.js'
 
 const Cube = {
@@ -147,9 +148,17 @@ export default class CelestialBody {
     rigidBody: optional, CannonJS physics body
   */
 
-  constructor(rigidBody, mesh) {
+  constructor(cannonOptions, mesh) {
+    if (cannonOptions.shape === undefined) {
+      console.warn("[%s] Creating rigidbody with default shape!", this.constructor.name)
+      cannonOptions.shape = new CANNON.Sphere(1)
+    }
+    cannonOptions.linearDamping = 0  // conservation of momentum
+    cannonOptions.angularDamping = 0  // conservation of angular momentum
+
+    this.rigidBody = new CANNON.Body(cannonOptions)
+
     // may be undefined (if client root body)
-    this.rigidBody = rigidBody
     this.mesh = mesh
 
     /*try {

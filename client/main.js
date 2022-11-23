@@ -30,7 +30,7 @@ let renderRequest, then = 0
 function animate(now) {
   const deltaTime = (now - then) / 1000;
   then = now;
-  debugFrame.innerText = `FPS: ${(1/deltaTime).toFixed(2)}`
+  debugFrame.innerText = `FPS: ${(1 / deltaTime).toFixed(2)}`
 
   playerController.update(deltaTime)
   link.world.step(deltaTime)
@@ -48,22 +48,23 @@ function start() {
   gui.clearScreen()
 
   /* extra body for testing */
-  const rigidbody = new CANNON.Body({
+  testbody = new CelestialBody({
     mass: 1, // kg
     shape: new CANNON.Sphere(1)
-  })
-  const mesh = new Mesh("Cube", new Texture("debug.png"))
-  testbody = new CelestialBody(rigidbody, mesh)
+
+  }, new Mesh("Cube", new Texture("debug.png")))
+
   testbody.position = { x: 2, y: 2, z: -7 }
   link.world.addBody(testbody)
 
-  const rigidbody2 = new CANNON.Body({
+  /**/
+  testbody2 = new CelestialBody({
     mass: 1, // kg
     shape: new CANNON.Sphere(1),
     type: CANNON.Body.STATIC,
 
-  })
-  testbody2 = new CelestialBody(rigidbody2, mesh)
+  }, new Mesh("Cube", new Texture("debug2.png")))
+
   testbody2.position = { x: -2, y: 2, z: -7 }
   link.world.addBody(testbody2)
   /**/
