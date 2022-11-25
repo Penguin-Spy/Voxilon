@@ -83,7 +83,7 @@ let link  // current link, may be undefined
 
 async function directLink(worldOptions) {
   if (!linkModules.direct) {
-    linkModules.direct = (await import('./directLink/Link.js')).default
+    linkModules.direct = (await import('/link/DirectLink.js')).default
   }
 
   console.info("Starting direct link")
@@ -91,16 +91,15 @@ async function directLink(worldOptions) {
 
   start()
 }
-
-async function networkLink(gameCode) {
+async function networkLink(gameCode, username) {
   if (!linkModules.network) {
-    linkModules.network = (await import('./networkLink/Link.js')).default
+    linkModules.network = (await import('/link/NetworkLink.js')).default
   }
 
-  console.info("Starting network link")
-  link = new linkModules.network(gameCode)
+  console.info(`Starting network link w/ code: ${gameCode} & username: ${username}`)
+  link = new linkModules.network(gameCode, username)
 
   start()
 }
 
-export { renderer, input, gui, playerController, testbody, testbody2, link };
+export { renderer, input, gui, playerController, link, stop, testbody, testbody2 };

@@ -2,6 +2,7 @@ export default class GUI {
   constructor(parentNode) {
     this.root = parentNode
     this.history = []
+    this.notableNodes = {} // nodes that have "id" set, usually for accessing in gui scripts
 
     // Main frame for the currently open screen (inventory, building gui, main menu, etc.)
     this.mainFrame = document.createElement("div")
@@ -53,6 +54,8 @@ export default class GUI {
               element.action.call(this)
             })
             break
+          case "id":
+            this.notableNodes[element[k]] = node // don't break; so we set the attribute too
           default:
             node.setAttribute(k, element[k])
         }

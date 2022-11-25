@@ -1,33 +1,20 @@
-var express = require('express');
-var http = require('http');
-
-var app = express();
-
-// Allows the client module to be imported on the root
-// required for relative include paths ('./common/PacketEncoder.js') to work on client & server
-app.get("/client.js", (req, res, next) => {
-  req.url = "/client/main.js"
-  next()
-})
+const express = require('express');
+const signal = require('./signal.js');
+const app = express();
 
 // Host static client & common files
 app.use("/client", express.static("client"));
 app.use("/common", express.static("common"));
 app.use("/assets", express.static("assets"));
-app.use("/directLink", express.static("directLink"));
+app.use("/link", express.static("link"));
 app.use(express.static("www"));
 
-// Start Servers
-var server = http.createServer(app);
+app.get("/400", (req, res) => {
+  res.status(400).send("girl that request makes no sense")
+})
 
-// use only our websocket handler (breaks other upgrade requests, don't need them)
-server.removeAllListeners('upgrade');
-server.on('upgrade', function(req, socket, head) {
-  const code = req.url.split("/")[2]
-  console.log(`[${code}] Connection on ${new Date().toLocaleString('en-US', { hour12: false, timeZone: 'UTC' })}`);
-
+// Start server & respond to upgrade requests
+const server = app.listen(8080, function() {
+  console.log("Express server started")
 });
-
-server.listen(8080, function() {
-  console.log("Express server started");
-});
+server.on('upgrade', signal.upgrade);

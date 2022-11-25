@@ -18,7 +18,7 @@ export default {
       $: 'button', content: "Multiplayer",
       class: 'big',
       action: function() {
-        alert("Multiplayer clicked")
+        this.forward("multiplayer")
       }
     }, {
       $: 'button', content: "Settings",
@@ -55,6 +55,27 @@ export default {
         this.actions.directLink({
           name: "new world"
         })
+      }
+    }, {
+      $: 'button', class: "big back", content: "Back",
+      action: function() { this.back() }
+    }
+  ],
+  multiplayer: [
+    { $: 'h2', content: "Multiplayer" },
+
+    {
+      $: 'input', class: "big", id: "gameCode",
+      type: "text", placeholder: "game code"
+    }, {
+      $: 'input', class: "big", id: "username",
+      type: "text", placeholder: "username"
+    }, {
+      $: 'button', class: "big", content: "Join",
+      action: function() {
+        const gameCode = this.notableNodes.gameCode.value
+        const username = this.notableNodes.username.value
+        this.actions.networkLink(gameCode, username)
       }
     }, {
       $: 'button', class: "big back", content: "Back",
