@@ -1,6 +1,6 @@
 import World from '../common/World.js'
 import PlayerBody from '/common/bodies/Player.js'
-import DataConnection from '/link/DataConnection.js'
+import PeerConnection from '/link/PeerConnection.js'
 
 export default class NetworkLink {
   constructor(code, username) {
@@ -24,27 +24,26 @@ export default class NetworkLink {
 
     this.ws.onmessage = (e) => {
       const data = JSON.parse(e.data)
-      console.info("[link Receive]", data)
+      console.log("[link Receive]", data)
       switch (data.type) {
         case "join":
           if (data.approved) { // request to join was approved, continue with WebRTC
-            this.pc = new RTCPeerConnection()
-            this.dataConnection = new DataConnection(this.pc, this.ws)
+            this.pc = new PeerConnection(this.ws)
 
-            this.pc.ondatachannel = ({ channel }) => {
-              this.dataChannel = channel
-              this.dataChannel.onmessage = ({ data }) => {
-                console.log(`[dataChannel] ${data}`)
-              }
+            this.dataChannel = this.pc.createDataChannel("link", {
+              ordered: false,
+              negotiated: true, id: 0
+            })
+            this.dataChannel.onopen = e => {
+              console.info("[dataChannel] open")
+            }
+            this.dataChannel.onmessage = ({ data }) => {
+              console.log(`[dataChannel] ${data}`)
             }
 
-            /*this.dataChannel = this.pc.createDataChannel("link", { ordered: false })
-
-            this.dataChannel.onmessage = ({ data }) => {
-              console.log(`[dataChannel:${client.id}] ${data}`)
-            }*/
           } else { // it was denied, close websocket
             this.ws.close(1000, "Join request not approved")
+            console.info("Join request not approved")
           }
           break;
         default:

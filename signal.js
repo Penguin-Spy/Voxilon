@@ -37,7 +37,11 @@ wsServer.on('connection', (ws, code) => {
       console.log(`[${code}] HOST → ${data.to} | ${msg}`)
 
       const client = session.clients[data.to]
-      if (!client || client.readyState !== ws.OPEN) { ws.close(1002, "Invalid client specified") }
+      if (!client || client.readyState !== ws.OPEN) {
+        ws.close(1002, "Invalid client specified")
+        console.warn(`[${code}] host closed due to invalid client specified: \n\t${msg}`)
+        return
+      }
       delete data.to // client knows it's to them
       client.send(JSON.stringify(data))
     })

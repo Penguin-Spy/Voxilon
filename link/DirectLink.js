@@ -1,6 +1,6 @@
 import World from '/common/World.js'
 import PlayerBody from '/common/bodies/Player.js'
-import DataConnection from '/link/DataConnection.js'
+import PeerConnection from '/link/PeerConnection.js'
 
 export default class DirectLink {
   constructor(worldOptions) {
@@ -31,6 +31,7 @@ export default class DirectLink {
   /* --- Direct Link methods --- */
 
   publish(code) {
+    console.info(`Publishing w/ code: ${code}`)
     // get game code from signaling server
     // start listening for WebRTC connections
     this.ws = new WebSocket(`wss://${window.location.hostname}/signal?code=${code}`)
@@ -39,7 +40,7 @@ export default class DirectLink {
       console.log("[link Receive]", data)
       switch (data.type) {
         case "join": // request to join
-          console.log(`Approving ${data.username}'s request to join`)
+          console.info(`Approving ${data.username}'s request to join`)
           this.ws.send(JSON.stringify({
             to: data.from,
             type: "join",
@@ -49,11 +50,15 @@ export default class DirectLink {
           const client = this._clients[data.from] = {}
           client.id = data.from
 
-          client.pc = new RTCPeerConnection()
-          client.dataConnection = new DataConnection(client.pc, this.ws, client.id)
+          client.pc = new PeerConnection(this.ws, client.id)
 
-          client.dataChannel = client.pc.createDataChannel("link", { ordered: false })
-
+          client.dataChannel = client.pc.createDataChannel("link", {
+            ordered: false,
+            negotiated: true, id: 0
+          })
+          client.dataChannel.onopen = e => {
+            console.info(`[dataChannel:${client.id}] open`)
+          }
           client.dataChannel.onmessage = ({ data }) => {
             console.log(`[dataChannel:${client.id}] ${data}`)
           }
@@ -68,7 +73,6 @@ export default class DirectLink {
       console.warn(`Websocket closed | ${code}: ${reason}`)
     }
 
-    //sendChannel = localConnection.createDataChannel("sendChannel")
   }
 
 

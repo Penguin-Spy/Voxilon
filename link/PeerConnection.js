@@ -1,9 +1,9 @@
 // Class to encapsulate the RTCPeerConnection & communication with the signaling server
 
-export default class DataConnection {
-  constructor(pc, ws, to) {
-    this.pc = pc // RTCPeerConnection
-    this.ws = ws // WebSocket
+export default class PeerConnection {
+  constructor(ws, to) {
+    this.pc = new RTCPeerConnection() // RTCPeerConnection
+    this.ws = ws // WebSocket, for signaling server
     this.to = to // optional int, ID of client this connection is to (for host)
 
     this.polite = to === undefined // if to isn't given, we're the client, and therefore the polite peer
@@ -13,7 +13,7 @@ export default class DataConnection {
     this.pc.onnegotiationneeded = async () => {
       try {
         this.makingOffer = true;
-        await pc.setLocalDescription();
+        await this.pc.setLocalDescription();
         this.signal({ type: "description", content: this.pc.localDescription })
       } catch (err) {
         console.error(err);
@@ -29,7 +29,7 @@ export default class DataConnection {
     this.ws.onmessage = async (e) => {
       try {
         const data = JSON.parse(e.data)
-        console.info("[DC Signal Receive]", data)
+        console.log("[DC Signal Receive]", data)
         switch (data.type) {
           case "description":
             const description = data.content
@@ -70,5 +70,9 @@ export default class DataConnection {
   signal(packet) {
     if (this.to !== undefined) { packet.to = this.to }
     this.ws.send(JSON.stringify(packet));
+  }
+
+  createDataChannel(label, options) {
+    return this.pc.createDataChannel(label, options)
   }
 }
