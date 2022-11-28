@@ -11,13 +11,6 @@ export default class PlayerController {
     // in radians
     this.yaw = 0
     this.pitch = 0
-
-    Input.oninput = control => {
-      console.log(`afdas ${control}`)
-      if (control === "open_chat") {
-        console.log("opening chat")
-      }
-    }
   }
 
   // Attach this controller to the specified Link
@@ -46,25 +39,25 @@ export default class PlayerController {
     const playerVec = Quaternion.prototype.rotateVector.call(
       this.link.playerBody.quaternion.normalize(), [playerVelocity.x, playerVelocity.y, playerVelocity.z])
 
-    if (Input.forward) {
+    if (Input.get('forward')) {
       moveZ = -moveSpeed * dt
-    } else if (Input.backward) {
+    } else if (Input.get('backward')) {
       moveZ = moveSpeed * dt
     } else {
       moveZ = playerVec[2] * -this.linearDamping
     }
 
-    if (Input.right) {
+    if (Input.get('right')) {
       moveX = moveSpeed * dt
-    } else if (Input.left) {
+    } else if (Input.get('left')) {
       moveX = -moveSpeed * dt
     } else {
       moveX = playerVec[0] * -this.linearDamping
     }
 
-    if (Input.up) {
+    if (Input.get('up')) {
       moveY = moveSpeed * dt
-    } else if (Input.down) {
+    } else if (Input.get('down')) {
       moveY = -moveSpeed * dt
     } else {
       moveY = playerVec[1] * -this.linearDamping

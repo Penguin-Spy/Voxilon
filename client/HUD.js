@@ -2,32 +2,62 @@ import Input from '/client/Input.js'
 import GUI from '/client/GUI.js'
 
 export default class HUD {
-  constructor(input, gui) {
+  constructor() {
     this.frame = GUI.addFrame("gui-hud")
     this.frame.hidden = true
 
+
     const chat = document.createElement('div')
-    chat.setAttribute('class', "chat")
+    chat.setAttribute('class', "chat-container")
+
+    this.chatList = document.createElement('div')
+
+    this.chatInput = document.createElement('input')
+    this.chatInput.hidden = true
+    this.chatInput.onkeydown = e => {
+      if (e.code === "Enter") {
+        const msg = this.chatInput.value
+        console.info(`[HUD] Sending chat message: "${msg}"`)
+        this.chatInput.value = ""
+        this.closeChat()
+      }
+    }
+
+    chat.appendChild(this.chatList);
+    chat.appendChild(this.chatInput);
     this.frame.appendChild(chat)
+
 
     const hotbar = document.createElement('div')
     hotbar.setAttribute('class', "hotbar")
     this.frame.appendChild(hotbar)
 
 
+    Input.on("open_chat", e => {
+      this.openChat()
+    })
   }
 
   hide() { this.frame.hidden = true }
   show() { this.frame.hidden = false }
 
+  openChat() {
+    this.chatInput.hidden = false
+    this.chatInput.focus()
+  }
+  closeChat() {
+    this.chatInput.hidden = true
+    this.chatInput.blur() // removes focus from the input. (great name there guys, super not confusing)
+  }
+
   showChatMessage(msg) {
     const span = document.createElement('span');
     span.appendChild(document.createTextNode(msg));
     span.appendChild(document.createElement('br'));
-    this.chat.appendChild(span);
+    this.chatList.appendChild(span);
     setTimeout(() => {
       console.log("removing message", span)
-      this.chat.removeChild(span)
+      this.chatList.removeChild(span)
     }, 10e3)
   }
 

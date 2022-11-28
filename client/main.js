@@ -47,6 +47,8 @@ function start() {
 
   GUI.clearScreen()
   hud.show()
+  Input.enablePointerLock()
+  Input.requestPointerLock()
 
   /* extra body for testing */
   testbody = new CelestialBody({

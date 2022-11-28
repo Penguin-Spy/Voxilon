@@ -92,10 +92,14 @@ button.invisible {
 }
 
 /* HUD */
-.gui-hud .chat {
+.gui-hud .chat-container {
   position: absolute;
   left: 0; bottom: 0;
 }
+.gui-hud .chat-container input {
+  pointer-events: initial;
+}
+
 .gui-hud .hotbar {
   margin: auto;
   width: fit-content;
