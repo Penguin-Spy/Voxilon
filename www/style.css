@@ -60,6 +60,11 @@ input, button {
 .gui-debug {
   position: absolute;
 }
+.gui-hud {
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+}
 
 /* common styles */
 .gui-mainFrame input {
@@ -84,6 +89,16 @@ button.back {
 button.invisible {
   opacity: 0;
   pointer-events: none;
+}
+
+/* HUD */
+.gui-hud .chat {
+  position: absolute;
+  left: 0; bottom: 0;
+}
+.gui-hud .hotbar {
+  margin: auto;
+  width: fit-content;
 }
 
 /* Main Menu */

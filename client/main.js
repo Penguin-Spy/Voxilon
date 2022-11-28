@@ -1,6 +1,7 @@
 import Renderer from '/client/Renderer.js'
 import Input from '/client/Input.js'
 import GUI from '/client/GUI.js'
+import HUD from '/client/HUD.js'
 import PlayerController from '/client/PlayerController.js'
 
 import main_menu from '/client/views/main_menu.js'
@@ -17,12 +18,11 @@ function $(query) {  // not jQuery!! just looks like it :troll:
 // initalize engine
 const glCanvas = $("#glCanvas");
 const renderer = new Renderer(glCanvas);
-const input = new Input(glCanvas);
-const gui = new GUI($("#gui"));
-const playerController = new PlayerController(input);
+const hud = new HUD();
+const playerController = new PlayerController();
 
-gui.loadScreen(main_menu, "title", { directLink, networkLink })
-const debugFrame = gui.addFrame("gui-debug")
+GUI.loadScreen(main_menu, "title", { directLink, networkLink })
+const debugFrame = GUI.addFrame("gui-debug")
 
 let renderRequest, then = 0
 
@@ -45,7 +45,8 @@ function start() {
   playerController.attach(link)
   renderer.attach(link.playerBody)
 
-  gui.clearScreen()
+  GUI.clearScreen()
+  hud.show()
 
   /* extra body for testing */
   testbody = new CelestialBody({
@@ -102,4 +103,4 @@ async function networkLink(gameCode, username) {
   start()
 }
 
-export { renderer, input, gui, playerController, link, stop, testbody, testbody2 };
+export { renderer, Input, GUI, hud, playerController, link, stop, testbody, testbody2 };

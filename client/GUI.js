@@ -1,5 +1,6 @@
-export default class GUI {
-  constructor(parentNode) {
+class GUI {
+  constructor(/* parentNode */) {
+    const parentNode = document.querySelector("#gui")
     this.root = parentNode
     this.history = []
     this.notableNodes = {} // nodes that have "id" set, usually for accessing in gui scripts
@@ -78,3 +79,5 @@ export default class GUI {
   }
 
 }
+
+export default new GUI();

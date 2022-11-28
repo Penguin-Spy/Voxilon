@@ -4,7 +4,7 @@ as well as controls rebinding.
 Exposes named fields for each type of input, i.e. "Input.forward" instead of "Input.currentKeys[87]"
 */
 
-export default class Input {
+class Input {
   // Array of all currently pressed keys
   #currentKeys = {};
   // Object mapping each control type to a KeyboardEvent.code
@@ -27,14 +27,18 @@ export default class Input {
 
   #canvas;
 
-  
-  constructor(canvas) {
+
+  constructor() {
+    const canvas = document.querySelector("#glCanvas")
+
     this.mouseX = 0
     this.mouseY = 0
     this.oldMouseX = 0
     this.oldMouseY = 0
-    
+
     this.#canvas = canvas;
+
+    this.oninput = false;
 
     canvas.requestPointerLock = canvas.requestPointerLock ||
       canvas.mozRequestPointerLock;
@@ -47,7 +51,7 @@ export default class Input {
     document.addEventListener('mozpointerlockchange', this.#lockChangeAlert, false);
 
     canvas.addEventListener('click', canvas.requestPointerLock)
-    
+
     document.addEventListener('touchstart', this.#handleTouch)
     document.addEventListener('touchstop', this.#handleTouch)
     document.addEventListener('keydown', this.#handleKeyDown)
@@ -55,18 +59,18 @@ export default class Input {
 
 
     /* PROXY SHENANIGANS */
-  
+
     // Allows for input.controlMap.forward but not input.controlMap.bruh
     this.controlMap = new Proxy(this.controlMap, {
-      set: function (target, prop, value) {
-        if(target[prop] != undefined) {
+      set: function(target, prop, value) {
+        if (target[prop] != undefined) {
           target[prop] = value
         } else {
           throw new ReferenceError(`Unknown control '${prop}' (cannot be set to '${value}')`)
         }
       },
-      get: function (target, prop) {
-        if(target[prop] != undefined) {
+      get: function(target, prop) {
+        if (target[prop] != undefined) {
           return Reflect.get(...arguments);
         }
         throw new ReferenceError(`Unknown control '${prop}'`)
@@ -75,20 +79,20 @@ export default class Input {
 
     // Allows for input["forward"] or input.forward = true
     return new Proxy(this, {
-      get: function (target, prop) {
-        if(target[prop] != undefined) {
+      get: function(target, prop) {
+        if (target[prop] != undefined) {
           return Reflect.get(...arguments);
-        } else if(target.controlMap[prop]) {
+        } else if (target.controlMap[prop]) {
           return target.#currentKeys[target.controlMap[prop]] || false
         } else {
           throw new ReferenceError(`Unknown property '${prop}' of Input ${target}`)
         }
       },
-      set: function (target, prop, value) {
-        if(target[prop] != undefined) {
+      set: function(target, prop, value) {
+        if (target[prop] != undefined) {
           return Reflect.set(...arguments);
-        } else if(target.controlMap[prop]) {
-          if(typeof(value) === "boolean") {
+        } else if (target.controlMap[prop]) {
+          if (typeof (value) === "boolean") {
             target.#currentKeys[target.controlMap[prop]] = value
           } else {
             throw new TypeError(`Cannot set key '${prop}' of Input ${target} to '${value}'`)
@@ -99,9 +103,9 @@ export default class Input {
       }
     })
   }
-  
+
   /* EVENT HANDLERS */
-  #lockChangeAlert = () =>{
+  #lockChangeAlert = () => {
     if (document.pointerLockElement === this.#canvas) {
       document.addEventListener("mousemove", this.#handleMouseMove, false);
     } else {
@@ -149,3 +153,5 @@ export default class Input {
     return returnVal;
   }
 }
+
+export default new Input();

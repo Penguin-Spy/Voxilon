@@ -1,10 +1,9 @@
-import Quaternion from '../common/Quaternion.js'
+import Quaternion from '/common/Quaternion.js'
+import Input from '/client/Input.js'
 
 export default class PlayerController {
 
-  constructor(input) {
-    this.input = input
-
+  constructor() {
     this.lookSpeed = 1
     this.moveSpeed = 1
     this.linearDamping = 0.025
@@ -12,6 +11,13 @@ export default class PlayerController {
     // in radians
     this.yaw = 0
     this.pitch = 0
+
+    Input.oninput = control => {
+      console.log(`afdas ${control}`)
+      if (control === "open_chat") {
+        console.log("opening chat")
+      }
+    }
   }
 
   // Attach this controller to the specified Link
@@ -40,25 +46,25 @@ export default class PlayerController {
     const playerVec = Quaternion.prototype.rotateVector.call(
       this.link.playerBody.quaternion.normalize(), [playerVelocity.x, playerVelocity.y, playerVelocity.z])
 
-    if (this.input.forward) {
+    if (Input.forward) {
       moveZ = -moveSpeed * dt
-    } else if (this.input.backward) {
+    } else if (Input.backward) {
       moveZ = moveSpeed * dt
     } else {
       moveZ = playerVec[2] * -this.linearDamping
     }
 
-    if (this.input.right) {
+    if (Input.right) {
       moveX = moveSpeed * dt
-    } else if (this.input.left) {
+    } else if (Input.left) {
       moveX = -moveSpeed * dt
     } else {
       moveX = playerVec[0] * -this.linearDamping
     }
 
-    if (this.input.up) {
+    if (Input.up) {
       moveY = moveSpeed * dt
-    } else if (this.input.down) {
+    } else if (Input.down) {
       moveY = -moveSpeed * dt
     } else {
       moveY = playerVec[1] * -this.linearDamping
@@ -77,8 +83,8 @@ export default class PlayerController {
   }
 
   _updateRotation() {
-    this.yaw += this.input.mouseDX() * this.lookSpeed * 0.005;
-    this.pitch += this.input.mouseDY() * this.lookSpeed * 0.005;
+    this.yaw += Input.mouseDX() * this.lookSpeed * 0.005;
+    this.pitch += Input.mouseDY() * this.lookSpeed * 0.005;
 
     // Rotation of 0π = Straight forward, 2π = Slightly above straight forward
     // Rotation flips from 0π to 2π at straight ahead.
