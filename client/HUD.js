@@ -16,8 +16,7 @@ export default class HUD {
     this.chatInput.hidden = true
     this.chatInput.onkeydown = e => {
       if (e.code === "Enter") {
-        const msg = this.chatInput.value
-        console.info(`[HUD] Sending chat message: "${msg}"`)
+        this.link.sendChat(this.chatInput.value)
         this.chatInput.value = ""
         this.closeChat()
       }
@@ -31,11 +30,17 @@ export default class HUD {
     const hotbar = document.createElement('div')
     hotbar.setAttribute('class', "hotbar")
     this.frame.appendChild(hotbar)
+  }
 
+  attach(playerController, link) {
+    this.playerController = playerController
+    this.link = link
+    this.link.on('chat_message', ({ author, msg }) => this.showChatMessage(author, msg))
+  }
 
-    Input.on("open_chat", e => {
-      this.openChat()
-    })
+  // get values of stuff from playercontroller & update elements
+  update() {
+    if (Input.get('open_chat') && this.chatInput.hidden) { this.openChat() }
   }
 
   hide() { this.frame.hidden = true }
@@ -50,9 +55,9 @@ export default class HUD {
     this.chatInput.blur() // removes focus from the input. (great name there guys, super not confusing)
   }
 
-  showChatMessage(msg) {
+  showChatMessage(author, msg) {
     const span = document.createElement('span');
-    span.appendChild(document.createTextNode(msg));
+    span.appendChild(document.createTextNode(`<${author}> ${msg}`));
     span.appendChild(document.createElement('br'));
     this.chatList.appendChild(span);
     setTimeout(() => {

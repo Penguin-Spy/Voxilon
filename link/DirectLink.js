@@ -11,7 +11,10 @@ export default class DirectLink {
     }
     */
 
+    // networking stuff
     this._clients = []
+    this._callbacks = {}
+    this._username = "host" // maybe load from LocalStorage?
 
     // create/load world
     this._world = new World()
@@ -27,52 +30,78 @@ export default class DirectLink {
   get playerBody() { return this._playerBody }
   //get world() { console.error("accessing Link.world directly!!") }
   get world() { return this._world }
+  get username() { return this._username }
 
   /* --- Direct Link methods --- */
 
-  publish(code) {
-    console.info(`Publishing w/ code: ${code}`)
-    // get game code from signaling server
-    // start listening for WebRTC connections
-    this.ws = new WebSocket(`wss://${window.location.hostname}/signal?code=${code}`)
-    this.ws.onmessage = e => {
-      const data = JSON.parse(e.data)
-      console.log("[link Receive]", data)
-      switch (data.type) {
-        case "join": // request to join
-          console.info(`Approving ${data.username}'s request to join`)
-          this.ws.send(JSON.stringify({
-            to: data.from,
-            type: "join",
-            approved: true // always approve the request for now
-          }))
+  async publish(options) {
+    try {
+      /*options.name = options.name ?? "A Universe";
+      console.info("Publishing w/ options:", options)
 
-          const client = this._clients[data.from] = {}
-          client.id = data.from
+      // get game code from signaling server
+      const res = await fetch("/signal", {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(options)
+      })
+      const code = (await res.json()).code*/
+      const code = options.code
+      this._username = options.username ?? this._username;
 
-          client.pc = new PeerConnection(this.ws, client.id)
+      // start listening for WebRTC connections
+      this.ws = new WebSocket(`wss://${window.location.hostname}/signal?code=${code}`)
+      this.ws.onmessage = e => {
+        const data = JSON.parse(e.data)
+        console.log("[link Receive]", data)
+        switch (data.type) {
+          case "join": // request to join
+            console.info(`Approving ${data.username}'s request to join`)
+            this.ws.send(JSON.stringify({
+              to: data.from,
+              type: "join",
+              approved: true // always approve the request for now
+            }))
 
-          client.dataChannel = client.pc.createDataChannel("link", {
-            ordered: false,
-            negotiated: true, id: 0
-          })
-          client.dataChannel.onopen = e => {
-            console.info(`[dataChannel:${client.id}] open`)
-          }
-          client.dataChannel.onmessage = ({ data }) => {
-            console.log(`[dataChannel:${client.id}] ${data}`)
-          }
+            const client = this._clients[data.from] = {}
+            client.id = data.from
 
-          break;
-        default:
-          break;
+            client.pc = new PeerConnection(this.ws, client.id)
+
+            client.dataChannel = client.pc.createDataChannel("link", {
+              ordered: false,
+              negotiated: true, id: 0
+            })
+            client.dataChannel.onopen = e => {
+              console.info(`[dataChannel:${client.id}] open`)
+            }
+            client.dataChannel.onmessage = ({ data }) => {
+              console.log(`[dataChannel:${client.id}] ${data}`)
+              const parsed = JSON.parse(data)
+              // temp just treat everything as chat msg
+              this.emit('chat_message', parsed)
+              this.broadcast(parsed)
+            }
+
+            break;
+          default:
+            break;
+        }
       }
-    }
 
-    this.ws.onclose = ({ code, reason }) => {
-      console.warn(`Websocket closed | ${code}: ${reason}`)
-    }
+      this.ws.onclose = ({ code, reason }) => {
+        console.warn(`Websocket closed | ${code}: ${reason}`)
+      }
 
+    } catch (err) {
+      console.error("An error occured while publishing the universe:", err)
+    }
+  }
+
+  broadcast(packet) {
+    for (const client of this._clients) {
+      client.dataChannel.send(JSON.stringify(packet))
+    }
   }
 
 
@@ -86,7 +115,25 @@ export default class DirectLink {
     this._playerBody.quaternion = this._playerBody.quaternion.normalize()
   }
 
-  /* Chat */
-  sendChat(message) { }
+  // Chat
+  sendChat(msg) {
+    console.info(`[DirectLink] Sending chat message: "${msg}"`)
+    const packet = { author: this._username, msg }
+    // broadcast chat msg packet to all clients
+    this.broadcast(packet)
+    // send it to ourselves via the event handler
+    this.emit('chat_message', packet)
+  }
+
+  // packet event handling
+  on(event, callback) {
+    this._callbacks[event] = callback
+  }
+  emit(event, data) {
+    const callback = this._callbacks[event]
+    if (typeof callback === "function") {
+      callback(data)
+    }
+  }
 
 }  

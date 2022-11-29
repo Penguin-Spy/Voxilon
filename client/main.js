@@ -33,6 +33,7 @@ function animate(now) {
   debugFrame.innerText = `FPS: ${(1 / deltaTime).toFixed(2)}`
 
   playerController.update(deltaTime)
+  hud.update()
   link.world.step(deltaTime)
 
   renderer.render(link.world)
@@ -44,6 +45,7 @@ let testbody, testbody2
 function start() {
   playerController.attach(link)
   renderer.attach(link.playerBody)
+  hud.attach(playerController, link)
 
   GUI.clearScreen()
   hud.show()

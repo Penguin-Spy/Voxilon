@@ -9,8 +9,8 @@ class TwoWayMap {
       this.reverseMap[value] = key;
     }
   }
-  getValue(key) { return this.map[key]; }
-  getKey(value) { return this.reverseMap[value]; }
+  keyToValue(key) { return this.map[key]; } // getValue
+  valueToKey(value) { return this.reverseMap[value]; } //getKey
   set(key, value) {
     this.map[key] = value;
     this.reverseMap[value] = key;

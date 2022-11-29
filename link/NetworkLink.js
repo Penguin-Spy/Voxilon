@@ -4,7 +4,9 @@ import PeerConnection from '/link/PeerConnection.js'
 
 export default class NetworkLink {
   constructor(code, username) {
-    this.username = username
+    this._username = username // maybe load from LocalStorage? (prefill input of gui)
+
+    this._callbacks = {}
 
     // create/load world
     this._world = new World()
@@ -39,6 +41,8 @@ export default class NetworkLink {
             }
             this.dataChannel.onmessage = ({ data }) => {
               console.log(`[dataChannel] ${data}`)
+              const parsed = JSON.parse(data)
+              this.emit('chat_message', parsed)
             }
 
           } else { // it was denied, close websocket
@@ -61,20 +65,17 @@ export default class NetworkLink {
     this.ws.onclose = ({ code, reason }) => {
       console.warn(`Websocket closed | ${code}: ${reason}`)
     }
-
-    /*pc.ondatachannel = ({ channel }) => {
-      console.log("received data channel:", channel)
-      channel.onmessage = e => {
-        console.info(e.data)
-      }
-      channel.onopen = e => console.log("sendChannel.onopen: ", e)
-      channel.onclose = e => console.log("sendChannel.onclose: ", e)
-    }*/
   }
 
   get playerBody() { return this._playerBody }
   //get world() { console.error("accessing Link.world directly!!") }
   get world() { return this._world }
+  get username() { return this._username }
+
+  /* --- Network Link methods --- */
+  send(packet) {
+    this.dataChannel.send(JSON.stringify(packet))
+  }
 
   /* --- Link interface methods --- */
 
@@ -90,7 +91,22 @@ export default class NetworkLink {
 
   }
 
-  /* Chat */
-  sendChat(message) { }
+  // Chat
+  sendChat(msg) {
+    console.info(`[NetworkLink] Sending chat message: "${msg}"`)
+    const packet = { author: this._username, msg }
+    this.send(packet)
+  }
+
+  // packet event handling
+  on(event, callback) {
+    this._callbacks[event] = callback
+  }
+  emit(event, data) {
+    const callback = this._callbacks[event]
+    if (typeof callback === "function") {
+      callback(data)
+    }
+  }
 
 }  

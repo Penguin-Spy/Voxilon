@@ -18,9 +18,9 @@ export default class PlayerController {
     this.link = link
   }
 
-  // sets the reference for what direction is "Upwards"
+  // sets the reference for what direction is "downwards"
   // pass undefined to remove any reference to up (in space, no gravity)
-  setUpVector(vector) {
+  setDownReference(vector) {
 
   }
 

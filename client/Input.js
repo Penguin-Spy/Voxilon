@@ -18,6 +18,7 @@ const controlMap = new TwoWayMap({
   "KeyD": "right",
   "Space": "up",
   "ShiftLeft": "down",
+  "KeyZ": "toggle_intertia_damping",
   "Tab": "open_chat",
 })
 
@@ -80,7 +81,7 @@ function handleKeyDown(event) {
   if (document.activeElement.nodeName === "INPUT") return // re-allow typing in <input>s & ignore typed text
   currentKeys[event.code] = true
 
-  const callback = eventHandlers[controlMap.getValue(event.code)]
+  const callback = eventHandlers[controlMap.keyToValue(event.code)]
   if (typeof callback === "function") {
     callback(event)
   }
@@ -102,6 +103,7 @@ export default {
     canvas.removeEventListener('click', canvas.requestPointerLock)
   },
   requestPointerLock() { canvas.requestPointerLock() },
+
   mouseDX() {
     const returnVal = mouseX - oldMouseX
     oldMouseX = mouseX
@@ -112,15 +114,21 @@ export default {
     oldMouseY = mouseY
     return returnVal
   },
+
   get(control) {
-    const key = controlMap.getKey(control)
+    const key = controlMap.valueToKey(control)
     if (key !== undefined) {
       return currentKeys[key]
     } else {
       throw new TypeError(`Invalid control: "${control}"`)
     }
   },
-  on(control, callback) {
-    eventHandlers[control] = callback
-  }
+
+  /*on(control, callback) {
+    if (controlMap.valueToKey(control) !== undefined) {
+      eventHandlers[control] = callback
+    } else {
+      throw new TypeError(`Invalid control: "${control}"`)
+    }
+  }*/
 }
