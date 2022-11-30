@@ -1,6 +1,8 @@
 import World from '/common/World.js'
 import PlayerBody from '/common/bodies/Player.js'
 import PeerConnection from '/link/PeerConnection.js'
+import PacketEncoder from '/link/PacketEncoder.js'
+import PacketDecoder from '/link/PacketDecoder.js'
 
 export default class DirectLink {
   constructor(worldOptions) {
@@ -36,6 +38,9 @@ export default class DirectLink {
 
   async publish(options) {
     try {
+      if (typeof options === "string") {
+        options = { code: options }
+      }
       /*options.name = options.name ?? "A Universe";
       console.info("Publishing w/ options:", options)
 
@@ -72,16 +77,9 @@ export default class DirectLink {
               ordered: false,
               negotiated: true, id: 0
             })
-            client.dataChannel.onopen = e => {
-              console.info(`[dataChannel:${client.id}] open`)
-            }
-            client.dataChannel.onmessage = ({ data }) => {
-              console.log(`[dataChannel:${client.id}] ${data}`)
-              const parsed = JSON.parse(data)
-              // temp just treat everything as chat msg
-              this.emit('chat_message', parsed)
-              this.broadcast(parsed)
-            }
+            client.dataChannel.onopen = e => { console.info(`[dataChannel:${client.id}] open`) }
+            client.dataChannel.onclose = e => { console.info(`[dataChannel:${client.id}] close`) }
+            client.dataChannel.onmessage = ({ data }) => { this._handlePacket(client, data) }
 
             break;
           default:
@@ -98,9 +96,18 @@ export default class DirectLink {
     }
   }
 
+  _handlePacket(client, data) {
+    console.log(`[dataChannel:${client.id}] ${data}`)
+    const packet = PacketDecoder.chat(data)
+    // temp just treat everything as chat msg
+    this.emit('chat_message', packet)
+    this.broadcast(PacketEncoder.chat(packet))
+  }
+
+
   broadcast(packet) {
     for (const client of this._clients) {
-      client.dataChannel.send(JSON.stringify(packet))
+      client.dataChannel.send(packet)
     }
   }
 
@@ -118,11 +125,10 @@ export default class DirectLink {
   // Chat
   sendChat(msg) {
     console.info(`[DirectLink] Sending chat message: "${msg}"`)
-    const packet = { author: this._username, msg }
     // broadcast chat msg packet to all clients
-    this.broadcast(packet)
+    this.broadcast(PacketEncoder.chat(this._username, msg))
     // send it to ourselves via the event handler
-    this.emit('chat_message', packet)
+    this.emit('chat_message', { author: this._username, msg })
   }
 
   // packet event handling

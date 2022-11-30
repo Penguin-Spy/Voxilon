@@ -1,6 +1,8 @@
 import World from '../common/World.js'
 import PlayerBody from '/common/bodies/Player.js'
 import PeerConnection from '/link/PeerConnection.js'
+import PacketEncoder from '/link/PacketEncoder.js'
+import PacketDecoder from '/link/PacketDecoder.js'
 
 export default class NetworkLink {
   constructor(code, username) {
@@ -36,14 +38,9 @@ export default class NetworkLink {
               ordered: false,
               negotiated: true, id: 0
             })
-            this.dataChannel.onopen = e => {
-              console.info("[dataChannel] open")
-            }
-            this.dataChannel.onmessage = ({ data }) => {
-              console.log(`[dataChannel] ${data}`)
-              const parsed = JSON.parse(data)
-              this.emit('chat_message', parsed)
-            }
+            this.dataChannel.onopen = e => { console.info("[dataChannel] open") }
+            this.dataChannel.onclose = e => { console.info("[dataChannel] close") }
+            this.dataChannel.onmessage = ({ data }) => { this._handlePacket(data) }
 
           } else { // it was denied, close websocket
             this.ws.close(1000, "Join request not approved")
@@ -73,8 +70,14 @@ export default class NetworkLink {
   get username() { return this._username }
 
   /* --- Network Link methods --- */
+  _handlePacket(data) {
+    console.log(`[dataChannel] ${data}`)
+    const packet = PacketDecoder.chat(data)
+    this.emit('chat_message', packet)
+  }
+
   send(packet) {
-    this.dataChannel.send(JSON.stringify(packet))
+    this.dataChannel.send(packet)
   }
 
   /* --- Link interface methods --- */
@@ -94,8 +97,7 @@ export default class NetworkLink {
   // Chat
   sendChat(msg) {
     console.info(`[NetworkLink] Sending chat message: "${msg}"`)
-    const packet = { author: this._username, msg }
-    this.send(packet)
+    this.send(PacketEncoder.chat(this._username, msg))
   }
 
   // packet event handling
