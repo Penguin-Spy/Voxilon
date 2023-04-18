@@ -38,28 +38,21 @@ export default class DirectLink {
 
   async publish(options) {
     try {
-      if (typeof options === "string") {
-        options = { code: options }
-      }
-      /*options.name = options.name ?? "A Universe";
+      options.name = options.name ?? "A Universe";
       console.info("Publishing w/ options:", options)
 
       // get game code from signaling server
-      const res = await fetch("/signal", {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify(options)
-      })
-      const code = (await res.json()).code*/
-      const code = options.code
       this._username = options.username ?? this._username;
 
       // start listening for WebRTC connections
-      this.ws = new WebSocket(`wss://${window.location.hostname}/signal?code=${code}`)
+      this.ws = new WebSocket(`wss://signal.voxilon.ml/new_session`)
       this.ws.onmessage = e => {
         const data = JSON.parse(e.data)
         console.log("[link Receive]", data)
         switch (data.type) {
+          case "hello":
+            console.info(`Join code: ${data.join_code}`)
+            break;
           case "join": // request to join
             console.info(`Approving ${data.username}'s request to join`)
             this.ws.send(JSON.stringify({
@@ -101,7 +94,7 @@ export default class DirectLink {
     const packet = PacketDecoder.chat(data)
     // temp just treat everything as chat msg
     this.emit('chat_message', packet)
-    this.broadcast(PacketEncoder.chat(packet))
+    this.broadcast(PacketEncoder.chat(packet.author, packet.msg))
   }
 
 

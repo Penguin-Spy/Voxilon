@@ -4,8 +4,10 @@ import PeerConnection from '/link/PeerConnection.js'
 import PacketEncoder from '/link/PacketEncoder.js'
 import PacketDecoder from '/link/PacketDecoder.js'
 
+const joinCodeRegex = /^([A-HJ-NP-Z0-9]{5})$/
+
 export default class NetworkLink {
-  constructor(code, username) {
+  constructor(target, username) {
     this._username = username // maybe load from LocalStorage? (prefill input of gui)
 
     this._callbacks = {}
@@ -18,13 +20,19 @@ export default class NetworkLink {
     this._playerBody.position = { x: 0, y: 1, z: 0 }
     this._world.addBody(this._playerBody)
 
-    // join host
-
     // open a WebRTC data channel with the host of the specified game
-    // TODO: how to handle game codes (client hosting) vs URIs of dedicated hosts
+    if (target.match(joinCodeRegex)) { // convert join code to full url
+      console.log(`prefixing ${target}`)
+      target = `wss://signal.voxilon.ml/${target}`
+    }
+    // normalize url
+    const targetURL = new URL(target)
+    targetURL.protocol = "wss:"
+    targetURL.hash = ""
+    console.log(targetURL)
 
-    //this.pc = new RTCPeerConnection()
-    this.ws = new WebSocket(`wss://${window.location.hostname}/signal?code=${code}`)
+    // create websocket & add msg handler
+    this.ws = new WebSocket(targetURL)
 
     this.ws.onmessage = (e) => {
       const data = JSON.parse(e.data)
