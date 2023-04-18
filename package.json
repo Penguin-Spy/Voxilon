@@ -11,7 +11,6 @@
   "author": "Penguin_Spy",
   "license": "GPL-3.0-or-later",
   "dependencies": {
-    "cannon-es": "^0.19.0",
     "express": "^4.17.1",
     "ws": "^7.4.3"
   }
