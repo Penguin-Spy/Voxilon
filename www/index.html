@@ -5,19 +5,19 @@
   <title>Voxilon</title>
   <link rel="icon" type="image/png" href="/favicon.png">
   <link href="style.css" rel="stylesheet" type="text/css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gl-matrix/2.8.1/gl-matrix-min.js"
-          integrity="sha512-zhHQR0/H5SEBL3Wn6yYSaTTZej12z0hVZKOv3TwCUXT1z5qeqGcXJLLrbERYRScEDDpYIJhPC1fk31gqR783iQ=="
-          crossorigin="anonymous" defer></script>
   <script src="https://webrtc.github.io/adapter/adapter-latest.js" defer></script>
-</head><body>
-  <div class="container">
-    <div id="gui"></div>
-    <canvas id="glCanvas">Your browser does not support the HTML5 canvas.
-Please upgrade to a modern browser.</canvas>
-  </div>
-  <script>"use strict";
-    (async function () {
-      window.Voxilon = await import('./client/main.js');
-    })();
+  <script async src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
+  <script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.151.3/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.151.3/examples/jsm/",
+    "cannon": "https://pmndrs.github.io/cannon-es/dist/cannon-es.js"
+  }
+}
   </script>
+  
+</head><body>
+  <div id="gui"></div>
+  <script type="module" src="./client/main.js"></script>
 </body></html>

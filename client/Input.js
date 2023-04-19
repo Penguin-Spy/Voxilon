@@ -5,10 +5,12 @@ Exposes named fields for each type of input, i.e. "Input.forward" instead of "In
 */
 
 import { TwoWayMap } from '/common/util.js'
-const canvas = document.querySelector("#glCanvas")
 
 // State of all currently pressed keys
 const currentKeys = {}
+
+// Canvas (to be filled from THREE.js)
+let canvas
 
 // Object mapping each KeyboardEvent.code to a control type (and vice versa)
 const controlMap = new TwoWayMap({
@@ -32,9 +34,6 @@ let mouseY = 0
 let oldMouseX = 0
 let oldMouseY = 0
 
-// oninput = false
-
-canvas.requestPointerLock = canvas.requestPointerLock || canvas.mozRequestPointerLock
 document.exitPointerLock = document.exitPointerLock || document.mozExitPointerLock
 
 // Hook pointer lock state change events for different browsers
@@ -87,7 +86,7 @@ function handleKeyDown(event) {
   }
 
   // TODO: remove these conditions before production; this is for quick developing only!!
-  if (!(event.code === "F5" || (event.code === "KeyI" && event.ctrlKey && event.shiftKey))) {
+  if (!(event.code === "F5" || (event.code === "KeyI" && event.ctrlKey && event.shiftKey) || (event.code == "KeyR" && event.ctrlKey))) {
     event.preventDefault()
   }
 }
@@ -103,6 +102,11 @@ export default {
     canvas.removeEventListener('click', canvas.requestPointerLock)
   },
   requestPointerLock() { canvas.requestPointerLock() },
+
+  useCanvas(threeCanvas) {
+    canvas = threeCanvas;
+    canvas.requestPointerLock = canvas.requestPointerLock || canvas.mozRequestPointerLock
+  },
 
   mouseDX() {
     const returnVal = mouseX - oldMouseX

@@ -65,7 +65,7 @@ export default class PlayerController {
 
     // Three.js has a better rotatevector that doesn't use arrays
     const vec = Quaternion.prototype.rotateVector.call(
-      this.link.playerBody.quaternion.normalize().conjugate(), [moveX, moveY, moveZ])
+      this.link.playerBody.quaternion.normalize(), [moveX, moveY, moveZ])
 
 
     this.link.playerMove({
@@ -102,6 +102,6 @@ export default class PlayerController {
 
     // Apply rotation
     //this.body.quaternion = Quaternion.fromEuler(0, this.pitch, this.yaw);
-    this.link.playerRotate(Quaternion.fromEuler(0, this.pitch, this.yaw))
+    this.link.playerRotate(Quaternion.fromEuler(0, this.pitch, this.yaw).normalize().conjugate())
   }
 }

@@ -112,7 +112,7 @@ export default class DirectLink {
   }
   playerRotate(quaternion) {  // sets player's rotation
     this._playerBody.quaternion = quaternion
-    this._playerBody.quaternion = this._playerBody.quaternion.normalize()
+    //this._playerBody.quaternion = this._playerBody.quaternion.normalize()
   }
 
   // Chat

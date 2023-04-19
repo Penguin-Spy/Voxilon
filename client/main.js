@@ -6,18 +6,18 @@ import PlayerController from '/client/PlayerController.js'
 
 import main_menu from '/client/views/main_menu.js'
 
-import * as CANNON from 'https://pmndrs.github.io/cannon-es/dist/cannon-es.js';
-import CelestialBody from '/common/CelestialBody.js';
-import Mesh from '/common/Mesh.js';
-import Texture from '/client/Texture.js';
+import * as CANNON from 'cannon'
+import Body from '/common/Body.js'
+import Mesh from '/common/Mesh.js'
+import Texture from '/client/Texture.js'
 
 function $(query) {  // not jQuery!! just looks like it :troll:
   return document.querySelector(query);
 }
 
 // initalize engine
-const glCanvas = $("#glCanvas");
-const renderer = new Renderer(glCanvas);
+const renderer = new Renderer();
+Input.useCanvas(renderer.getCanvas());
 const hud = new HUD();
 const playerController = new PlayerController();
 
@@ -43,6 +43,8 @@ function animate(now) {
 
 let testbody, testbody2
 function start() {
+  window.Voxilon.link = link;
+  
   playerController.attach(link)
   renderer.attach(link.playerBody)
   hud.attach(playerController, link)
@@ -53,22 +55,23 @@ function start() {
   Input.requestPointerLock()
 
   /* extra body for testing */
-  testbody = new CelestialBody({
+  testbody = new Body({
     mass: 1, // kg
     shape: new CANNON.Sphere(1)
 
-  }, new Mesh("Cube", new Texture("debug.png")))
+  }, undefined)
+  //new Mesh("Cube", new Texture("debug.png"))
 
   testbody.position = { x: 2, y: 2, z: -7 }
   link.world.addBody(testbody)
 
   /**/
-  testbody2 = new CelestialBody({
+  testbody2 = new Body({
     mass: 1, // kg
     shape: new CANNON.Sphere(1),
     type: CANNON.Body.STATIC,
 
-  }, new Mesh("Cube", new Texture("debug2.png")))
+  }, false)
 
   testbody2.position = { x: -2, y: 2, z: -7 }
   link.world.addBody(testbody2)
@@ -107,4 +110,4 @@ async function networkLink(gameCode, username) {
   start()
 }
 
-export { renderer, Input, GUI, hud, playerController, link, stop, testbody, testbody2 };
+window.Voxilon = { renderer, Input, GUI, hud, playerController, link, stop, testbody, testbody2 };

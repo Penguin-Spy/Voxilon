@@ -1,7 +1,7 @@
-import { Sphere } from 'https://pmndrs.github.io/cannon-es/dist/cannon-es.js';
-import CelestialBody from '/common/CelestialBody.js'
+import { Sphere } from 'cannon';
+import Body from '/common/Body.js'
 
-export default class PlayerBody extends CelestialBody {
+export default class PlayerBody extends Body {
   constructor() {
     super({
       mass: 1, // kg

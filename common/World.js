@@ -1,4 +1,5 @@
-import * as CANNON from 'https://pmndrs.github.io/cannon-es/dist/cannon-es.js';
+import * as CANNON from 'cannon';
+import * as THREE from 'three';
 
 const dt = 1 / 60
 
@@ -29,13 +30,15 @@ export default class World {
     groundBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0); // make it face up
     this._physics.addBody(groundBody);
 
+    this.scene = new THREE.Scene();
   }
 
   get bodies() { return this._bodies }
 
-  addBody(celestialBody) {
-    this._physics.addBody(celestialBody.rigidBody)
-    return this._bodies.push(celestialBody)
+  addBody(body) {
+    this._physics.addBody(body.rigidBody)
+    this.scene.add(body.mesh)
+    return this._bodies.push(body)
   }
 
   getBody(bodyID) {
@@ -59,20 +62,10 @@ export default class World {
     delete this._bodies[bodyID];
   }
   step(frameTime) {
-    this._physics.fixedStep()
+    for(const body of this._bodies) {
+      body.update()
+    }
 
-    /*if (this.rootBody) {
-      // rootBody.id is not a field of CelestialBody, it's set in world.setBody(selfBody=true)
-      this.session.moveBody(
-        this.rootBody.id,
-        this.rootBody.position,
-        this.rootBody.velocity
-      );
-      this.session.rotateBody(
-        this.rootBody.id,
-        this.rootBody.quaternion,
-        this.rootBody.angularVelocity
-      );
-    }*/
+    this._physics.fixedStep()
   }
 }

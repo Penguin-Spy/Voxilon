@@ -3,7 +3,7 @@ export default {
   id: "main_menu",
   title: [
     { $: 'h1', content: "Voxilon" },
-    { $: 'h2', content: "The WebRTC Update?" },
+    { $: 'h2', content: "with THREE.js now!! (soon)" },
 
     {
       $: 'button', content: "Singleplayer",
