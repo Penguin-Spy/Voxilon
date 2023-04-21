@@ -37,7 +37,7 @@ export default class World {
 
   addBody(body) {
     this._physics.addBody(body.rigidBody)
-    this.scene.add(body.mesh)
+    if(body.mesh) this.scene.add(body.mesh)
     return this._bodies.push(body)
   }
 

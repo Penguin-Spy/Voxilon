@@ -1,9 +1,4 @@
-import Quaternion from '/common/Quaternion.js'
 import * as THREE from 'three';
-
-function toMatrix4(quat) {
-  return Quaternion.prototype.toMatrix4.call(quat)
-}
 
 export default class Renderer {
 

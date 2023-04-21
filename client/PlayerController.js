@@ -37,7 +37,7 @@ export default class PlayerController {
     const playerVelocity = this.link.playerBody.velocity
     // player velocity converted to camera-forward reference frame
     const playerVec = Quaternion.prototype.rotateVector.call(
-      this.link.playerBody.quaternion.normalize(), [playerVelocity.x, playerVelocity.y, playerVelocity.z])
+      this.link.playerBody.quaternion.normalize().conjugate(), [playerVelocity.x, playerVelocity.y, playerVelocity.z])
 
     if (Input.get('forward')) {
       moveZ = -moveSpeed * dt
@@ -101,7 +101,6 @@ export default class PlayerController {
     }
 
     // Apply rotation
-    //this.body.quaternion = Quaternion.fromEuler(0, this.pitch, this.yaw);
     this.link.playerRotate(Quaternion.fromEuler(0, this.pitch, this.yaw).normalize().conjugate())
   }
 }

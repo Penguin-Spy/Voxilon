@@ -8,8 +8,6 @@ import main_menu from '/client/views/main_menu.js'
 
 import * as CANNON from 'cannon'
 import Body from '/common/Body.js'
-import Mesh from '/common/Mesh.js'
-import Texture from '/client/Texture.js'
 
 function $(query) {  // not jQuery!! just looks like it :troll:
   return document.querySelector(query);
@@ -58,9 +56,7 @@ function start() {
   testbody = new Body({
     mass: 1, // kg
     shape: new CANNON.Sphere(1)
-
-  }, undefined)
-  //new Mesh("Cube", new Texture("debug.png"))
+  })
 
   testbody.position = { x: 2, y: 2, z: -7 }
   link.world.addBody(testbody)
@@ -70,8 +66,7 @@ function start() {
     mass: 1, // kg
     shape: new CANNON.Sphere(1),
     type: CANNON.Body.STATIC,
-
-  }, false)
+  })
 
   testbody2.position = { x: -2, y: 2, z: -7 }
   link.world.addBody(testbody2)
