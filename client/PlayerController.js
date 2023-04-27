@@ -1,5 +1,9 @@
-import Quaternion from '/common/Quaternion.js'
 import Input from '/client/Input.js'
+import { Vector3, Quaternion, Euler } from 'three'
+
+const _velocity = new Vector3();
+const _quaternion = new Quaternion();
+const _euler = new Euler();
 
 export default class PlayerController {
 
@@ -11,6 +15,7 @@ export default class PlayerController {
     // in radians
     this.yaw = 0
     this.pitch = 0
+    this.roll = 0
   }
 
   // Attach this controller to the specified Link
@@ -26,7 +31,7 @@ export default class PlayerController {
 
   // Take input data and apply it to the player's body
   update(dt) {
-    this._updateRotation();
+    this._updateRotation(dt);
     this._updatePos(dt);
   }
 
@@ -34,17 +39,16 @@ export default class PlayerController {
     let moveX = 0, moveY = 0, moveZ = 0  // relative to camera forward == -Z
     const moveSpeed = this.moveSpeed * 20
 
-    const playerVelocity = this.link.playerBody.velocity
     // player velocity converted to camera-forward reference frame
-    const playerVec = Quaternion.prototype.rotateVector.call(
-      this.link.playerBody.quaternion.normalize().conjugate(), [playerVelocity.x, playerVelocity.y, playerVelocity.z])
+    _velocity.copy(this.link.playerBody.velocity)
+             .applyQuaternion(this.link.playerBody.quaternion.conjugate())
 
     if (Input.get('forward')) {
       moveZ = -moveSpeed * dt
     } else if (Input.get('backward')) {
       moveZ = moveSpeed * dt
     } else {
-      moveZ = playerVec[2] * -this.linearDamping
+      moveZ = _velocity.z * -this.linearDamping
     }
 
     if (Input.get('right')) {
@@ -52,7 +56,7 @@ export default class PlayerController {
     } else if (Input.get('left')) {
       moveX = -moveSpeed * dt
     } else {
-      moveX = playerVec[0] * -this.linearDamping
+      moveX = _velocity.x * -this.linearDamping
     }
 
     if (Input.get('up')) {
@@ -60,24 +64,26 @@ export default class PlayerController {
     } else if (Input.get('down')) {
       moveY = -moveSpeed * dt
     } else {
-      moveY = playerVec[1] * -this.linearDamping
+      moveY = _velocity.y * -this.linearDamping
     }
 
-    // Three.js has a better rotatevector that doesn't use arrays
-    const vec = Quaternion.prototype.rotateVector.call(
-      this.link.playerBody.quaternion.normalize(), [moveX, moveY, moveZ])
+    _velocity.set(moveX, moveY, moveZ)
+    _velocity.applyQuaternion(this.link.playerBody.quaternion)
 
-
-    this.link.playerMove({
-      x: vec[0],
-      y: vec[1],
-      z: vec[2]
-    })
+    this.link.playerMove(_velocity)
   }
 
-  _updateRotation() {
+  _updateRotation(dt) {
     this.yaw += Input.mouseDX() * this.lookSpeed * 0.005;
     this.pitch += Input.mouseDY() * this.lookSpeed * 0.005;
+
+    /*let moveRoll = 0;    
+    if (Input.get('roll_left')) {
+      moveRoll += 1 * dt
+    } else if (Input.get('roll_right')) {
+      moveRoll -= 1 * dt
+    }
+    this.roll += moveRoll*/
 
     // Rotation of 0π = Straight forward, 2π = Slightly above straight forward
     // Rotation flips from 0π to 2π at straight ahead.
@@ -101,6 +107,8 @@ export default class PlayerController {
     }
 
     // Apply rotation
-    this.link.playerRotate(Quaternion.fromEuler(0, this.pitch, this.yaw).normalize().conjugate())
+    _euler.set(this.pitch, this.yaw, this.roll)
+    _quaternion.setFromEuler(_euler).conjugate()
+    this.link.playerRotate(_quaternion)
   }
 }

@@ -22,6 +22,8 @@ const controlMap = new TwoWayMap({
   "ShiftLeft": "down",
   "KeyZ": "toggle_intertia_damping",
   "Tab": "open_chat",
+  "KeyQ": "roll_left",
+  "KeyE": "roll_right"
 })
 
 // Mapping of "control" -> function()
