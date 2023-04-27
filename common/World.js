@@ -35,7 +35,7 @@ export default class World {
 
     const geometry = new THREE.PlaneGeometry( 20, 20 );
     geometry.lookAt(new THREE.Vector3(0, 1, 0)); // face upwards
-    const material = new THREE.MeshBasicMaterial( {color: 0x7CFC00, side: THREE.DoubleSide} );
+    const material = new THREE.MeshBasicMaterial( {color: 0x3CCC00, side: THREE.DoubleSide} );
     const plane = new THREE.Mesh( geometry, material );
     this.scene.add( plane );
   }

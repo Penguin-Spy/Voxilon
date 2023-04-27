@@ -18,6 +18,28 @@
   </script>
   
 </head><body>
-  <div id="gui"></div>
+  <div id="gui">
+    <div class="gui-loading">
+      <span>Voxilon is loading...</span>
+    </div>
+  </div>
+  <script>
+    const loadingFrame = document.querySelector(".gui-loading")
+    function newMessage(message) {
+      const element = document.createElement("span")
+      element.innerText = message
+      loadingFrame.appendChild(element)
+    }
+    window.onerror = (msg, source, line, column) => {
+      if(msg.startsWith("TypeError: Error resolving module specifier")) {
+        newMessage("Module imported")
+        console.info("Caught module import TypeError.")
+        return true // prevent error from showing in console
+      } else {
+        newMessage(`Loading failed: ${msg}`)
+        newMessage(`  ${source}:${line}:${column}`)
+      }
+    }
+  </script>
   <script type="module" src="./client/main.js"></script>
 </body></html>

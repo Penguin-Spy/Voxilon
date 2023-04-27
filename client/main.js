@@ -9,6 +9,10 @@ import main_menu from '/client/views/main_menu.js'
 import * as CANNON from 'cannon'
 import Body from '/common/Body.js'
 
+// remove loading error handler
+// todo: make a new error handler for runtime errors? (display to user that something went wrong)
+window.onerror = undefined;
+
 function $(query) {  // not jQuery!! just looks like it :troll:
   return document.querySelector(query);
 }
