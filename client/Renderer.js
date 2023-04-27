@@ -12,10 +12,6 @@ export default class Renderer {
     window.addEventListener('resize', () => {
       this.resize(window.innerWidth, window.innerHeight);
     });
-
-    
-this.camera.position.z = 5;
-
   }
 
   resize = (width, height) => {
@@ -33,14 +29,8 @@ this.camera.position.z = 5;
   }
 
   render = (world) => {
-    this.camera.position.set(this.body.position.x,
-                             this.body.position.y,
-                             this.body.position.z)
-
-    this.camera.quaternion.set(this.body.quaternion.x,
-                               this.body.quaternion.y,
-                               this.body.quaternion.z,
-                               this.body.quaternion.w)
+    this.camera.position.copy(this.body.position)
+    this.camera.quaternion.copy(this.body.quaternion)
     
     this.renderer.render(world.scene, this.camera);
   }

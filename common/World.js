@@ -31,6 +31,13 @@ export default class World {
     this._physics.addBody(groundBody);
 
     this.scene = new THREE.Scene();
+    this.scene.background = new THREE.Color("#87CEEB")
+
+    const geometry = new THREE.PlaneGeometry( 20, 20 );
+    geometry.lookAt(new THREE.Vector3(0, 1, 0)); // face upwards
+    const material = new THREE.MeshBasicMaterial( {color: 0x7CFC00, side: THREE.DoubleSide} );
+    const plane = new THREE.Mesh( geometry, material );
+    this.scene.add( plane );
   }
 
   get bodies() { return this._bodies }

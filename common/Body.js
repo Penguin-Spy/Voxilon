@@ -1,13 +1,17 @@
 import * as CANNON from 'cannon';
 import * as THREE from 'three';
 
+const geometry = new THREE.BoxGeometry(2, 2, 2);
+const material = new THREE.MeshBasicMaterial({ color: 0x0000ff })
+const absoluteDefaultMesh = new THREE.Mesh(geometry, material)
+
 export default class Body {
   /*
     mesh:      optional, rendering mesh (model & texture)
     rigidBody: optional, CannonJS physics body
   */
 
-  constructor(cannonOptions, mesh) {
+  constructor(cannonOptions, defaultMesh) {
     if (cannonOptions.shape === undefined) {
       console.warn("[%s] Creating rigidbody with default shape!", this.constructor.name)
       cannonOptions.shape = new CANNON.Sphere(1)
@@ -17,15 +21,13 @@ export default class Body {
 
     this.rigidBody = new CANNON.Body(cannonOptions)
 
-    if(mesh === undefined) {
+    if(defaultMesh === undefined) {
       console.warn("[%s] Creating rigidbody with default mesh!", this.constructor.name)
-      const geometry = new THREE.BoxGeometry(2, 2, 2);
-      const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 })
-      mesh = new THREE.Mesh(geometry, material)
+      defaultMesh = absoluteDefaultMesh
     }
     // may be false to indicate no mesh (if client root body)
-    if(mesh) {
-      this.mesh = mesh
+    if(defaultMesh) {
+      this.mesh = defaultMesh.clone()
     }
   }
 

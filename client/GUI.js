@@ -1,5 +1,5 @@
 class GUI {
-  constructor(/* parentNode */) {
+  constructor() {
     const parentNode = document.querySelector("#gui")
     this.root = parentNode
     this.history = []

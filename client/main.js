@@ -21,6 +21,15 @@ const playerController = new PlayerController();
 
 GUI.loadScreen(main_menu, "title", { directLink, networkLink })
 const debugFrame = GUI.addFrame("gui-debug")
+const renderDebug = document.createElement("span")
+const physicsDebug = document.createElement("div")
+const positionSpan = document.createElement("span")
+const velocitySpan = document.createElement("span")
+physicsDebug.appendChild(positionSpan)
+physicsDebug.appendChild(document.createElement("br"))
+physicsDebug.appendChild(velocitySpan)
+debugFrame.appendChild(renderDebug)
+debugFrame.appendChild(physicsDebug)
 
 let renderRequest, then = 0
 
@@ -28,11 +37,15 @@ let renderRequest, then = 0
 function animate(now) {
   const deltaTime = (now - then) / 1000;
   then = now;
-  debugFrame.innerText = `FPS: ${(1 / deltaTime).toFixed(2)}`
+  renderDebug.innerText = `FPS: ${(1 / deltaTime).toFixed(2)}`
 
   playerController.update(deltaTime)
   hud.update()
   link.world.step(deltaTime)
+  const _velocity = link.playerBody.velocity
+  const _position = link.playerBody.position
+  positionSpan.innerHTML = ` X: ${_position.x.toFixed(3)}  Y: ${_position.y.toFixed(3)}  Z: ${_position.z.toFixed(3)}`
+  velocitySpan.innerHTML = `vX: ${_velocity.x.toFixed(3)} vY: ${_velocity.y.toFixed(3)} vZ: ${_velocity.z.toFixed(3)}`
 
   renderer.render(link.world)
   renderRequest = requestAnimationFrame(animate)
