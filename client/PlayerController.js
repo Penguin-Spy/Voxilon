@@ -5,17 +5,21 @@ const _velocity = new Vector3();
 const _quaternion = new Quaternion();
 const _euler = new Euler();
 
+const LINEAR_DAMPING = 0.025
+
 export default class PlayerController {
 
   constructor() {
     this.lookSpeed = 1
     this.moveSpeed = 1
-    this.linearDamping = 0.025
+    this.linearDamping = LINEAR_DAMPING
 
     // in radians
     this.yaw = 0
     this.pitch = 0
     this.roll = 0
+
+    Input.on("toggle_intertia_damping", this.toggleIntertiaDamping.bind(this))
   }
 
   // Attach this controller to the specified Link
@@ -29,6 +33,15 @@ export default class PlayerController {
 
   }
 
+  toggleIntertiaDamping() {
+    if(this.linearDamping === 0) {
+      this.linearDamping = LINEAR_DAMPING
+    } else {
+      this.linearDamping = 0
+    }
+    console.log(`toggled: ${this.linearDamping}`)
+  }
+  
   // Take input data and apply it to the player's body
   update(dt) {
     this._updateRotation(dt);
@@ -77,13 +90,13 @@ export default class PlayerController {
     this.yaw += Input.mouseDX() * this.lookSpeed * 0.005;
     this.pitch += Input.mouseDY() * this.lookSpeed * 0.005;
 
-    /*let moveRoll = 0;    
+    let moveRoll = 0;    
     if (Input.get('roll_left')) {
       moveRoll += 1 * dt
     } else if (Input.get('roll_right')) {
       moveRoll -= 1 * dt
     }
-    this.roll += moveRoll*/
+    this.roll += moveRoll
 
     // Rotation of 0π = Straight forward, 2π = Slightly above straight forward
     // Rotation flips from 0π to 2π at straight ahead.

@@ -130,11 +130,13 @@ export default {
     }
   },
 
-  /*on(control, callback) {
-    if (controlMap.valueToKey(control) !== undefined) {
-      eventHandlers[control] = callback
-    } else {
+  on(control, callback) {
+    if (controlMap.valueToKey(control) == undefined) {
       throw new TypeError(`Invalid control: "${control}"`)
     }
-  }*/
+    if(eventHandlers[control]) {
+      throw new Error(`Event handler for control "${control}" already exists!`)
+    }
+    eventHandlers[control] = callback
+  }
 }
