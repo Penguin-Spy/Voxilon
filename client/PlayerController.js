@@ -2,10 +2,14 @@ import Input from '/client/Input.js'
 import { Vector3, Quaternion, Euler } from 'three'
 
 const _velocity = new Vector3();
-const _quaternion = new Quaternion();
+const _q1 = new Quaternion();
+const _q2 = new Quaternion();
 const _euler = new Euler();
 
 const LINEAR_DAMPING = 0.025
+const RIGHT   = new Vector3(1, 0, 0)
+const UP      = new Vector3(0, 1, 0)
+const FORWARD = new Vector3(0, 0, 1)
 
 export default class PlayerController {
 
@@ -87,10 +91,10 @@ export default class PlayerController {
   }
 
   _updateRotation(dt) {
-    this.yaw += Input.mouseDX() * this.lookSpeed * 0.005;
+    /*this.yaw += Input.mouseDX() * this.lookSpeed * 0.005;
     this.pitch += Input.mouseDY() * this.lookSpeed * 0.005;
 
-    let moveRoll = 0;    
+    let moveRoll = 0;
     if (Input.get('roll_left')) {
       moveRoll += 1 * dt
     } else if (Input.get('roll_right')) {
@@ -121,7 +125,25 @@ export default class PlayerController {
 
     // Apply rotation
     _euler.set(this.pitch, this.yaw, this.roll)
-    _quaternion.setFromEuler(_euler).conjugate()
-    this.link.playerRotate(_quaternion)
+    _quaternion.setFromEuler(_euler).conjugate()*/
+
+    _q1.copy(this.link.playerBody.quaternion)
+
+    // yaw
+    _q2.setFromAxisAngle(UP, Input.mouseDX() * this.lookSpeed * -0.005)
+    _q1.multiply(_q2)
+    // pitch
+    _q2.setFromAxisAngle(RIGHT, Input.mouseDY() * this.lookSpeed * -0.005)
+    _q1.multiply(_q2)
+
+    // roll
+    if (Input.get('roll_left')) {
+      _q2.setFromAxisAngle(FORWARD, 1 * dt)
+    } else if (Input.get('roll_right')) {
+      _q2.setFromAxisAngle(FORWARD, -1 * dt)
+    }
+    _q1.multiply(_q2)
+    
+    this.link.playerRotate(_q1)
   }
 }
