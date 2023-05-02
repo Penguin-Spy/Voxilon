@@ -1,4 +1,4 @@
-import { Sphere } from 'cannon';
+import { Sphere, Body as CannonBody } from 'cannon';
 import * as THREE from 'three';
 import Body from '/common/Body.js'
 
@@ -16,5 +16,18 @@ export default class PlayerBody extends Body {
       //linearDamping: 0.9 //TODO: this should actually be inertia dampening (reducing velocity to 0 when that dir isn't pressed)
       // dont use linearDamping bc it does it for gravity too
     }, local ? defaultMesh : false)
+
+    this.onGround = false;
+  }
+
+  update() {
+    super.update();
+
+    // check if this player body is touching the ground
+    // TODO: make this smarter: check if collision vector is pointing towards the down Frame of Reference (the dir of gravity)
+    const ourId = this.rigidBody.id;
+    this.onGround = Voxilon.link.playerBody.rigidBody.world.contacts.some(e => {
+	   return e.bi.id === ourId || e.bj.id === ourId
+    })
   }
 }

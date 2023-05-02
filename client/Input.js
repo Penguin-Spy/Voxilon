@@ -20,10 +20,11 @@ const controlMap = new TwoWayMap({
   "KeyD": "right",
   "Space": "up",
   "ShiftLeft": "down",
-  "KeyZ": "toggle_intertia_damping",
-  "Tab": "open_chat",
   "KeyQ": "roll_left",
-  "KeyE": "roll_right"
+  "KeyE": "roll_right",
+  "KeyZ": "toggle_intertia_damping",
+  "KeyX": "toggle_jetpack",
+  "Tab": "toggle_chat",
 })
 
 // Mapping of "control" -> function()
@@ -79,7 +80,7 @@ function handleTouch(event) {
 }
 
 function handleKeyDown(event) {
-  if (document.activeElement.nodeName === "INPUT") return // re-allow typing in <input>s & ignore typed text
+  if (document.activeElement.nodeName === "INPUT" && event.code !== "Tab") return // re-allow typing in <input>s & ignore typed text
   currentKeys[event.code] = true
 
   const callback = eventHandlers[controlMap.keyToValue(event.code)]

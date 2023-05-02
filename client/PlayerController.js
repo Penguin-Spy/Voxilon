@@ -17,6 +17,7 @@ export default class PlayerController {
     this.lookSpeed = 1
     this.moveSpeed = 1
     this.linearDamping = LINEAR_DAMPING
+    this.jetpackActive = false;
 
     // in radians
     this.yaw = 0
@@ -24,17 +25,22 @@ export default class PlayerController {
     this.roll = 0
 
     Input.on("toggle_intertia_damping", this.toggleIntertiaDamping.bind(this))
+    Input.on("toggle_jetpack", this.toggleJetpack.bind(this))
   }
 
   // Attach this controller to the specified Link
-  attach(link) {
+  attach(link, hud) {
     this.link = link
+    this.body = link.playerBody
+    this.hud = hud
+    hud.updateStatus(this)
   }
 
   // sets the reference for what direction is "downwards"
+  // Vector3 of the coordinates of the point
   // pass undefined to remove any reference to up (in space, no gravity)
-  setDownReference(vector) {
-
+  setGravityCenter(pos) {
+    
   }
 
   toggleIntertiaDamping() {
@@ -43,7 +49,12 @@ export default class PlayerController {
     } else {
       this.linearDamping = 0
     }
-    console.log(`toggled: ${this.linearDamping}`)
+    this.hud.updateStatus(this)
+  }
+
+  toggleJetpack() {
+    this.jetpackActive = !this.jetpackActive
+    this.hud.updateStatus(this)
   }
   
   // Take input data and apply it to the player's body
@@ -57,8 +68,8 @@ export default class PlayerController {
     const moveSpeed = this.moveSpeed * 20
 
     // player velocity converted to camera-forward reference frame
-    _velocity.copy(this.link.playerBody.velocity)
-             .applyQuaternion(this.link.playerBody.quaternion.conjugate())
+    _velocity.copy(this.body.velocity)
+             .applyQuaternion(this.body.quaternion.conjugate())
 
     if (Input.get('forward')) {
       moveZ = -moveSpeed * dt
@@ -85,7 +96,7 @@ export default class PlayerController {
     }
 
     _velocity.set(moveX, moveY, moveZ)
-    _velocity.applyQuaternion(this.link.playerBody.quaternion)
+    _velocity.applyQuaternion(this.body.quaternion)
 
     this.link.playerMove(_velocity)
   }
@@ -127,7 +138,7 @@ export default class PlayerController {
     _euler.set(this.pitch, this.yaw, this.roll)
     _quaternion.setFromEuler(_euler).conjugate()*/
 
-    _q1.copy(this.link.playerBody.quaternion)
+    _q1.copy(this.body.quaternion)
 
     // yaw
     _q2.setFromAxisAngle(UP, Input.mouseDX() * this.lookSpeed * -0.005)
@@ -139,10 +150,11 @@ export default class PlayerController {
     // roll
     if (Input.get('roll_left')) {
       _q2.setFromAxisAngle(FORWARD, 1 * dt)
+      _q1.multiply(_q2)
     } else if (Input.get('roll_right')) {
       _q2.setFromAxisAngle(FORWARD, -1 * dt)
+      _q1.multiply(_q2)
     }
-    _q1.multiply(_q2)
     
     this.link.playerRotate(_q1)
   }

@@ -60,9 +60,9 @@ let testbody, testbody2
 function start() {
   window.Voxilon.link = link;
   
-  playerController.attach(link)
+  playerController.attach(link, hud)
   renderer.attach(link.playerBody)
-  hud.attach(playerController, link)
+  hud.attach(link)
 
   GUI.clearScreen()
   hud.show()

@@ -102,10 +102,20 @@ button.invisible {
 .gui-hud .chat-container input {
   pointer-events: initial;
 }
+.gui-hud .chat-list {
+  display: flex;
+  flex-direction: column;
+}
 
 .gui-hud .hotbar {
   margin: auto;
   width: fit-content;
+}
+.gui-hud .status-display {
+  position: absolute;
+  right: 0; bottom: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 

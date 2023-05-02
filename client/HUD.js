@@ -11,7 +11,7 @@ export default class HUD {
     chat.setAttribute('class', "chat-container")
 
     this.chatList = document.createElement('div')
-
+    this.chatList.setAttribute('class', 'chat-list')
     this.chatInput = document.createElement('input')
     this.chatInput.hidden = true
     this.chatInput.onkeydown = e => {
@@ -21,7 +21,6 @@ export default class HUD {
         this.closeChat()
       }
     }
-
     chat.appendChild(this.chatList);
     chat.appendChild(this.chatInput);
     this.frame.appendChild(chat)
@@ -30,17 +29,41 @@ export default class HUD {
     const hotbar = document.createElement('div')
     hotbar.setAttribute('class', "hotbar")
     this.frame.appendChild(hotbar)
+
+    
+    const statusDisplay = document.createElement('div')
+    statusDisplay.setAttribute('class', "status-display")
+    
+    this.jetpackStatus = document.createElement('span')
+    this.inertiaStatus = document.createElement('span')
+    statusDisplay.appendChild(this.jetpackStatus)
+    statusDisplay.appendChild(this.inertiaStatus)
+    this.frame.appendChild(statusDisplay)
+
+
+    Input.on('toggle_chat', () => {
+      if(this.chatInput.hidden) {
+        this.openChat()
+      } else {
+        this.closeChat()
+      }
+    })
   }
 
-  attach(playerController, link) {
-    this.playerController = playerController
+  attach(link) {
     this.link = link
     this.link.on('chat_message', ({ author, msg }) => this.showChatMessage(author, msg))
   }
 
-  // get values of stuff from playercontroller & update elements
+  // update elements
   update() {
-    if (Input.get('open_chat') && this.chatInput.hidden) { this.openChat() }
+    if(document.activeElement !== this.chatInput && !this.chatInput.hidden ) { this.closeChat() }
+  }
+
+  // called by PlayerController when we need to update the status display
+  updateStatus(status) {
+    this.jetpackStatus.innerText = `Jetpack: ${status.jetpackActive ? "ACTIVE" : "INACTIVE"}`
+    this.inertiaStatus.innerText = `Dampeners: ${status.linearDamping !== 0 ? "ACTIVE" : "INACTIVE"}`
   }
 
   hide() { this.frame.hidden = true }
@@ -52,16 +75,14 @@ export default class HUD {
   }
   closeChat() {
     this.chatInput.hidden = true
-    this.chatInput.blur() // removes focus from the input. (great name there guys, super not confusing)
+    this.chatInput.blur() // removes focus from the input, returing it to the body. (great name there guys, super not confusing)
   }
 
   showChatMessage(author, msg) {
     const span = document.createElement('span');
     span.appendChild(document.createTextNode(`<${author}> ${msg}`));
-    span.appendChild(document.createElement('br'));
     this.chatList.appendChild(span);
     setTimeout(() => {
-      console.log("removing message", span)
       this.chatList.removeChild(span)
     }, 10e3)
   }
