@@ -1,14 +1,17 @@
 import * as CANNON from 'cannon';
 import * as THREE from 'three';
 
-const dt = 1 / 60
-
 export default class World {
   constructor() {
     this._bodies = []
 
+    this.gravityPoint = new THREE.Vector3(0, 0, 0);
+    this.gravityStrength = 9.8 // m/s²
+
+    // --- CANNON ---
+    
     this._physics = new CANNON.World({
-      gravity: new CANNON.Vec3(0, -9.82, 0) // m/s²
+      frictionGravity: new CANNON.Vec3(0, -9.82, 0) // direction doesn't matter, only magnitude is used in friction calculations
     });
 
     const physicsMaterial = new CANNON.Material("slipperyMaterial");
@@ -16,28 +19,28 @@ export default class World {
       physicsMaterial,
       {
         friction: 0.0, // friction coefficient
-        restitution: 0.3  // restitution}
+        restitution: 0.3  // restitution
       }
     );
     // We must add the contact materials to the world
     this._physics.addContactMaterial(physicsContactMaterial);
 
-
     const groundBody = new CANNON.Body({
       type: CANNON.Body.STATIC,
-      shape: new CANNON.Plane()
-    });
-    groundBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0); // make it face up
+      shape: new CANNON.Sphere(10)
+    })
     this._physics.addBody(groundBody);
 
-    this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color("#87CEEB")
 
-    const geometry = new THREE.PlaneGeometry( 20, 20 );
-    geometry.lookAt(new THREE.Vector3(0, 1, 0)); // face upwards
+    // --- THREE ---
+    
+    this.scene = new THREE.Scene();
+    //this.scene.background = new THREE.Color("#87CEEB")
+
     const material = new THREE.MeshBasicMaterial( {color: 0x3CCC00, side: THREE.DoubleSide} );
-    const plane = new THREE.Mesh( geometry, material );
-    this.scene.add( plane );
+    const geometry = new THREE.SphereGeometry( 10, 32, 16 )
+    const groundMesh = new THREE.Mesh(geometry, material)
+    this.scene.add(groundMesh);
   }
 
   get bodies() { return this._bodies }
@@ -69,8 +72,9 @@ export default class World {
     delete this._bodies[bodyID];
   }
   step(frameTime) {
+    // updates THREE meshes & calculates gravity
     for(const body of this._bodies) {
-      body.update()
+      body.update(this)
     }
 
     this._physics.fixedStep()

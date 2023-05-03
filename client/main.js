@@ -24,35 +24,49 @@ const hud = new HUD();
 const playerController = new PlayerController();
 
 GUI.loadScreen(main_menu, "title", { directLink, networkLink })
+
 const debugFrame = GUI.addFrame("gui-debug")
-const renderDebug = document.createElement("span")
+const renderSpan = document.createElement("span")
+
 const physicsDebug = document.createElement("div")
 const positionSpan = document.createElement("span")
 const velocitySpan = document.createElement("span")
 physicsDebug.appendChild(positionSpan)
 physicsDebug.appendChild(document.createElement("br"))
 physicsDebug.appendChild(velocitySpan)
-debugFrame.appendChild(renderDebug)
+
+debugFrame.appendChild(renderSpan)
 debugFrame.appendChild(physicsDebug)
 
 let renderRequest, then = 0
-
 // ticks the physics engine and then the Server (crafting machines, belts, vehicles, etc.)
 function animate(now) {
+  //const now = performance.now()
   const deltaTime = (now - then) / 1000;
   then = now;
-  renderDebug.innerText = `FPS: ${(1 / deltaTime).toFixed(2)}`
+  renderRequest = requestAnimationFrame(animate)
 
+  if(deltaTime > 0.1) { // took longer than 1/10th of a second
+    if(document.visibilityState === "visible") { // if the document is visible, log warning. otherwise, silently skip frame because it's in the background.
+      console.warn(`Warning: animation callback took ${(deltaTime * 1000).toFixed()}ms to trigger! Skipping step to prevent simulation instability.`)
+    }
+    return;
+  }
+
+  // --- Physics ---
   playerController.update(deltaTime)
   hud.update()
+
   link.world.step(deltaTime)
+
+  // --- Render ---
+  renderSpan.innerText = `FPS: ${(1 / deltaTime).toFixed(2)}`
   const _velocity = link.playerBody.velocity
   const _position = link.playerBody.position
   positionSpan.innerHTML = ` X: ${_position.x.toFixed(3)}  Y: ${_position.y.toFixed(3)}  Z: ${_position.z.toFixed(3)}`
   velocitySpan.innerHTML = `vX: ${_velocity.x.toFixed(3)} vY: ${_velocity.y.toFixed(3)} vZ: ${_velocity.z.toFixed(3)}`
 
   renderer.render(link.world)
-  renderRequest = requestAnimationFrame(animate)
 }
 
 
@@ -75,7 +89,7 @@ function start() {
     shape: new CANNON.Sphere(1)
   })
 
-  testbody.position = { x: 2, y: 2, z: -7 }
+  testbody.position = { x: 2, y: 12, z: -7 }
   link.world.addBody(testbody)
 
   /**/
@@ -85,7 +99,7 @@ function start() {
     type: CANNON.Body.STATIC,
   })
 
-  testbody2.position = { x: -2, y: 2, z: -7 }
+  testbody2.position = { x: -2, y: 12, z: -7 }
   link.world.addBody(testbody2)
   /**/
 

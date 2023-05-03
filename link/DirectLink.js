@@ -23,7 +23,7 @@ export default class DirectLink {
 
     // create player's body
     this._playerBody = new PlayerBody()
-    this._playerBody.position = { x: 0, y: 1, z: 0 }
+    this._playerBody.position = { x: 0, y: 12, z: 0 }
     this._world.addBody(this._playerBody)
 
     // create Integrated server

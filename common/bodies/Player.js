@@ -20,13 +20,13 @@ export default class PlayerBody extends Body {
     this.onGround = false;
   }
 
-  update() {
-    super.update();
+  update(world) {
+    super.update(world);
 
     // check if this player body is touching the ground
     // TODO: make this smarter: check if collision vector is pointing towards the down Frame of Reference (the dir of gravity)
     const ourId = this.rigidBody.id;
-    this.onGround = Voxilon.link.playerBody.rigidBody.world.contacts.some(e => {
+    this.onGround = world._physics.contacts.some(e => {
 	   return e.bi.id === ourId || e.bj.id === ourId
     })
   }
