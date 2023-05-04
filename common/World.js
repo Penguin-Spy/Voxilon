@@ -56,26 +56,33 @@ export default class World {
   };
 
   moveBody(bodyID, position, velocity) {
-    if (this._bodies[bodyID]) {
-      this._bodies[bodyID].position = position;
-      this._bodies[bodyId].velocity = velocity
+    console.warn("World:moveBody called")
+    const body = this._bodies[bodyID];
+    if (body) {
+      body.position = position;
+      body.velocity = velocity
     }
   };
   rotateBody(bodyID, quaternion, angularVelocity) {
-    if (this._bodies[bodyID]) {
-      this._bodies[bodyID].quaternion = quaternion;
-      this._bodies[bodyID].angularVelocity = angularVelocity;
+    console.warn("World:rotateBody called")
+    const body = this._bodies[bodyID];
+    if (body) {
+      body.quaternion = quaternion;
+      body.angularVelocity = angularVelocity;
     }
   };
 
   removeBody(bodyID) {
+    const body = this._bodies[bodyID];
+    this._physics.removeBody(body.rigidBody)
+    if(body.mesh)this.scene.remove(body.mesh)
     delete this._bodies[bodyID];
   }
   step(frameTime) {
     // updates THREE meshes & calculates gravity
-    for(const body of this._bodies) {
+    this._bodies.forEach(body => {
       body.update(this)
-    }
+    })
 
     this._physics.fixedStep()
   }

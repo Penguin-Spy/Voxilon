@@ -44,12 +44,12 @@ function animate(now) {
   //const now = performance.now()
   const deltaTime = (now - then) / 1000;
   then = now;
-  renderRequest = requestAnimationFrame(animate)
 
   if(deltaTime > 0.1) { // took longer than 1/10th of a second
     if(document.visibilityState === "visible") { // if the document is visible, log warning. otherwise, silently skip frame because it's in the background.
       console.warn(`Warning: animation callback took ${(deltaTime * 1000).toFixed()}ms to trigger! Skipping step to prevent simulation instability.`)
     }
+    renderRequest = requestAnimationFrame(animate)
     return;
   }
 
@@ -67,6 +67,9 @@ function animate(now) {
   velocitySpan.innerHTML = `vX: ${_velocity.x.toFixed(3)} vY: ${_velocity.y.toFixed(3)} vZ: ${_velocity.z.toFixed(3)}`
 
   renderer.render(link.world)
+
+  // only request the next frame if this one succeded
+  renderRequest = requestAnimationFrame(animate)
 }
 
 

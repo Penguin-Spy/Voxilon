@@ -110,9 +110,9 @@ export default class DirectLink {
   playerMove(velocity) {  // vector of direction to move in
     this._playerBody.rigidBody.applyImpulse(velocity)
   }
-  playerRotate(quaternion) {  // sets player's rotation
-    this._playerBody.quaternion = quaternion
-    //this._playerBody.quaternion = this._playerBody.quaternion.normalize()
+  playerRotate(bodyQuaternion, lookQuaternion) {  // sets player's rotation
+    this._playerBody.quaternion = bodyQuaternion
+    this._playerBody.lookQuaternion = lookQuaternion
   }
 
   // Chat

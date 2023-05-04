@@ -1,23 +1,29 @@
 import Input from '/client/Input.js'
-import { Vector3, Quaternion, Euler } from 'three'
+import { Vector3, Quaternion } from 'three'
 
-const _v = new Vector3();
+const _v1 = new Vector3();
+const _v2 = new Vector3();
 const _q1 = new Quaternion();
 const _q2 = new Quaternion();
-const _euler = new Euler();
 
-const LINEAR_DAMPING = 4 // 0.025
 const RIGHT   = new Vector3(1, 0, 0)
 const UP      = new Vector3(0, 1, 0)
 const FORWARD = new Vector3(0, 0, 1)
 
+const HALF_PI = Math.PI / 2;
+
+// strength of jetpack:
+const LINEAR_DAMPING = 0.1  // 10%
+const MOVE_SPEED = 40     // m/s²
+
 export default class PlayerController {
 
   constructor() {
-    this.lookSpeed = 0.75 // 0.005
-    this.moveSpeed = 40
+    this.lookSpeed = 0.75
+    this.moveSpeed = MOVE_SPEED
     this.linearDamping = LINEAR_DAMPING
     this.jetpackActive = false;
+    this.pitch = 0;
 
     Input.on("toggle_intertia_damping", this.toggleIntertiaDamping.bind(this))
     Input.on("toggle_jetpack", this.toggleJetpack.bind(this))
@@ -42,54 +48,49 @@ export default class PlayerController {
 
   toggleJetpack() {
     this.jetpackActive = !this.jetpackActive
-
-    // consume mouse inputs that may have not been read
-    Input.mouseDX()
-    Input.mouseDY()
-
-    // update pitch/yaw if toggling into gravity field
-    if(!this.jetpackActive) {
-      /*_q1.copy(this.body.quaternion)
-      _q2.setFromAxisAngle(RIGHT, -90)
-      _q1.multiply(_q2)
-
-      _q2.setFromAxisAngle(this.body.gravityVector, 0)*/
-
-      
-      //_q2.setFromAxisAngle(this.body.gravityVector, 0).normalize();
-      //_q2.identity();
-      _q1.copy(this.body.quaternion).conjugate()//.multiply(_q2)
-      //this.link.playerRotate(_q1)
-
-      _euler.setFromQuaternion(_q1, "XYZ")
-      console.log(this.body.gravityVector, _q2, _euler)
-
-      
+    // if enabling jetpack,
+    if(this.jetpackActive) {
+      this.body.quaternion = this.body.lookQuaternion
+      this.pitch = 0;
     }
-    
     this.hud.updateStatus(this)
   }
   
   // Take input data and apply it to the player's body
   update(dt) {
     if(this.jetpackActive) {
-      this._updateRotation(dt);
-      this._updateJetpackMovement(dt);
+      this._updateJetpackRotation(dt)
+      this._updateJetpackMovement(dt)
     } else {
-      this._updateGravityRotation(dt);
-      //this._updateGravityMovement(dt);
-      this._updateJetpackMovement(dt);
+      this._updateGravityRotation(dt)
+      this._updateGravityMovement(dt)
     }
   }
 
-  _updateRotation(dt) {
+  _updateJetpackRotation(dt) {
     _q1.copy(this.body.quaternion)
-
+    let angle = 0;
+    
     // yaw
-    _q2.setFromAxisAngle(UP, -Input.mouseDX() * this.lookSpeed * dt)
+    if (Input.get('yaw_left')) {
+      angle = 1; 
+    } else if (Input.get('yaw_right')) {
+      angle = -1;
+    } else {
+       angle = -Input.mouseDX()
+    }
+    _q2.setFromAxisAngle(UP, angle * this.lookSpeed * dt)
     _q1.multiply(_q2)
+    
     // pitch
-    _q2.setFromAxisAngle(RIGHT, -Input.mouseDY() * this.lookSpeed * dt)
+    if (Input.get('pitch_up')) {
+      angle = 1; 
+    } else if (Input.get('pitch_down')) {
+      angle = -1;
+    } else {
+       angle = -Input.mouseDY()
+    }
+    _q2.setFromAxisAngle(RIGHT, angle * this.lookSpeed * dt)
     _q1.multiply(_q2)
 
     // roll
@@ -101,109 +102,120 @@ export default class PlayerController {
       _q1.multiply(_q2)
     }
     
-    this.link.playerRotate(_q1)
+    this.link.playerRotate(_q1, _q1)
   }
 
   _updateGravityRotation(dt) {
-    
-    /*this.body.getWorldDirection(_v) // positive Z of body facing direction
-
-    _v.cross(this.body.gravityVector) // rightwards vector
-    
-    // pitch
     _q1.copy(this.body.quaternion)
-    _q2.setFromAxisAngle(_v1, Input.mouseDY() * this.lookSpeed * -0.005)
-    _q1.multiply(_q2)*/
-
-    /*_q1.copy(this.body.quaternion)
+    let angle = 0;
 
     // yaw
-    _q2.setFromAxisAngle(UP, Input.mouseDX() * this.lookSpeed * -0.005)
-    _q1.multiply(_q2)
-    // pitch
-    _q2.setFromAxisAngle(RIGHT, Input.mouseDY() * this.lookSpeed * -0.005)
-    _q1.multiply(_q2)
-    
-    this.link.playerRotate(_q1)*/
-
-    // ----------------
-    
-
-    // This keeps pitch within .5π & 1.5π (Straight down & straight up)
-    // This only makes sense with a "down" frame of reference
-    //   (I.E. the debug map or in a gravity field)
-    //   When in a "down" FoR, W/S/Space/Shift should apply based on that FoR, not the camera's Forward/Up
-    //else if (this.pitch > 0.5 * Math.PI && this.pitch < 1.5 * Math.PI) {
-    //  this.pitch = this.pitch < Math.PI ? 0.5 * Math.PI : 1.5 * Math.PI;
-    //}
-
-
-    // calculate gravityRIGHT
-    /*_v.copy(FORWARD)
-    _v.applyQuaternion(this.body.quaternion)
-
-    _v.cross(this.body.gravityVector)*/
-    
-    
-    /*if (Input.get('yaw_left')) {
-      _q2.setFromAxisAngle(UP, this.lookSpeed * dt)
-      _q1.multiply(_q2)
+    if (Input.get('yaw_left')) {
+      angle = 1; 
     } else if (Input.get('yaw_right')) {
-      _q2.setFromAxisAngle(UP, -this.lookSpeed * dt)
-      _q1.multiply(_q2)
+      angle = -1;
+    } else {
+       angle = -Input.mouseDX()
     }
-    
+    _q2.setFromAxisAngle(UP, angle * this.lookSpeed * dt)
+    _q1.multiply(_q2)
+
+    // align player body to gravity
+    _v1.copy(this.body.gravityVector).negate() // gravityUP
+    _v2.copy(UP).applyQuaternion(_q1) // bodyUP
+    _q2.setFromUnitVectors(_v2, _v1)  // angle to rotate bodyUP to gravityUP
+    _q2.multiply(_q1)  // include current body rotation
+
+    _q1.slerp(_q2, 10 * dt)
+
+    // pitch
     if (Input.get('pitch_up')) {
-      _q2.setFromAxisAngle(RIGHT, this.lookSpeed * dt)
-      _q1.multiply(_q2)
+      angle = 1; 
     } else if (Input.get('pitch_down')) {
-      _q2.setFromAxisAngle(RIGHT, -this.lookSpeed * dt)
-      _q1.multiply(_q2)
-    }*/
-
+      angle = -1;
+    } else {
+       angle = -Input.mouseDY()
+    }
+    this.pitch += angle * this.lookSpeed * dt
+    // keep pitch within .5π & 1.5π (Straight down & straight up)
+    if(this.pitch > HALF_PI) {
+      this.pitch = HALF_PI
+    } else if(this.pitch < -HALF_PI) {
+      this.pitch = -HALF_PI
+    }
+    _q2.setFromAxisAngle(RIGHT, this.pitch)
+    _q2.multiplyQuaternions(_q1, _q2)
     
-    this._updateRotation(dt);
-
+    this.link.playerRotate(_q1, _q2)
   }
 
   _updateGravityMovement(dt) {
-    
-  }
-
-  _updateJetpackMovement(dt) {
-    let moveX = 0, moveY = 0, moveZ = 0  // relative to camera forward == -Z
-
-    // player velocity converted to camera-forward reference frame
-    _v.copy(this.body.velocity)
-             .applyQuaternion(this.body.quaternion.conjugate())
+    _v1.set(0, 0, 0)
 
     if (Input.get('forward')) {
-      moveZ = -1
+      _v1.z = -1
     } else if (Input.get('backward')) {
-      moveZ = 1
-    } else {
-      moveZ = _v.z * -this.linearDamping
+      _v1.z = 1
     }
 
     if (Input.get('right')) {
-      moveX = 1
+      _v1.x = 1
     } else if (Input.get('left')) {
-      moveX = -1
-    } else {
-      moveX = _v.x * -this.linearDamping
+      _v1.x = -1
     }
 
     if (Input.get('up')) {
-      moveY = 1
+      _v1.y = 1
     } else if (Input.get('down')) {
-      moveY = -1
-    } else {
-      moveY = _v.y * -this.linearDamping
+      _v1.y = -1
     }
 
-    _v.set(moveX, moveY, moveZ).normalize().multiplyScalar(this.moveSpeed * dt)
-    _v.applyQuaternion(this.body.quaternion)
+    _v1.normalize().multiplyScalar(this.moveSpeed * dt); // player movement
+    _v1.applyQuaternion(this.body.quaternion) // rotate to world space
 
-    this.link.playerMove(_v)
+    this.link.playerMove(_v1)
+  }
+
+  _updateJetpackMovement(dt) {
+    _v1.set(0, 0, 0)
+    // player velocity converted to camera-forward reference frame (camera forward = -Z)
+    _v2.copy(this.body.velocity)
+      .applyQuaternion(this.body.quaternion.conjugate())
+
+    if (Input.get('forward')) {
+      _v1.z = -1
+      _v2.z = 0
+    } else if (Input.get('backward')) {
+      _v1.z = 1
+      _v2.z = 0
+    } else {
+      _v2.z *= -this.linearDamping
+    }
+
+    if (Input.get('right')) {
+      _v1.x = 1
+      _v2.x = 0
+    } else if (Input.get('left')) {
+      _v1.x = -1
+      _v2.x = 0
+    } else {
+      _v2.x *= -this.linearDamping
+    }
+
+    if (Input.get('up')) {
+      _v1.y = 1
+      _v2.y = 0
+    } else if (Input.get('down')) {
+      _v1.y = -1
+      _v2.y = 0
+    } else {
+      _v2.y *= -this.linearDamping
+    }
+
+    _v1.normalize().multiplyScalar(this.moveSpeed * dt); // player movement
+    _v1.add(_v2); // linear damping
+    _v1.applyQuaternion(this.body.quaternion) // rotate back to world space
+
+    this.link.playerMove(_v1)
   }
 }

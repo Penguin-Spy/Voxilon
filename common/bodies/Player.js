@@ -18,6 +18,7 @@ export default class PlayerBody extends Body {
     }, local ? defaultMesh : false)
 
     this.onGround = false;
+    this.lookQuaternion = new THREE.Quaternion();
   }
 
   update(world) {

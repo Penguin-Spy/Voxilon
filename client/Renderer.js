@@ -30,7 +30,7 @@ export default class Renderer {
 
   render = (world) => {
     this.camera.position.copy(this.body.position)
-    this.camera.quaternion.copy(this.body.quaternion)
+    this.camera.quaternion.copy(this.body.lookQuaternion)
     
     this.renderer.render(world.scene, this.camera);
   }
