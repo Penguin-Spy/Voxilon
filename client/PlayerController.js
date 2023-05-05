@@ -5,6 +5,7 @@ const _v1 = new Vector3();
 const _v2 = new Vector3();
 const _q1 = new Quaternion();
 const _q2 = new Quaternion();
+let angle = 0;
 
 const RIGHT   = new Vector3(1, 0, 0)
 const UP      = new Vector3(0, 1, 0)
@@ -23,6 +24,8 @@ export default class PlayerController {
     this.moveSpeed = MOVE_SPEED
     this.linearDamping = LINEAR_DAMPING
     this.jetpackActive = false;
+    
+    this.bodyQuaternion = new Quaternion(); // for storing edits to this before they're applied during the physics
     this.pitch = 0;
 
     Input.on("toggle_intertia_damping", this.toggleIntertiaDamping.bind(this))
@@ -57,19 +60,25 @@ export default class PlayerController {
   }
   
   // Take input data and apply it to the player's body
-  update(dt) {
+  updateMovement(dt) {
+    this.body.quaternion.copy(this.bodyQuaternion)
     if(this.jetpackActive) {
-      this._updateJetpackRotation(dt)
       this._updateJetpackMovement(dt)
     } else {
-      this._updateGravityRotation(dt)
       this._updateGravityMovement(dt)
     }
   }
 
+  updateRotation(dt) {
+    if(this.jetpackActive) {
+      this._updateJetpackRotation(dt)
+    } else {
+      this._updateGravityRotation(dt)
+    }
+  }
+  
   _updateJetpackRotation(dt) {
     _q1.copy(this.body.quaternion)
-    let angle = 0;
     
     // yaw
     if (Input.get('yaw_left')) {
@@ -102,12 +111,12 @@ export default class PlayerController {
       _q1.multiply(_q2)
     }
     
-    this.link.playerRotate(_q1, _q1)
+    this.bodyQuaternion.copy(_q1)
+    this.body.lookQuaternion.copy(_q1)
   }
 
   _updateGravityRotation(dt) {
-    _q1.copy(this.body.quaternion)
-    let angle = 0;
+    _q1.copy(this.bodyQuaternion)
 
     // yaw
     if (Input.get('yaw_left')) {
@@ -146,7 +155,8 @@ export default class PlayerController {
     _q2.setFromAxisAngle(RIGHT, this.pitch)
     _q2.multiplyQuaternions(_q1, _q2)
     
-    this.link.playerRotate(_q1, _q2)
+    this.bodyQuaternion.copy(_q1)       // gravity-aligned quaternion
+    this.body.lookQuaternion.copy(_q2)  // gravity-aligned quaternion + pitch
   }
 
   _updateGravityMovement(dt) {
@@ -180,7 +190,7 @@ export default class PlayerController {
     _v1.set(0, 0, 0)
     // player velocity converted to camera-forward reference frame (camera forward = -Z)
     _v2.copy(this.body.velocity)
-      .applyQuaternion(this.body.quaternion.conjugate())
+      .applyQuaternion(_q1.copy(this.body.quaternion).conjugate())
 
     if (Input.get('forward')) {
       _v1.z = -1

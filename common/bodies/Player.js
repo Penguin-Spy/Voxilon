@@ -18,11 +18,20 @@ export default class PlayerBody extends Body {
     }, local ? defaultMesh : false)
 
     this.onGround = false;
-    this.lookQuaternion = new THREE.Quaternion();
+    this.lookQuaternion = new THREE.Quaternion(); // client-side, independent of body rotation & world stepping
+    this.controller = null;
   }
 
-  update(world) {
-    super.update(world);
+  attach(playerController) {
+    this.controller = playerController
+  }
+
+  update(world, dt) {
+    if(this.controller) {
+      this.controller.updateMovement(dt)
+    }
+    
+    super.update(world, dt);
 
     // check if this player body is touching the ground
     // TODO: make this smarter: check if collision vector is pointing towards the down Frame of Reference (the dir of gravity)

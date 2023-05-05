@@ -136,7 +136,7 @@ export default {
   },
 
   on(control, callback) {
-    if (controlMap.valueToKey(control) == undefined) {
+    if (controlMap.valueToKey(control) === undefined) {
       throw new TypeError(`Invalid control: "${control}"`)
     }
     if(eventHandlers[control]) {

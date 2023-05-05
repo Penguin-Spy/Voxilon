@@ -78,10 +78,10 @@ export default class World {
     if(body.mesh)this.scene.remove(body.mesh)
     delete this._bodies[bodyID];
   }
-  step(frameTime) {
+  step(dt) {
     // updates THREE meshes & calculates gravity
     this._bodies.forEach(body => {
-      body.update(this)
+      body.update(this, dt)
     })
 
     this._physics.fixedStep()

@@ -2,7 +2,6 @@ import Renderer from '/client/Renderer.js'
 import Input from '/client/Input.js'
 import GUI from '/client/GUI.js'
 import HUD from '/client/HUD.js'
-import PlayerController from '/client/PlayerController.js'
 
 import main_menu from '/client/views/main_menu.js'
 
@@ -21,7 +20,6 @@ function $(query) {  // not jQuery!! just looks like it :troll:
 const renderer = new Renderer();
 Input.useCanvas(renderer.getCanvas());
 const hud = new HUD();
-const playerController = new PlayerController();
 
 GUI.loadScreen(main_menu, "title", { directLink, networkLink })
 
@@ -54,10 +52,10 @@ function animate(now) {
   }
 
   // --- Physics ---
-  playerController.update(deltaTime)
+  link.playerController.updateRotation(deltaTime)
   hud.update()
 
-  link.world.step(deltaTime)
+  link.step(deltaTime)
 
   // --- Render ---
   renderSpan.innerText = `FPS: ${(1 / deltaTime).toFixed(2)}`
@@ -77,7 +75,7 @@ let testbody, testbody2
 function start() {
   window.Voxilon.link = link;
   
-  playerController.attach(link, hud)
+  link.playerController.attach(link, hud)
   renderer.attach(link.playerBody)
   hud.attach(link)
 
@@ -120,7 +118,12 @@ let link  // current link, may be undefined
 
 async function directLink(worldOptions) {
   if (!linkModules.direct) {
-    linkModules.direct = (await import('/link/DirectLink.js')).default
+    try {
+      linkModules.direct = (await import('/link/DirectLink.js')).default
+    } catch(err) {
+      throw err
+      return false
+    }
   }
 
   console.info("Starting direct link")
@@ -130,7 +133,12 @@ async function directLink(worldOptions) {
 }
 async function networkLink(gameCode, username) {
   if (!linkModules.network) {
-    linkModules.network = (await import('/link/NetworkLink.js')).default
+    try {
+      linkModules.network = (await import('/link/NetworkLink.js')).default
+    } catch(err) {
+      throw err
+      return false
+    }
   }
 
   console.info(`Starting network link w/ code: ${gameCode} & username: ${username}`)
@@ -139,4 +147,4 @@ async function networkLink(gameCode, username) {
   start()
 }
 
-window.Voxilon = { renderer, Input, GUI, hud, playerController, link, stop, testbody, testbody2 };
+window.Voxilon = { renderer, Input, GUI, hud, link, stop };

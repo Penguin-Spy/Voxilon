@@ -74,7 +74,7 @@ function handleClientMessage(ws, data) {
 const wsServer = new WebSocket.Server({ noServer: true });
 // Initalize websocket & add to session
 wsServer.on('connection', (ws, code) => {
-  if (code === undefined) { // host
+  if (code === null) { // host
     code = makeCode()
     ws.session = sessions[code] = { host: ws, clients: [] }
 
@@ -113,7 +113,7 @@ wsServer.on('connection', (ws, code) => {
 const signalUriRegex = /^\/([A-HJ-NP-Z0-9]{5})$/;
 exports.upgrade = function(req, sock, head) {
   console.log(`[signal] connection to '${req.url}' on ${new Date().toLocaleString('en-US', { hour12: false, timeZone: 'UTC' })}`)
-  const [join_session, code] = req.url.match(signalUriRegex) || [false, undefined];
+  const [ join_session, code ] = req.url.match(signalUriRegex) || [ false, null ];
   const new_session = req.url === "/new_session"
 
   if (!join_session && !new_session) {

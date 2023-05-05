@@ -51,8 +51,8 @@ export default class Body {
   update(world) {
     // copy cannon position & quaternion to three
     if(this.mesh) {
-      this.mesh.position.copy(this.position)
-      this.mesh.quaternion.copy(this.quaternion)
+      this.mesh.position.copy(this.rigidBody.interpolatedPosition)
+      this.mesh.quaternion.copy(this.rigidBody.interpolatedQuaternion)
     }
 
     // get direction from body to gravity center

@@ -3,6 +3,7 @@ import PlayerBody from '/common/bodies/Player.js'
 import PeerConnection from '/link/PeerConnection.js'
 import PacketEncoder from '/link/PacketEncoder.js'
 import PacketDecoder from '/link/PacketDecoder.js'
+import PlayerController from '/client/PlayerController.js'
 
 export default class DirectLink {
   constructor(worldOptions) {
@@ -25,6 +26,9 @@ export default class DirectLink {
     this._playerBody = new PlayerBody()
     this._playerBody.position = { x: 0, y: 12, z: 0 }
     this._world.addBody(this._playerBody)
+
+    this.playerController = new PlayerController();
+    this._playerBody.attach(this.playerController)
 
     // create Integrated server
   }
@@ -110,6 +114,9 @@ export default class DirectLink {
   playerMove(velocity) {  // vector of direction to move in
     this._playerBody.rigidBody.applyImpulse(velocity)
   }
+  /*playerLook(lookQuaternion) {
+    this._playerBody.lookQuaternion = lookQuaternion
+  }*/
   playerRotate(bodyQuaternion, lookQuaternion) {  // sets player's rotation
     this._playerBody.quaternion = bodyQuaternion
     this._playerBody.lookQuaternion = lookQuaternion
@@ -135,4 +142,7 @@ export default class DirectLink {
     }
   }
 
+  step(dt) {
+    this._world.step(dt)
+  }
 }  
