@@ -1,11 +1,15 @@
 import * as CANNON from 'cannon';
 import * as THREE from 'three';
+import { ground } from "/common/Materials.js";
 
 const geometry = new THREE.BoxGeometry(2, 2, 2);
 const material = new THREE.MeshBasicMaterial({ color: 0x0000ff })
 const absoluteDefaultMesh = new THREE.Mesh(geometry, material)
 
-const _v = new THREE.Vector3();
+const _v1 = new THREE.Vector3();
+const _v2 = new THREE.Vector3();
+
+export const G = 6.6743e-11;
 
 export default class Body {
   /*
@@ -20,6 +24,13 @@ export default class Body {
     if (cannonOptions.shape === undefined) {
       console.warn("[%s] Creating rigidbody with default shape!", this.constructor.name)
       cannonOptions.shape = new CANNON.Sphere(1)
+    }
+    if(cannonOptions.type === undefined) {
+      cannonOptions.type = CANNON.Body.DYNAMIC
+    }
+    if(cannonOptions.material === undefined) {
+      console.warn("[%s] Creating rigidbody with default material!", this.constructor.name)
+      cannonOptions.material = ground
     }
     cannonOptions.linearDamping = 0  // conservation of momentum
     cannonOptions.angularDamping = 0  // conservation of angular momentum
@@ -48,17 +59,42 @@ export default class Body {
   get angularVelocity() { return this.rigidBody.angularVelocity }
   set angularVelocity(value) { this.rigidBody.angularVelocity.copy(value) }
 
-  update(world) {
+  get mass() { return this.rigidBody.mass }
+
+  update(world, dt) {
     // copy cannon position & quaternion to three
     if(this.mesh) {
       this.mesh.position.copy(this.rigidBody.interpolatedPosition)
       this.mesh.quaternion.copy(this.rigidBody.interpolatedQuaternion)
     }
 
-    // get direction from body to gravity center
-    this.gravityVector.copy(world.gravityPoint).sub(this.position).normalize()
-    // calculate and apply gravity
-    _v.copy(this.gravityVector).multiplyScalar(world.gravityStrength)
-    this.rigidBody.applyForce(_v)
+    if(this.rigidBody.type === CANNON.Body.DYNAMIC) {
+      this.gravityVector.set(0, 0, 0)
+      for(const otherBody of world.gravityBodies) {
+
+        // difference in position
+        _v1.copy(otherBody.position).sub(this.position)
+
+        const rSquared = _v1.lengthSq() // distance squared
+        _v2.copy(_v1).normalize()       // direction of force
+
+        // force
+        _v2.multiplyScalar(G * this.mass * otherBody.mass / rSquared)
+
+        // acceleration
+        _v2/*.divideScalar(this.mass)*/.multiplyScalar(dt)
+
+        //console.log(this.rigidBody.id, _v2)
+        
+        this.gravityVector.copy(_v2)
+        //this.rigidBody.applyForce(_v2)
+        this.rigidBody.applyImpulse(_v2)
+        
+        // calculate and apply gravity
+        //_v1.copy(this.gravityVector).multiplyScalar(world.gravityStrength)
+        //this.rigidBody.applyForce(_v1)
+        
+      }
+    }
   }
 }

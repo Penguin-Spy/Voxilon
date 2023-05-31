@@ -1,5 +1,6 @@
 import Input from '/client/Input.js'
 import { Vector3, Quaternion } from 'three'
+import * as Materials from "/common/Materials.js"
 
 const _v1 = new Vector3();
 const _v2 = new Vector3();
@@ -15,15 +16,22 @@ const HALF_PI = Math.PI / 2;
 
 // strength of jetpack:
 const LINEAR_DAMPING = 0.1  // 10%
-const MOVE_SPEED = 40     // m/s²
+const WALK_SPEED = 80       // m/s²
+const JUMP_STRENGTH = 3     // idk the unit lol
+const FLY_SPEED = 40        // m/s²
 
 export default class PlayerController {
 
   constructor() {
     this.lookSpeed = 0.75
-    this.moveSpeed = MOVE_SPEED
+    this.walkSpeed = WALK_SPEED
+    this.jumpStrength = JUMP_STRENGTH
+    this.flySpeed = FLY_SPEED
+    
     this.linearDamping = LINEAR_DAMPING
     this.jetpackActive = false;
+    
+    this.jumpLockout = 0; // counts down steps until player can jump again
     
     this.bodyQuaternion = new Quaternion(); // for storing edits to this before they're applied during the physics
     this.pitch = 0;
@@ -55,6 +63,8 @@ export default class PlayerController {
     if(this.jetpackActive) {
       this.body.quaternion = this.body.lookQuaternion
       this.pitch = 0;
+    } else {
+      this.body.material = Materials.ground
     }
     this.hud.updateStatus(this)
   }
@@ -160,6 +170,18 @@ export default class PlayerController {
   }
 
   _updateGravityMovement(dt) {
+    if(this.body.onGround) {
+      this.hud.otherStatus.innerText = "onGround: true"
+    } else {
+      this.hud.otherStatus.innerText = "onGround: false"
+    }
+
+    // reset material to default when in the air (ground vs. walkingPlayer)
+    if(!this.body.onGround) {
+      this.body.material = Materials.ground
+      return
+    }
+    
     _v1.set(0, 0, 0)
 
     if (Input.get('forward')) {
@@ -174,16 +196,27 @@ export default class PlayerController {
       _v1.x = -1
     }
 
-    if (Input.get('up')) {
-      _v1.y = 1
-    } else if (Input.get('down')) {
-      _v1.y = -1
-    }
+    _v1.normalize()
 
-    _v1.normalize().multiplyScalar(this.moveSpeed * dt); // player movement
+    if(this.jumpLockout > 0) this.jumpLockout--;
+    if (Input.get('up') && this.jumpLockout == 0) {
+      _v1.y += this.jumpStrength
+      this.jumpLockout = 10;
+      console.log("jump", this.body.velocity)
+    }
+    
+    _v1.multiplyScalar(this.body.mass * this.walkSpeed * dt); // player movement
     _v1.applyQuaternion(this.body.quaternion) // rotate to world space
 
     this.link.playerMove(_v1)
+
+    if(_v1.lengthSq() > 0) {
+      this.body.material = Materials.walkingPlayer
+      //this.hud.otherStatus.innerText = "walking"
+    } else {
+      this.body.material = Materials.ground
+      //this.hud.otherStatus.innerText = "ground"
+    }
   }
 
   _updateJetpackMovement(dt) {
@@ -222,8 +255,9 @@ export default class PlayerController {
       _v2.y *= -this.linearDamping
     }
 
-    _v1.normalize().multiplyScalar(this.moveSpeed * dt); // player movement
+    _v1.normalize().multiplyScalar(this.flySpeed * dt); // player movement
     _v1.add(_v2); // linear damping
+    _v1.multiplyScalar(this.body.mass)
     _v1.applyQuaternion(this.body.quaternion) // rotate back to world space
 
     this.link.playerMove(_v1)

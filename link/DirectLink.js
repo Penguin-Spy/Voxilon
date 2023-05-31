@@ -1,9 +1,11 @@
 import World from '/common/World.js'
-import PlayerBody from '/common/bodies/Player.js'
+import PlayerBody from '/common/bodies/PlayerBody.js'
 import PeerConnection from '/link/PeerConnection.js'
 import PacketEncoder from '/link/PacketEncoder.js'
 import PacketDecoder from '/link/PacketDecoder.js'
 import PlayerController from '/client/PlayerController.js'
+
+const dt = 1/60
 
 export default class DirectLink {
   constructor(worldOptions) {
@@ -13,6 +15,8 @@ export default class DirectLink {
       file: [object File]
     }
     */
+
+    this.accumulator = 0
 
     // networking stuff
     this._clients = []
@@ -24,7 +28,7 @@ export default class DirectLink {
 
     // create player's body
     this._playerBody = new PlayerBody()
-    this._playerBody.position = { x: 0, y: 12, z: 0 }
+    this._playerBody.position = { x: 0, y: 24, z: 0 }
     this._world.addBody(this._playerBody)
 
     this.playerController = new PlayerController();
@@ -142,7 +146,20 @@ export default class DirectLink {
     }
   }
 
-  step(dt) {
-    this._world.step(dt)
+  step(deltaTime) {
+    this.accumulator += deltaTime
+    let maxSteps = 10;
+
+    while (this.accumulator > dt && maxSteps > 0) {
+      this._world.step(dt)
+      this.accumulator -= dt
+      maxSteps--
+    }
+
+    if(this.accumulator > dt) {  // remove extra steps worth of time that could not be processed
+      console.warn(`Warning: stepping world took too many steps to catch up! Simulation is behind by ${Math.floor(this.accumulator / dt)}ms`)
+      this.accumulator = this.accumulator % dt
+    }
+    
   }
 }  

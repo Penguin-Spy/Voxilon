@@ -1,12 +1,11 @@
 import * as CANNON from 'cannon';
 import * as THREE from 'three';
+import CelestialBody from "/common/bodies/CelestialBody.js";
+import { contactMaterials } from "/common/Materials.js";
 
 export default class World {
   constructor() {
     this._bodies = []
-
-    this.gravityPoint = new THREE.Vector3(0, 0, 0);
-    this.gravityStrength = 9.8 // m/s²
 
     // --- CANNON ---
     
@@ -14,36 +13,27 @@ export default class World {
       frictionGravity: new CANNON.Vec3(0, -9.82, 0) // direction doesn't matter, only magnitude is used in friction calculations
     });
 
-    const physicsMaterial = new CANNON.Material("slipperyMaterial");
-    const physicsContactMaterial = new CANNON.ContactMaterial(physicsMaterial,
-      physicsMaterial,
-      {
-        friction: 0.0, // friction coefficient
-        restitution: 0.3  // restitution
-      }
-    );
-    // We must add the contact materials to the world
-    this._physics.addContactMaterial(physicsContactMaterial);
+    for(const contactMaterial of contactMaterials) {
+      console.log(contactMaterial)
+      this._physics.addContactMaterial(contactMaterial)
+    }
 
-    const groundBody = new CANNON.Body({
-      type: CANNON.Body.STATIC,
-      shape: new CANNON.Sphere(10)
-    })
-    this._physics.addBody(groundBody);
-
-
+    
     // --- THREE ---
     
     this.scene = new THREE.Scene();
     //this.scene.background = new THREE.Color("#87CEEB")
 
-    const material = new THREE.MeshBasicMaterial( {color: 0x3CCC00, side: THREE.DoubleSide} );
-    const geometry = new THREE.SphereGeometry( 10, 32, 16 )
-    const groundMesh = new THREE.Mesh(geometry, material)
-    this.scene.add(groundMesh);
+    const planet = new CelestialBody(20, 9.8)
+    this.addBody(planet)
   }
 
   get bodies() { return this._bodies }
+  get gravityBodies() {
+    return this._bodies.filter(e => {
+      return e.rigidBody.type === CANNON.Body.KINEMATIC && e.rigidBody.mass > 0
+    })
+  }
 
   addBody(body) {
     this._physics.addBody(body.rigidBody)
@@ -78,6 +68,8 @@ export default class World {
     if(body.mesh)this.scene.remove(body.mesh)
     delete this._bodies[bodyID];
   }
+
+
   step(dt) {
     // updates THREE meshes & calculates gravity
     this._bodies.forEach(body => {

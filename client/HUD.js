@@ -36,8 +36,10 @@ export default class HUD {
     
     this.jetpackStatus = document.createElement('span')
     this.inertiaStatus = document.createElement('span')
+    this.otherStatus = document.createElement('span')
     statusDisplay.appendChild(this.jetpackStatus)
     statusDisplay.appendChild(this.inertiaStatus)
+    statusDisplay.appendChild(this.otherStatus)
     this.frame.appendChild(statusDisplay)
 
 

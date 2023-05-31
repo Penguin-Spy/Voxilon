@@ -78,6 +78,17 @@ class GUI {
     this.loadView(this.history.pop())
   }
 
+  // displays an error over the whole screen, stops game.
+  // only for use with unhandled/catastrophic errors
+  showError(err) {
+    console.error(err)
+    
+  }
+
+  // displays an error in the top left of the screen
+  showWarning(warn) {
+    console.warn(warn)
+  }
 }
 
 export default new GUI();

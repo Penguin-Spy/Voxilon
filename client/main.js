@@ -71,7 +71,7 @@ function animate(now) {
 }
 
 
-let testbody, testbody2
+let testbody, testbodyTwo
 function start() {
   window.Voxilon.link = link;
   
@@ -90,18 +90,18 @@ function start() {
     shape: new CANNON.Sphere(1)
   })
 
-  testbody.position = { x: 2, y: 12, z: -7 }
+  testbody.position = { x: 2, y: 24, z: -7 }
   link.world.addBody(testbody)
 
   /**/
-  testbody2 = new Body({
+  testbodyTwo = new Body({
     mass: 1, // kg
     shape: new CANNON.Sphere(1),
     type: CANNON.Body.STATIC,
   })
 
-  testbody2.position = { x: -2, y: 12, z: -7 }
-  link.world.addBody(testbody2)
+  testbodyTwo.position = { x: -2, y: 24, z: -7 }
+  link.world.addBody(testbodyTwo)
   /**/
 
   requestAnimationFrame(animate)
@@ -147,4 +147,4 @@ async function networkLink(gameCode, username) {
   start()
 }
 
-window.Voxilon = { renderer, Input, GUI, hud, link, stop };
+window.Voxilon = { renderer, Input, GUI, hud, link, stop, animate };
