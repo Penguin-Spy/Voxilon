@@ -90,7 +90,7 @@ function start() {
     shape: new CANNON.Sphere(1)
   })
 
-  testbody.position = { x: 2, y: 24, z: -7 }
+  testbody.position = { x: 2, y: 44, z: -7 }
   link.world.addBody(testbody)
 
   /**/
@@ -100,7 +100,7 @@ function start() {
     type: CANNON.Body.STATIC,
   })
 
-  testbodyTwo.position = { x: -2, y: 24, z: -7 }
+  testbodyTwo.position = { x: -2, y: 44, z: -7 }
   link.world.addBody(testbodyTwo)
   /**/
 

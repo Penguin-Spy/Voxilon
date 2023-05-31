@@ -61,7 +61,7 @@ export default class Body {
 
   get mass() { return this.rigidBody.mass }
 
-  update(world, dt) {
+  update(world, DT) {
     // copy cannon position & quaternion to three
     if(this.mesh) {
       this.mesh.position.copy(this.rigidBody.interpolatedPosition)
@@ -82,7 +82,7 @@ export default class Body {
         _v2.multiplyScalar(G * this.mass * otherBody.mass / rSquared)
 
         // acceleration
-        _v2/*.divideScalar(this.mass)*/.multiplyScalar(dt)
+        _v2/*.divideScalar(this.mass)*/.multiplyScalar(DT)
 
         //console.log(this.rigidBody.id, _v2)
         

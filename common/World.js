@@ -14,7 +14,6 @@ export default class World {
     });
 
     for(const contactMaterial of contactMaterials) {
-      console.log(contactMaterial)
       this._physics.addContactMaterial(contactMaterial)
     }
 
@@ -24,7 +23,7 @@ export default class World {
     this.scene = new THREE.Scene();
     //this.scene.background = new THREE.Color("#87CEEB")
 
-    const planet = new CelestialBody(20, 9.8)
+    const planet = new CelestialBody(40, 9.8)
     this.addBody(planet)
   }
 
@@ -70,12 +69,12 @@ export default class World {
   }
 
 
-  step(dt) {
+  step(DT) {
     // updates THREE meshes & calculates gravity
     this._bodies.forEach(body => {
-      body.update(this, dt)
+      body.update(this, DT)
     })
 
-    this._physics.fixedStep()
+    this._physics.fixedStep(DT)
   }
 }

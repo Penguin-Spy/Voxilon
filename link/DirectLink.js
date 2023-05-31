@@ -5,7 +5,7 @@ import PacketEncoder from '/link/PacketEncoder.js'
 import PacketDecoder from '/link/PacketDecoder.js'
 import PlayerController from '/client/PlayerController.js'
 
-const dt = 1/60
+const DT = 1/60
 
 export default class DirectLink {
   constructor(worldOptions) {
@@ -28,7 +28,7 @@ export default class DirectLink {
 
     // create player's body
     this._playerBody = new PlayerBody()
-    this._playerBody.position = { x: 0, y: 24, z: 0 }
+    this._playerBody.position = { x: 0, y: 44, z: 0 }
     this._world.addBody(this._playerBody)
 
     this.playerController = new PlayerController();
@@ -150,15 +150,15 @@ export default class DirectLink {
     this.accumulator += deltaTime
     let maxSteps = 10;
 
-    while (this.accumulator > dt && maxSteps > 0) {
-      this._world.step(dt)
-      this.accumulator -= dt
+    while (this.accumulator > DT && maxSteps > 0) {
+      this._world.step(DT)
+      this.accumulator -= DT
       maxSteps--
     }
 
-    if(this.accumulator > dt) {  // remove extra steps worth of time that could not be processed
-      console.warn(`Warning: stepping world took too many steps to catch up! Simulation is behind by ${Math.floor(this.accumulator / dt)}ms`)
-      this.accumulator = this.accumulator % dt
+    if(this.accumulator > DT) {  // remove extra steps worth of time that could not be processed
+      console.warn(`Warning: stepping world took too many steps to catch up! Simulation is behind by ${Math.floor(this.accumulator / DT)}ms`)
+      this.accumulator = this.accumulator % DT
     }
     
   }

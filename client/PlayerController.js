@@ -16,7 +16,7 @@ const HALF_PI = Math.PI / 2;
 
 // strength of jetpack:
 const LINEAR_DAMPING = 0.1  // 10%
-const WALK_SPEED = 80       // m/s²
+const WALK_SPEED = 80       // m/s², affected by friction
 const JUMP_STRENGTH = 3     // idk the unit lol
 const FLY_SPEED = 40        // m/s²
 
@@ -64,30 +64,30 @@ export default class PlayerController {
       this.body.quaternion = this.body.lookQuaternion
       this.pitch = 0;
     } else {
-      this.body.material = Materials.ground
+      this.body.rigidBody.material = Materials.standingPlayer
     }
     this.hud.updateStatus(this)
   }
   
   // Take input data and apply it to the player's body
-  updateMovement(dt) {
+  updateMovement(DT) {
     this.body.quaternion.copy(this.bodyQuaternion)
     if(this.jetpackActive) {
-      this._updateJetpackMovement(dt)
+      this._updateJetpackMovement(DT)
     } else {
-      this._updateGravityMovement(dt)
+      this._updateGravityMovement(DT)
     }
   }
 
-  updateRotation(dt) {
+  updateRotation(deltaTime) {
     if(this.jetpackActive) {
-      this._updateJetpackRotation(dt)
+      this._updateJetpackRotation(deltaTime)
     } else {
-      this._updateGravityRotation(dt)
+      this._updateGravityRotation(deltaTime)
     }
   }
   
-  _updateJetpackRotation(dt) {
+  _updateJetpackRotation(deltaTime) {
     _q1.copy(this.body.quaternion)
     
     // yaw
@@ -98,7 +98,7 @@ export default class PlayerController {
     } else {
        angle = -Input.mouseDX()
     }
-    _q2.setFromAxisAngle(UP, angle * this.lookSpeed * dt)
+    _q2.setFromAxisAngle(UP, angle * this.lookSpeed * deltaTime)
     _q1.multiply(_q2)
     
     // pitch
@@ -109,15 +109,15 @@ export default class PlayerController {
     } else {
        angle = -Input.mouseDY()
     }
-    _q2.setFromAxisAngle(RIGHT, angle * this.lookSpeed * dt)
+    _q2.setFromAxisAngle(RIGHT, angle * this.lookSpeed * deltaTime)
     _q1.multiply(_q2)
 
     // roll
     if (Input.get('roll_left')) {
-      _q2.setFromAxisAngle(FORWARD, this.lookSpeed * dt)
+      _q2.setFromAxisAngle(FORWARD, this.lookSpeed * deltaTime)
       _q1.multiply(_q2)
     } else if (Input.get('roll_right')) {
-      _q2.setFromAxisAngle(FORWARD, -this.lookSpeed * dt)
+      _q2.setFromAxisAngle(FORWARD, -this.lookSpeed * deltaTime)
       _q1.multiply(_q2)
     }
     
@@ -125,7 +125,7 @@ export default class PlayerController {
     this.body.lookQuaternion.copy(_q1)
   }
 
-  _updateGravityRotation(dt) {
+  _updateGravityRotation(deltaTime) {
     _q1.copy(this.bodyQuaternion)
 
     // yaw
@@ -136,7 +136,7 @@ export default class PlayerController {
     } else {
        angle = -Input.mouseDX()
     }
-    _q2.setFromAxisAngle(UP, angle * this.lookSpeed * dt)
+    _q2.setFromAxisAngle(UP, angle * this.lookSpeed * deltaTime)
     _q1.multiply(_q2)
 
     // align player body to gravity
@@ -145,7 +145,7 @@ export default class PlayerController {
     _q2.setFromUnitVectors(_v2, _v1)  // angle to rotate bodyUP to gravityUP
     _q2.multiply(_q1)  // include current body rotation
 
-    _q1.slerp(_q2, 10 * dt)
+    _q1.slerp(_q2, 10 * deltaTime)
 
     // pitch
     if (Input.get('pitch_up')) {
@@ -155,7 +155,7 @@ export default class PlayerController {
     } else {
        angle = -Input.mouseDY()
     }
-    this.pitch += angle * this.lookSpeed * dt
+    this.pitch += angle * this.lookSpeed * deltaTime;
     // keep pitch within .5π & 1.5π (Straight down & straight up)
     if(this.pitch > HALF_PI) {
       this.pitch = HALF_PI
@@ -169,16 +169,10 @@ export default class PlayerController {
     this.body.lookQuaternion.copy(_q2)  // gravity-aligned quaternion + pitch
   }
 
-  _updateGravityMovement(dt) {
-    if(this.body.onGround) {
-      this.hud.otherStatus.innerText = "onGround: true"
-    } else {
-      this.hud.otherStatus.innerText = "onGround: false"
-    }
-
-    // reset material to default when in the air (ground vs. walkingPlayer)
+  _updateGravityMovement(DT) {
+    // reset material to default when in the air (standingPlayer vs. walkingPlayer)
     if(!this.body.onGround) {
-      this.body.material = Materials.ground
+      this.body.rigidBody.material = Materials.standingPlayer
       return
     }
     
@@ -202,24 +196,21 @@ export default class PlayerController {
     if (Input.get('up') && this.jumpLockout == 0) {
       _v1.y += this.jumpStrength
       this.jumpLockout = 10;
-      console.log("jump", this.body.velocity)
     }
     
-    _v1.multiplyScalar(this.body.mass * this.walkSpeed * dt); // player movement
+    _v1.multiplyScalar(this.body.mass * this.walkSpeed * DT); // player movement
     _v1.applyQuaternion(this.body.quaternion) // rotate to world space
 
     this.link.playerMove(_v1)
 
-    if(_v1.lengthSq() > 0) {
-      this.body.material = Materials.walkingPlayer
-      //this.hud.otherStatus.innerText = "walking"
+    if(_v1.lengthSq() > 0 && this.jumpLockout == 0) {
+      this.body.rigidBody.material = Materials.walkingPlayer
     } else {
-      this.body.material = Materials.ground
-      //this.hud.otherStatus.innerText = "ground"
+      this.body.rigidBody.material = Materials.standingPlayer
     }
   }
 
-  _updateJetpackMovement(dt) {
+  _updateJetpackMovement(DT) {
     _v1.set(0, 0, 0)
     // player velocity converted to camera-forward reference frame (camera forward = -Z)
     _v2.copy(this.body.velocity)
@@ -255,7 +246,7 @@ export default class PlayerController {
       _v2.y *= -this.linearDamping
     }
 
-    _v1.normalize().multiplyScalar(this.flySpeed * dt); // player movement
+    _v1.normalize().multiplyScalar(this.flySpeed * DT); // player movement
     _v1.add(_v2); // linear damping
     _v1.multiplyScalar(this.body.mass)
     _v1.applyQuaternion(this.body.quaternion) // rotate back to world space

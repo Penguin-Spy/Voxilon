@@ -1,7 +1,7 @@
 import { Sphere, RaycastResult } from 'cannon';
 import * as THREE from 'three';
 import Body from "/common/Body.js";
-import { ground } from "/common/Materials.js";
+import { standingPlayer } from "/common/Materials.js";
 
 const geometry = new THREE.BoxGeometry(2, 2, 2);
 const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 })
@@ -18,7 +18,7 @@ export default class PlayerBody extends Body {
     super({
       mass: 70, // kg
       shape: new Sphere(1),
-      material: ground,
+      material: standingPlayer,
       angularFactor: { x: 0, y: 0, z: 0 },  // prevent the player's body rotating at all by physics (will need to be removed for 0g stuff)
     }, local ? defaultMesh : false)
 
@@ -32,12 +32,12 @@ export default class PlayerBody extends Body {
     this.controller = playerController
   }
 
-  update(world, dt) {
+  update(world, DT) {
     if(this.controller) {
-      this.controller.updateMovement(dt)
+      this.controller.updateMovement(DT)
     }
     
-    super.update(world, dt);
+    super.update(world, DT);
 
     // check if this player body is touching the ground
     // TODO: make this smarter: check if collision vector is pointing towards the down Frame of Reference (the dir of gravity)
