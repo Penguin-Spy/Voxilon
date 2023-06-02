@@ -24,7 +24,10 @@ export default class World {
     //this.scene.background = new THREE.Color("#87CEEB")
 
     const planet = new CelestialBody(40, 9.8)
+    const moon = new CelestialBody(10, 9.8)//1.62)
+    moon.position.set(20, 60, 10)
     this.addBody(planet)
+    this.addBody(moon)
   }
 
   get bodies() { return this._bodies }

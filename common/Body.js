@@ -6,8 +6,7 @@ const geometry = new THREE.BoxGeometry(2, 2, 2);
 const material = new THREE.MeshBasicMaterial({ color: 0x0000ff })
 const absoluteDefaultMesh = new THREE.Mesh(geometry, material)
 
-const _v1 = new THREE.Vector3();
-const _v2 = new THREE.Vector3();
+const _v = new THREE.Vector3();
 
 export const G = 6.6743e-11;
 
@@ -72,28 +71,23 @@ export default class Body {
       this.gravityVector.set(0, 0, 0)
       for(const otherBody of world.gravityBodies) {
 
-        // difference in position
-        _v1.copy(otherBody.position).sub(this.position)
-
-        const rSquared = _v1.lengthSq() // distance squared
-        _v2.copy(_v1).normalize()       // direction of force
+        _v.copy(otherBody.position).sub(this.position) // difference in position
+        const rSquared = _v.lengthSq() // distance squared
+        _v.normalize()                 // direction of force
 
         // force
-        _v2.multiplyScalar(G * this.mass * otherBody.mass / rSquared)
+        _v.multiplyScalar(G * this.mass * otherBody.mass / rSquared)
 
         // acceleration
-        _v2/*.divideScalar(this.mass)*/.multiplyScalar(DT)
+        _v/*.divideScalar(this.mass)*/.multiplyScalar(DT)
 
-        //console.log(this.rigidBody.id, _v2)
+        // save the gravity vector with the highest magnitude
+        if(_v.lengthSq() >= this.gravityVector.lengthSq()) {
+          this.gravityVector.copy(_v)
+        }
         
-        this.gravityVector.copy(_v2)
-        //this.rigidBody.applyForce(_v2)
-        this.rigidBody.applyImpulse(_v2)
-        
-        // calculate and apply gravity
-        //_v1.copy(this.gravityVector).multiplyScalar(world.gravityStrength)
-        //this.rigidBody.applyForce(_v1)
-        
+        // apply gravity
+        this.rigidBody.applyImpulse(_v)
       }
     }
   }
