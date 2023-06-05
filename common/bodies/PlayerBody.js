@@ -20,7 +20,7 @@ export default class PlayerBody extends Body {
       shape: new Sphere(1),
       material: standingPlayer,
       angularFactor: { x: 0, y: 0, z: 0 },  // prevent the player's body rotating at all by physics (will need to be removed for 0g stuff)
-    }, local ? defaultMesh : false)
+    }, local ? defaultMesh.clone() : false)
 
     this.onGround = false;
     this.lookQuaternion = new THREE.Quaternion(); // client-side, independent of body rotation & world stepping

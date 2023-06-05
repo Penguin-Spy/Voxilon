@@ -5,8 +5,7 @@ import HUD from '/client/HUD.js'
 
 import main_menu from '/client/views/main_menu.js'
 
-import * as CANNON from 'cannon'
-import Body from '/common/Body.js'
+import TestBody from '/common/bodies/TestBody.js'
 
 // remove loading error handler
 // todo: make a new error handler for runtime errors? (display to user that something went wrong)
@@ -85,24 +84,13 @@ function start() {
   Input.requestPointerLock()
 
   /* extra body for testing */
-  testbody = new Body({
-    mass: 1, // kg
-    shape: new CANNON.Sphere(1)
-  })
-
+  testbody = new TestBody({static: false})
   testbody.position = { x: 2, y: 44, z: -7 }
   link.world.addBody(testbody)
 
-  /**/
-  testbodyTwo = new Body({
-    mass: 1, // kg
-    shape: new CANNON.Sphere(1),
-    type: CANNON.Body.STATIC,
-  })
-
+  testbodyTwo = new TestBody({static: true})
   testbodyTwo.position = { x: -2, y: 44, z: -7 }
   link.world.addBody(testbodyTwo)
-  /**/
 
   requestAnimationFrame(animate)
 }
@@ -127,9 +115,12 @@ async function directLink(worldOptions) {
   }
 
   console.info("Starting direct link")
-  link = new linkModules.direct(worldOptions)
-
-  start()
+  try {
+    link = new linkModules.direct(worldOptions)
+    start()
+  } catch(e) {
+    GUI.showError("Error when starting direct link", e)
+  }
 }
 async function networkLink(gameCode, username) {
   if (!linkModules.network) {
@@ -142,7 +133,12 @@ async function networkLink(gameCode, username) {
   }
 
   console.info(`Starting network link w/ code: ${gameCode} & username: ${username}`)
-  link = new linkModules.network(gameCode, username)
+  try {
+    link = new linkModules.network(gameCode, username)
+    start()
+  } catch(e) {
+    GUI.showError("Error when starting network link", e)
+  }
 
   start()
 }

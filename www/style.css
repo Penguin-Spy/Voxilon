@@ -62,9 +62,12 @@ input, button {
 }
 .gui-loading {
   position: absolute;
+  width: 100%;
   margin: 8px;
   display: flex;
   flex-direction: column;
+  pointer-events: all;
+  user-select: text;
 }
 
 
@@ -135,5 +138,14 @@ button.invisible {
 
 /* Loading screen (before main.js has loaded & ran) */
 .gui-loading > span {
-  margin-bottom: 2px;
+  margin-bottom: 4px;
+  line-height: 1.1;
+}
+/* Error screen */
+.gui-loading[data-screen="error"] > span:nth-child(1) {
+  color: orangered;
+}
+.gui-loading[data-screen="error"] > span:nth-child(n+3) { /* stack trace elements */
+  margin-left: 1em;
+  color: #ddd;
 }

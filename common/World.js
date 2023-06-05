@@ -23,8 +23,8 @@ export default class World {
     this.scene = new THREE.Scene();
     //this.scene.background = new THREE.Color("#87CEEB")
 
-    const planet = new CelestialBody(40, 9.8)
-    const moon = new CelestialBody(10, 9.8)//1.62)
+    const planet = new CelestialBody({radius: 40, surfaceGravity: 9.8})
+    const moon = new CelestialBody({radius: 10, surfaceGravity: 9.8}) // 1.62
     moon.position.set(20, 60, 10)
     this.addBody(planet)
     this.addBody(moon)

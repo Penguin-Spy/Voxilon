@@ -6,9 +6,9 @@ class GUI {
     this.notableNodes = {} // nodes that have "id" set, usually for accessing in gui scripts
 
     // Main frame for the currently open screen (inventory, building gui, main menu, etc.)
-    this.mainFrame = document.createElement("div")
+    this.mainFrame = gui.children[0]
     this.mainFrame.setAttribute("class", "gui-mainFrame")
-    this.root.replaceChildren(this.mainFrame) // this removes the loading/"failed to load" message
+    this.mainFrame.replaceChildren() // this removes the loading message
   }
 
   addFrame(frameClass) {
@@ -80,9 +80,14 @@ class GUI {
 
   // displays an error over the whole screen, stops game.
   // only for use with unhandled/catastrophic errors
-  showError(err) {
-    console.error(err)
-    
+  showError(context, e) {
+    console.error(e)
+    this.clearScreen()
+    this.mainFrame.className = "gui-loading"
+    this.mainFrame.dataset.screen = "error"
+    newMessage(`${context}: ${e.message}`)
+    newMessage(`@ ${e.fileName}:${e.line}:${e.column}`)
+    e.stack.split("\n").forEach(newMessage)
   }
 
   // displays an error in the top left of the screen

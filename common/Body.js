@@ -2,10 +2,6 @@ import * as CANNON from 'cannon';
 import * as THREE from 'three';
 import { ground } from "/common/Materials.js";
 
-const geometry = new THREE.BoxGeometry(2, 2, 2);
-const material = new THREE.MeshBasicMaterial({ color: 0x0000ff })
-const absoluteDefaultMesh = new THREE.Mesh(geometry, material)
-
 const _v = new THREE.Vector3();
 
 export const G = 6.6743e-11;
@@ -16,7 +12,7 @@ export default class Body {
     rigidBody: optional, CannonJS physics body
   */
 
-  constructor(cannonOptions, defaultMesh) {
+  constructor(cannonOptions, mesh) {
     this.gravityVector = new THREE.Vector3();
     
     // --- CANNON ---
@@ -38,16 +34,30 @@ export default class Body {
 
     
     // --- THREE ---
-    if(defaultMesh === undefined) {
+    if(mesh === undefined) {
       console.warn("[%s] Creating rigidbody with default mesh!", this.constructor.name)
-      defaultMesh = absoluteDefaultMesh
+      mesh = absoluteDefaultMesh.clone()
     }
     // may be false to indicate no mesh (if client root body)
-    if(defaultMesh) {
-      this.mesh = defaultMesh.clone()
+    if(mesh) {
+      this.mesh = mesh
     }
   }
 
+  static deserialize(data) {
+    // todo: confirm data is in the proper format
+    const body = new Body({
+      mass: data.mass
+    });
+    body.position.set(...data.position)
+    body.velocity.set(...data.velocity)
+    body.quaternion.set(...data.quaternion)
+    body.angularVelocity.set(...data.angularVelocity)
+    return body;
+  }
+
+  // todo: remove the setter syntax, instead use the .set() method
+  // this better matches the fact that these are object references
   get position() { return this.rigidBody.position }
   set position(value) { this.rigidBody.position.copy(value) }
   get velocity() { return this.rigidBody.velocity }

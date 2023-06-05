@@ -17,4 +17,13 @@ class TwoWayMap {
   }
 }
 
-export { TwoWayMap }
+// type safety checks during world load
+function check(variable, type) {
+  if(typeof variable === type) {
+    return variable;
+  } else {
+    throw new TypeError(`Encountered incorrect type when loading. Expected ${type}, got ${typeof variable}.`)
+  }
+}
+
+export { TwoWayMap, check }
