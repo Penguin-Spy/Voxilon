@@ -1,31 +1,43 @@
-import { Sphere, RaycastResult } from 'cannon';
-import * as THREE from 'three';
-import Body from "/common/Body.js";
-import { standingPlayer } from "/common/Materials.js";
+import * as CANNON from 'cannon'
+import * as THREE from 'three'
+import Body from "/common/Body.js"
+import { standingPlayer } from "/common/Materials.js"
+import { check } from "/common/util.js"
 
 const geometry = new THREE.BoxGeometry(2, 2, 2);
 const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 })
 const defaultMesh = new THREE.Mesh(geometry, material)
 
-/*const _result = new RaycastResult();
+/*const _result = new CANNON.RaycastResult();
 const _raycastOptions = {collisionFilterGroup: 2}; // not the player
 const _v1 = new THREE.Vector3();
 const _v2 = new THREE.Vector3();*/
 
 export default class PlayerBody extends Body {
   // @param local boolean   is this PlayerBody for this client or another player
-  constructor(local) {
-    super({
-      mass: 70, // kg
-      shape: new Sphere(1),
+  constructor(data, local) {
+    const mass = 70; //check(data.mass, "number")
+    
+    const rigidBody = new CANNON.Body({
+      mass: mass, // kg
+      shape: new CANNON.Sphere(1),
+      type: CANNON.Body.DYNAMIC,
       material: standingPlayer,
       angularFactor: { x: 0, y: 0, z: 0 },  // prevent the player's body rotating at all by physics (will need to be removed for 0g stuff)
-    }, local ? defaultMesh.clone() : false)
+    })
+    
+    super(data, rigidBody, local ? defaultMesh.clone() : false)
 
     this.onGround = false;
     this.lookQuaternion = new THREE.Quaternion(); // client-side, independent of body rotation & world stepping
     this.controller = null;
     this.rigidBody.collisionFilterMask = 1; // dont get raycast intersected by our own update()
+  }
+
+  get type() { return "voxilon:player_body" }
+  serialize() {
+    const data = super.serialize()
+    return data
   }
 
   attach(playerController) {

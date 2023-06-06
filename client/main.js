@@ -5,8 +5,6 @@ import HUD from '/client/HUD.js'
 
 import main_menu from '/client/views/main_menu.js'
 
-import TestBody from '/common/bodies/TestBody.js'
-
 // remove loading error handler
 // todo: make a new error handler for runtime errors? (display to user that something went wrong)
 window.onerror = undefined;
@@ -69,10 +67,8 @@ function animate(now) {
   renderRequest = requestAnimationFrame(animate)
 }
 
-
-let testbody, testbodyTwo
 function start() {
-  window.Voxilon.link = link;
+  window.Voxilon.link = link
   
   link.playerController.attach(link, hud)
   renderer.attach(link.playerBody)
@@ -82,15 +78,6 @@ function start() {
   hud.show()
   Input.enablePointerLock()
   Input.requestPointerLock()
-
-  /* extra body for testing */
-  testbody = new TestBody({static: false})
-  testbody.position = { x: 2, y: 44, z: -7 }
-  link.world.addBody(testbody)
-
-  testbodyTwo = new TestBody({static: true})
-  testbodyTwo.position = { x: -2, y: 44, z: -7 }
-  link.world.addBody(testbodyTwo)
 
   requestAnimationFrame(animate)
 }

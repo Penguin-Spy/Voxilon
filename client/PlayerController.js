@@ -43,7 +43,7 @@ export default class PlayerController {
   // Attach this controller to the specified Link
   attach(link, hud) {
     this.link = link
-    this.body = link.playerBody
+    this.body = link._playerBody
     this.hud = hud
     hud.updateStatus(this)
   }
@@ -61,8 +61,8 @@ export default class PlayerController {
     this.jetpackActive = !this.jetpackActive
     // if enabling jetpack,
     if(this.jetpackActive) {
-      this.body.quaternion = this.body.lookQuaternion
-      this.pitch = 0;
+      this.body.quaternion.copy(this.body.lookQuaternion)
+      this.pitch = 0
     } else {
       this.body.rigidBody.material = Materials.standingPlayer
     }

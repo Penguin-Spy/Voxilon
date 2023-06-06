@@ -1,5 +1,4 @@
 import World from '/common/World.js'
-import PlayerBody from '/common/bodies/PlayerBody.js'
 import PeerConnection from '/link/PeerConnection.js'
 import PacketEncoder from '/link/PacketEncoder.js'
 import PacketDecoder from '/link/PacketDecoder.js'
@@ -24,12 +23,35 @@ export default class DirectLink {
     this._username = "host" // maybe load from LocalStorage?
 
     // create/load world
-    this._world = new World()
+    this._world = new World({
+      VERSION: "1.0",
+      bodies: [
+        {
+          type: "voxilon:celestial_body",
+          radius: 40,
+          surfaceGravity: 9.8
+        }, {
+          type: "voxilon:celestial_body",
+          position: [20, 60, 10],
+          radius: 10,
+          surfaceGravity: 9.8
+        }, {
+          type: "voxilon:test_body",
+          position: [2, 44, -7],
+          static: false
+        }, {
+          type: "voxilon:test_body",
+          position: [-2, 44, -7],
+          static: true
+        }, {
+          type: "voxilon:player_body",
+          position: [0, 44, 0]
+        }
+      ]
+    })
 
-    // create player's body
-    this._playerBody = new PlayerBody()
-    this._playerBody.position = { x: 0, y: 44, z: 0 }
-    this._world.addBody(this._playerBody)
+    // find player's body
+    this._playerBody = this._world.getBodyByType("voxilon:player_body")
 
     this.playerController = new PlayerController();
     this._playerBody.attach(this.playerController)

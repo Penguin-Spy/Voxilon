@@ -12,61 +12,49 @@ export default class Body {
     rigidBody: optional, CannonJS physics body
   */
 
-  constructor(cannonOptions, mesh) {
-    this.gravityVector = new THREE.Vector3();
-    
+  constructor(data, rigidBody, mesh) {
     // --- CANNON ---
-    if (cannonOptions.shape === undefined) {
-      console.warn("[%s] Creating rigidbody with default shape!", this.constructor.name)
-      cannonOptions.shape = new CANNON.Sphere(1)
-    }
-    if(cannonOptions.type === undefined) {
-      cannonOptions.type = CANNON.Body.DYNAMIC
-    }
-    if(cannonOptions.material === undefined) {
-      console.warn("[%s] Creating rigidbody with default material!", this.constructor.name)
-      cannonOptions.material = ground
-    }
-    cannonOptions.linearDamping = 0  // conservation of momentum
-    cannonOptions.angularDamping = 0  // conservation of angular momentum
-
-    this.rigidBody = new CANNON.Body(cannonOptions)
-
+    rigidBody.linearDamping = 0  // conservation of momentum
+    rigidBody.angularDamping = 0  // conservation of angular momentum
+    this.rigidBody = rigidBody
     
     // --- THREE ---
-    if(mesh === undefined) {
-      console.warn("[%s] Creating rigidbody with default mesh!", this.constructor.name)
-      mesh = absoluteDefaultMesh.clone()
-    }
     // may be false to indicate no mesh (if client root body)
     if(mesh) {
       this.mesh = mesh
     }
+
+    data = { // default values
+      position: [0, 0, 0],
+      velocity: [0, 0, 0],
+      quaternion: [0, 0, 0, 0],
+      angularVelocity: [0, 0, 0],
+      ...data
+    }
+
+    this.position.set(...data.position)
+    this.velocity.set(...data.velocity)
+    this.quaternion.set(...data.quaternion)
+    this.angularVelocity.set(...data.angularVelocity)
+    
+    this.gravityVector = new THREE.Vector3()
   }
 
-  static deserialize(data) {
-    // todo: confirm data is in the proper format
-    const body = new Body({
-      mass: data.mass
-    });
-    body.position.set(...data.position)
-    body.velocity.set(...data.velocity)
-    body.quaternion.set(...data.quaternion)
-    body.angularVelocity.set(...data.angularVelocity)
-    return body;
+  serialize() {
+    const data = {}
+    data.type = this.type
+    data.position = this.position.toArray()
+    data.velocity = this.velocity.toArray()
+    data.quaternion = this.quaternion.toArray()
+    data.angularVelocity = this.angularVelocity.toArray()
+    // data.mass = this.mass
+    return data
   }
 
-  // todo: remove the setter syntax, instead use the .set() method
-  // this better matches the fact that these are object references
   get position() { return this.rigidBody.position }
-  set position(value) { this.rigidBody.position.copy(value) }
   get velocity() { return this.rigidBody.velocity }
-  set velocity(value) { this.rigidBody.velocity.copy(value) }
-
   get quaternion() { return this.rigidBody.quaternion }
-  set quaternion(value) { this.rigidBody.quaternion.copy(value) }
   get angularVelocity() { return this.rigidBody.angularVelocity }
-  set angularVelocity(value) { this.rigidBody.angularVelocity.copy(value) }
 
   get mass() { return this.rigidBody.mass }
 

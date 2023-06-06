@@ -1,33 +1,46 @@
-import * as CANNON from 'cannon';
-import * as THREE from 'three';
-import CelestialBody from "/common/bodies/CelestialBody.js";
-import { contactMaterials } from "/common/Materials.js";
+import * as CANNON from 'cannon'
+import * as THREE from 'three'
+import CelestialBody from "/common/bodies/CelestialBody.js"
+import PlayerBody from "/common/bodies/PlayerBody.js"
+import TestBody from "/common/bodies/TestBody.js"
+import { contactMaterials } from "/common/Materials.js"
+
+const constructors = {
+  "voxilon:celestial_body": CelestialBody,
+  "voxilon:player_body": PlayerBody,
+  "voxilon:test_body": TestBody
+}
 
 export default class World {
-  constructor() {
+  constructor(data) {
+    if(data.VERSION !== "1.0") throw new Error(`Unknown world version: ${data.VERSION}`)
+    
+    this.name = data.name ?? "A Universe"
     this._bodies = []
 
     // --- CANNON ---
-    
     this._physics = new CANNON.World({
       frictionGravity: new CANNON.Vec3(0, -9.82, 0) // direction doesn't matter, only magnitude is used in friction calculations
-    });
-
+    })
     for(const contactMaterial of contactMaterials) {
       this._physics.addContactMaterial(contactMaterial)
     }
 
-    
     // --- THREE ---
-    
     this.scene = new THREE.Scene();
     //this.scene.background = new THREE.Color("#87CEEB")
 
-    const planet = new CelestialBody({radius: 40, surfaceGravity: 9.8})
-    const moon = new CelestialBody({radius: 10, surfaceGravity: 9.8}) // 1.62
-    moon.position.set(20, 60, 10)
-    this.addBody(planet)
-    this.addBody(moon)
+
+    data.bodies.forEach(b => {
+      this.addBody(new constructors[b.type](b))
+    })
+  }
+
+  serialize() {
+    const data = { "VERSION": "1.0" }
+    data.name = this.name
+    data.bodies = this._bodies.map(b => b.serialize())
+    return data
   }
 
   get bodies() { return this._bodies }
@@ -45,7 +58,14 @@ export default class World {
 
   getBody(bodyID) {
     return this._bodies[bodyID]
-  };
+  }
+
+  getBodyByType(type) {
+    return this.bodies.find(b => b.type === type)
+  }
+  getAllBodiesByType(type) {
+    return this.bodies.filter(b => b.type === type)
+  }
 
   moveBody(bodyID, position, velocity) {
     console.warn("World:moveBody called")
