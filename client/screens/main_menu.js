@@ -28,6 +28,7 @@ export default {
       class: 'big',
       action: function() {
         alert("Settings clicked")
+        throw new Error("test error")
       }
     },
 

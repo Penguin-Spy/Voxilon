@@ -5,33 +5,6 @@ import HUD from '/client/HUD.js'
 
 import main_menu from '/client/screens/main_menu.js'
 
-// remove loading error handler
-window.onerror = undefined;
-
-function $(query) {  // not jQuery!! just looks like it :troll:
-  return document.querySelector(query);
-}
-
-// initalize engine
-const renderer = new Renderer();
-Input.useCanvas(renderer.getCanvas());
-const hud = new HUD();
-
-GUI.loadScreen(main_menu, "title", { directLink, networkLink })
-
-const debugFrame = GUI.addFrame("gui-debug")
-const renderSpan = document.createElement("span")
-
-const physicsDebug = document.createElement("div")
-const positionSpan = document.createElement("span")
-const velocitySpan = document.createElement("span")
-physicsDebug.appendChild(positionSpan)
-physicsDebug.appendChild(document.createElement("br"))
-physicsDebug.appendChild(velocitySpan)
-
-debugFrame.appendChild(renderSpan)
-debugFrame.appendChild(physicsDebug)
-
 let renderRequest, then = 0
 // ticks the physics engine and then the Server (crafting machines, belts, vehicles, etc.)
 function animate(now) {
@@ -148,4 +121,30 @@ async function networkLink(button, gameCode, username) {
   start()
 }
 
+
+// initalize engine
+const renderer = new Renderer();
+Input.useCanvas(renderer.getCanvas());
+const hud = new HUD();
+
+GUI.loadScreen(main_menu, "title", { directLink, networkLink })
+
+const debugFrame = GUI.addFrame("gui-debug")
+const renderSpan = document.createElement("span")
+
+const physicsDebug = document.createElement("div")
+const positionSpan = document.createElement("span")
+const velocitySpan = document.createElement("span")
+physicsDebug.appendChild(positionSpan)
+physicsDebug.appendChild(document.createElement("br"))
+physicsDebug.appendChild(velocitySpan)
+
+debugFrame.appendChild(renderSpan)
+debugFrame.appendChild(physicsDebug)
+
+
+// remove loading error handler
+window.onerror = undefined;
+
+// debugging interface
 window.Voxilon = { renderer, Input, GUI, hud, link, stop, animate };

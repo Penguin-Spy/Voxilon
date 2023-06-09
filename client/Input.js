@@ -160,10 +160,14 @@ function handleGameKeyDown(event) {
 }
 
 function handleKeyDown(event) {
-  if(document.pointerLockElement === canvas) {
-    handleGameKeyDown(event)
-  } else if(GUI.hasScreenOpen) {
-    handleGuiKeyDown(event)
+  try {
+    if(document.pointerLockElement === canvas) {
+      handleGameKeyDown(event)
+    } else if(GUI.hasScreenOpen) {
+      handleGuiKeyDown(event)
+    }
+  } catch(e) {
+    GUI.showError("Error while handilng keydown", e)
   }
 }
 

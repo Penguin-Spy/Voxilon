@@ -4,6 +4,15 @@ const body = document.querySelector("body")
 
 const focusableNodeNames = ["input", 'select', "textarea", "button", "object"]
 
+// uses Function.bind(GUI, node), event is passed as a normal argument
+function protectedCallAction(action, event) {
+  try {
+    action.call(this, event)
+  } catch(e) {
+    this.showError("Error while running GUI action", e)
+  }
+}
+
 class GUI {
   constructor() {
     const parentNode = document.querySelector("#gui")
@@ -66,10 +75,9 @@ class GUI {
             node.innerHTML = element[k]
             break
           case "action":
-            node.addEventListener('click', e => {
-              element.action.call(this, e)
-            })
-            node.action = element.action
+            // this = GUI, action = element.action, event is passed as a normal argument
+            node.action = protectedCallAction.bind(this, element.action)
+            node.addEventListener('click', node.action)
             break
           case "proceedAction":
             this.proceedAction = element.action
@@ -107,14 +115,14 @@ class GUI {
 
   // when hitting enter in the menu
   proceed(event) {
-    if(this.proceedAction) this.proceedAction.call(this, event)
+    if(this.proceedAction) this.proceedAction(event)
   }
 
   // call action on the notableNode
   runAction(index, event) {
     const action = this.focusableNodes[index].action
     if(action === undefined) return false
-    action.call(this, event)
+    action(event)
     return true
   }
 
