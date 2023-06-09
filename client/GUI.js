@@ -1,15 +1,23 @@
+const body = document.querySelector("body")
+
+const focusableNodeNames = ["input", 'select', "textarea", "button", "object"]
+
 class GUI {
   constructor() {
     const parentNode = document.querySelector("#gui")
     this.root = parentNode
     this.history = []
     this.notableNodes = {} // nodes that have "id" set, usually for accessing in gui scripts
+    this.focusableNodes = [] // nodes that can receive focus
 
     // Main frame for the currently open screen (inventory, building gui, main menu, etc.)
     this.mainFrame = gui.children[0]
     this.mainFrame.setAttribute("class", "gui-mainFrame")
     this.mainFrame.replaceChildren() // this removes the loading message
   }
+
+  get cursor() { return body.dataset.cursor }
+  set cursor(value) { body.dataset.cursor = value }
 
   addFrame(frameClass) {
     const frame = document.createElement("div")
@@ -39,6 +47,9 @@ class GUI {
   loadView(view) {
     this.mainFrame.replaceChildren() // remove previous view
     this.mainFrame.dataset.view = view
+    this.notableNodes = {}
+    this.focusableNodes.length = 0
+    this.proceedAction = undefined
 
     // create all elements & put them in this.mainFrame
     for (const element of this.screen[view]) {
@@ -51,9 +62,12 @@ class GUI {
             node.innerHTML = element[k]
             break
           case "action":
-            node.addEventListener('click', () => {
-              element.action.call(this)
+            node.addEventListener('click', e => {
+              element.action.call(this, e)
             })
+            node.action = element.action
+          case "proceedAction":
+            this.proceedAction = element.action
             break
           case "id":
             this.notableNodes[element[k]] = node // don't break; so we set the attribute too
@@ -64,6 +78,10 @@ class GUI {
 
       // add the node to the main frame
       this.mainFrame.appendChild(node)
+      
+      if(focusableNodeNames.includes(element.$)) {
+        this.focusableNodes.push(node)
+      }
     }
   }
 
@@ -75,7 +93,17 @@ class GUI {
 
   // moves back one node in the navigation history
   back() {
-    this.loadView(this.history.pop())
+    if(this.history.length > 0) this.loadView(this.history.pop())
+  }
+
+  // when hitting enter in the menu
+  proceed(event) {
+    if(this.proceedAction) this.proceedAction.call(this, event)
+  }
+
+  // call action on the notableNode
+  runAction(index, event) {
+    this.focusableNodes[index].action.call(this, event)
   }
 
   // displays an error over the whole screen, stops game.

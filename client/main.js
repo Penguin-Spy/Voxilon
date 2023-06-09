@@ -75,6 +75,7 @@ function start() {
   hud.attach(link)
 
   GUI.clearScreen()
+  GUI.cursor = "default"
   hud.show()
   Input.enablePointerLock()
   Input.requestPointerLock()
@@ -91,11 +92,15 @@ function stop() {
 const linkModules = {}
 let link  // current link, may be undefined
 
-async function directLink(worldOptions) {
+async function directLink(button, worldOptions) {
+  button.disabled = true
+  GUI.cursor = "loading"
   if (!linkModules.direct) {
     try {
       linkModules.direct = (await import('/link/DirectLink.js')).default
     } catch(err) {
+      button.disabled = false
+      GUI.cursor = "default"
       throw err
       return false
     }
@@ -109,11 +114,15 @@ async function directLink(worldOptions) {
     GUI.showError("Error when starting direct link", e)
   }
 }
-async function networkLink(gameCode, username) {
+async function networkLink(button, gameCode, username) {
+  button.disabled = true
+  GUI.cursor = "loading"
   if (!linkModules.network) {
     try {
       linkModules.network = (await import('/link/NetworkLink.js')).default
     } catch(err) {
+      button.disabled = false
+      GUI.cursor = "default"
       throw err
       return false
     }

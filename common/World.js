@@ -15,7 +15,7 @@ export default class World {
   constructor(data) {
     if(data.VERSION !== "1.0") throw new Error(`Unknown world version: ${data.VERSION}`)
     
-    this.name = data.name ?? "A Universe"
+    this.name = data.name ?? "A Universe" 
     this._bodies = []
 
     // --- CANNON ---

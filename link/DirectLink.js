@@ -25,6 +25,7 @@ export default class DirectLink {
     // create/load world
     this._world = new World({
       VERSION: "1.0",
+      name: worldOptions.name,
       bodies: [
         {
           type: "voxilon:celestial_body",

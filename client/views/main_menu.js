@@ -7,12 +7,15 @@ export default {
 
     {
       $: 'button', content: "Singleplayer",
-      class: 'big',
-      action: function() {
-        //this.forward("singleplayer")
-        this.actions.directLink({
-          name: "new world"
-        })
+      class: 'big', id: "startButton", proceedAction: true,
+      action: function(e) {
+        if(e.shiftKey) {
+          this.actions.directLink(this.notableNodes.startButton, {
+            name: "Debug World"
+          })
+        } else {
+          this.forward("singleplayer")
+        }
       }
     }, {
       $: 'button', content: "Multiplayer",
@@ -50,10 +53,15 @@ export default {
     { $: 'span', content: "pretend there's sliders 'n stuff here" },
 
     {
-      $: 'button', class: "big", content: "Start",
+      $: 'input', class: "big", id: "worldName",
+      type: "text", placeholder: "universe name"
+    }, 
+    {
+      $: 'button', content: "Start",
+      class: "big", id: "startButton",
       action: function() {
-        this.actions.directLink({
-          name: "new world"
+        this.actions.directLink(this.notableNodes.startButton, {
+          name: this.notableNodes.worldName.value
         })
       }
     }, {
@@ -71,11 +79,12 @@ export default {
       $: 'input', class: "big", id: "username",
       type: "text", placeholder: "username"
     }, {
-      $: 'button', class: "big", content: "Join",
+      $: 'button', content: "Join",
+      class: "big", id: "startButton",
       action: function() {
         const gameCode = this.notableNodes.gameCode.value
         const username = this.notableNodes.username.value
-        this.actions.networkLink(gameCode, username)
+        this.actions.networkLink(this.notableNodes.startButton, gameCode, username)
       }
     }, {
       $: 'button', class: "big back", content: "Back",
