@@ -36,7 +36,8 @@ export default {
     { $: 'h2', content: "Singleplayer" },
 
     {
-      $: 'button', class: "big", content: "Create new Universe",
+      $: 'button', content: "Create new Universe",
+      class: "big", proceedAction: true,
       action: function() {
         this.forward("new_universe")
       }
@@ -58,7 +59,7 @@ export default {
     }, 
     {
       $: 'button', content: "Start",
-      class: "big", id: "startButton",
+      class: "big", id: "startButton", proceedAction: true,
       action: function() {
         this.actions.directLink(this.notableNodes.startButton, {
           name: this.notableNodes.worldName.value
@@ -80,7 +81,7 @@ export default {
       type: "text", placeholder: "username"
     }, {
       $: 'button', content: "Join",
-      class: "big", id: "startButton",
+      class: "big", id: "startButton", proceedAction: true,
       action: function() {
         const gameCode = this.notableNodes.gameCode.value
         const username = this.notableNodes.username.value

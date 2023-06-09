@@ -1,3 +1,5 @@
+import Input from "/client/Input.js"
+
 const body = document.querySelector("body")
 
 const focusableNodeNames = ["input", 'select', "textarea", "button", "object"]
@@ -18,6 +20,8 @@ class GUI {
 
   get cursor() { return body.dataset.cursor }
   set cursor(value) { body.dataset.cursor = value }
+
+  get hasScreenOpen() { return this.mainFrame.dataset.screen !== undefined }
 
   addFrame(frameClass) {
     const frame = document.createElement("div")
@@ -66,6 +70,7 @@ class GUI {
               element.action.call(this, e)
             })
             node.action = element.action
+            break
           case "proceedAction":
             this.proceedAction = element.action
             break
@@ -83,6 +88,10 @@ class GUI {
         this.focusableNodes.push(node)
       }
     }
+
+    // focus the first focusable text input in the view
+    const firstInput = this.focusableNodes.find(node => node.nodeName === "INPUT" && node.type === "text")
+    if(firstInput) { firstInput.focus() }
   }
 
   // moves the main view forward in the navigation history
@@ -103,19 +112,32 @@ class GUI {
 
   // call action on the notableNode
   runAction(index, event) {
-    this.focusableNodes[index].action.call(this, event)
+    const action = this.focusableNodes[index].action
+    if(action === undefined) return false
+    action.call(this, event)
+    return true
   }
+
 
   // displays an error over the whole screen, stops game.
   // only for use with unhandled/catastrophic errors
   showError(context, e) {
-    console.error(e)
+    console.error(context + " -", e)
     this.clearScreen()
-    this.mainFrame.className = "gui-loading"
+    Input.stop()
+    
+    this.mainFrame.className = "gui-messages"
     this.mainFrame.dataset.screen = "error"
-    newMessage(`${context}: ${e.message}`)
-    newMessage(`@ ${e.fileName}:${e.line}:${e.column}`)
-    e.stack.split("\n").forEach(newMessage)
+    newMessage(`${context} - ${e.name}: ${e.message}`, "error")
+    newMessage(`@ ${e.fileName}:${e.line}:${e.column}`, "stacktrace")
+    
+    for(const line of e.stack.split("\n")) {
+      newMessage(line, "stacktrace")
+      if(line.startsWith("FrameRequestCallback")) {  // don't fill the rest of the screen with the animate callback trace
+        newMessage("...", "stacktrace")
+        break
+      }
+    }
   }
 
   // displays an error in the top left of the screen

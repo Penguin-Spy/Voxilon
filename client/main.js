@@ -3,10 +3,9 @@ import Input from '/client/Input.js'
 import GUI from '/client/GUI.js'
 import HUD from '/client/HUD.js'
 
-import main_menu from '/client/views/main_menu.js'
+import main_menu from '/client/screens/main_menu.js'
 
 // remove loading error handler
-// todo: make a new error handler for runtime errors? (display to user that something went wrong)
 window.onerror = undefined;
 
 function $(query) {  // not jQuery!! just looks like it :troll:
@@ -49,19 +48,29 @@ function animate(now) {
   }
 
   // --- Physics ---
-  link.playerController.updateRotation(deltaTime)
-  hud.update()
+  try {
+    link.playerController.updateRotation(deltaTime)
+    hud.update()
 
-  link.step(deltaTime)
+    link.step(deltaTime)
+  } catch(e) {
+    GUI.showError("Error occured while ticking", e)
+    return
+  }
 
   // --- Render ---
-  renderSpan.innerText = `FPS: ${(1 / deltaTime).toFixed(2)}`
-  const _velocity = link.playerBody.velocity
-  const _position = link.playerBody.position
-  positionSpan.innerHTML = ` X: ${_position.x.toFixed(3)}  Y: ${_position.y.toFixed(3)}  Z: ${_position.z.toFixed(3)}`
-  velocitySpan.innerHTML = `vX: ${_velocity.x.toFixed(3)} vY: ${_velocity.y.toFixed(3)} vZ: ${_velocity.z.toFixed(3)}`
+  try {
+    renderSpan.innerText = `FPS: ${(1 / deltaTime).toFixed(2)}`
+    const _velocity = link.playerBody.velocity
+    const _position = link.playerBody.position
+    positionSpan.innerHTML = ` X: ${_position.x.toFixed(3)}  Y: ${_position.y.toFixed(3)}  Z: ${_position.z.toFixed(3)}`
+    velocitySpan.innerHTML = `vX: ${_velocity.x.toFixed(3)} vY: ${_velocity.y.toFixed(3)} vZ: ${_velocity.z.toFixed(3)}`
 
-  renderer.render(link.world)
+    renderer.render(link.world)
+  } catch(e) {
+    GUI.showError("Error occured while rendering", e)
+    return
+  }
 
   // only request the next frame if this one succeded
   renderRequest = requestAnimationFrame(animate)

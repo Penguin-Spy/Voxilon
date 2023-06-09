@@ -87,44 +87,50 @@ function handleTouch(event) {
 function handleGuiKeyDown(event) {
   const activeElement = document.activeElement
   const parent = activeElement.parentNode
+  let code = event.code
 
   // if nothing's selected, do custom enter behavior
   if(parent !== GUI.mainFrame) {
-    if (event.code === "Enter") {
+    if (code === "Enter") {
       GUI.proceed(event)
       event.preventDefault()
       return
     }
   }
-    
+
   // regardless of if something's selected:
     
   //  do esc
-  if (event.code === "Escape") {
+  if (code === "Escape") {
     GUI.back()
     event.preventDefault()
     return
   
   //  do arrow keys & enter navigation
   //    if nothing's selected, arrows go to 0 and .length
-  } else if(event.code === "ArrowUp" || event.code === "ArrowDown" || event.code === "Enter") {
+  } else if(code === "ArrowUp" || code === "ArrowDown" || code === "Enter") {
     let index = GUI.focusableNodes.indexOf(activeElement)
     // if index === -1 (no child focused), the index over/underflow code will behave properly still
-      
-    if(event.code === "ArrowDown") {
+
+    if(code === "Enter") {
+      event.preventDefault()
+      if(GUI.runAction(index, event)) {
+        return // if the element had an action that ran, return
+      } else {
+        console.log("next focusable element")
+        code = "ArrowDown" // otherwise, go to the next focusable element
+      }
+    }
+    if(code === "ArrowDown") {
       index++
       if(index >= GUI.focusableNodes.length) {
         index = 0
       }
-    } else if(event.code === "ArrowUp") {
+    } else if(code === "ArrowUp") {
       index--
       if(index < 0) {
         index = GUI.focusableNodes.length - 1
       }
-    } else if(event.code === "Enter") {
-      GUI.runAction(index, event)
-      event.preventDefault()
-      return
     }
     
     GUI.focusableNodes[index].focus()
@@ -156,7 +162,7 @@ function handleGameKeyDown(event) {
 function handleKeyDown(event) {
   if(document.pointerLockElement === canvas) {
     handleGameKeyDown(event)
-  } else {
+  } else if(GUI.hasScreenOpen) {
     handleGuiKeyDown(event)
   }
 }
@@ -164,6 +170,7 @@ function handleKeyDown(event) {
 function handleKeyUp(event) {
   currentKeys[event.code] = false
 }
+
 
 export default {
   enablePointerLock() {
@@ -207,5 +214,18 @@ export default {
       throw new Error(`Event handler for control "${control}" already exists!`)
     }
     eventHandlers[control] = callback
+  },
+
+  stop() {
+    this.disablePointerLock()
+    document.exitPointerLock()
+
+    document.removeEventListener('pointerlockchange', lockChangeAlert, false)
+    document.removeEventListener('mozpointerlockchange', lockChangeAlert, false)
+
+    document.removeEventListener('touchstart', handleTouch)
+    document.removeEventListener('touchstop', handleTouch)
+    document.removeEventListener('keydown', handleKeyDown)
+    document.removeEventListener('keyup', handleKeyUp)
   }
 }

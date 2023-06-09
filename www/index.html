@@ -19,15 +19,16 @@
   
 </head><body>
   <div id="gui">
-    <div class="gui-loading">
+    <div class="gui-messages">
       <span>Voxilon is loading...</span>
     </div>
   </div>
   <script>
-    const loadingFrame = document.querySelector(".gui-loading")
-    function newMessage(message) {
+    const loadingFrame = document.querySelector(".gui-messages")
+    function newMessage(message, type) {
       const element = document.createElement("span")
       element.innerText = message
+      if(type) element.className = type
       loadingFrame.appendChild(element)
     }
     window.onerror = (msg, source, line, column) => {
@@ -37,8 +38,8 @@
         return true // prevent error from showing in console
       } else {
         loadingFrame.dataset.screen = "error"
-        newMessage(`Loading failed: ${msg}`)
-        newMessage(`@ ${source}:${line}:${column}`)
+        newMessage(`Loading failed: ${msg}`, "error")
+        newMessage(`@ ${source}:${line}:${column}`, "stacktrace")
       }
     }
   </script>

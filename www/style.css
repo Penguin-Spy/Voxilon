@@ -37,6 +37,7 @@ input, button {
 }
 
 /* ----- GUI STYLES ----- */
+/* frame styles */
 .gui-mainFrame {
   z-index: 1;
   
@@ -60,14 +61,16 @@ input, button {
   bottom: 0;
   width: 100%;
 }
-.gui-loading {
+.gui-messages {
   position: absolute;
   width: 100%;
-  margin: 8px;
+  padding: 8px;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   pointer-events: all;
   user-select: text;
+  word-wrap: break-word;
 }
 
 
@@ -149,15 +152,18 @@ body[data-cursor="disabled"] {
 
 
 /* Loading screen (before main.js has loaded & ran) */
-.gui-loading > span {
+.gui-messages > span {
   margin-bottom: 4px;
   line-height: 1.1;
 }
 /* Error screen */
-.gui-loading[data-screen="error"] > span:nth-child(1) {
+.gui-messages[data-screen="error"] {
+  background-color: #444a;
+}
+.gui-messages[data-screen="error"] > span.error {
   color: orangered;
 }
-.gui-loading[data-screen="error"] > span:nth-child(n+3) { /* stack trace elements */
+.gui-messages[data-screen="error"] > span.stacktrace {
   margin-left: 1em;
   color: #ddd;
 }
