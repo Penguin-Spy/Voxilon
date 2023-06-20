@@ -39,7 +39,7 @@ function animate(now) {
     positionSpan.innerHTML = ` X: ${_position.x.toFixed(3)}  Y: ${_position.y.toFixed(3)}  Z: ${_position.z.toFixed(3)}`
     velocitySpan.innerHTML = `vX: ${_velocity.x.toFixed(3)} vY: ${_velocity.y.toFixed(3)} vZ: ${_velocity.z.toFixed(3)}`
 
-    renderer.render(link.world)
+    renderer.render()
   } catch(e) {
     GUI.showError("Error occured while rendering", e)
     return
@@ -53,7 +53,7 @@ function start() {
   window.Voxilon.link = link
   
   link.playerController.attach(link, hud)
-  renderer.attach(link.playerBody)
+  renderer.attach(link)
   hud.attach(link)
 
   GUI.clearScreen()

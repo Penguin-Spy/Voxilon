@@ -3,7 +3,7 @@ import * as THREE from 'three'
 import CelestialBody from "/common/bodies/CelestialBody.js"
 import PlayerBody from "/common/bodies/PlayerBody.js"
 import TestBody from "/common/bodies/TestBody.js"
-import { contactMaterials } from "/common/Materials.js"
+import { contactMaterials } from "/common/PhysicsMaterials.js"
 
 const constructors = {
   "voxilon:celestial_body": CelestialBody,
@@ -28,7 +28,6 @@ export default class World {
 
     // --- THREE ---
     this.scene = new THREE.Scene();
-    //this.scene.background = new THREE.Color("#87CEEB")
 
 
     data.bodies.forEach(b => {

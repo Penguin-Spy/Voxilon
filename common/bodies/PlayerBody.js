@@ -1,7 +1,7 @@
 import * as CANNON from 'cannon'
 import * as THREE from 'three'
 import Body from "/common/Body.js"
-import { standingPlayer } from "/common/Materials.js"
+import { standingPlayer } from "/common/PhysicsMaterials.js"
 import { check } from "/common/util.js"
 
 const geometry = new THREE.BoxGeometry(2, 2, 2);

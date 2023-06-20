@@ -1,7 +1,7 @@
 import * as CANNON from 'cannon'
 import * as THREE from 'three'
 import { default as Body, G } from '/common/Body.js'
-import { ground } from "/common/Materials.js"
+import { ground } from "/common/PhysicsMaterials.js"
 import { check } from '/common/util.js'
 
 const material = new THREE.MeshBasicMaterial({color: 0x3CCC00})

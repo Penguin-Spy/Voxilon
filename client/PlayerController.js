@@ -1,6 +1,6 @@
 import Input from '/client/Input.js'
 import { Vector3, Quaternion } from 'three'
-import * as Materials from "/common/Materials.js"
+import * as Materials from "/common/PhysicsMaterials.js"
 
 const _v1 = new Vector3();
 const _v2 = new Vector3();

@@ -1,12 +1,13 @@
 import * as CANNON from 'cannon'
 import * as THREE from 'three'
 import Body from "/common/Body.js"
-import { ground } from "/common/Materials.js"
+import { ground } from "/common/PhysicsMaterials.js"
 import { check } from '/common/util.js'
+import { debugGrid, debugCompass } from "/common/RenderMaterials.js"
 
 const geometry = new THREE.BoxGeometry(2, 2, 2);
-const material = new THREE.MeshBasicMaterial({ color: 0x0000ff })
-const mesh = new THREE.Mesh(geometry, material)
+const staticMesh = new THREE.Mesh(geometry, debugCompass)
+const dynamicMesh = new THREE.Mesh(geometry, debugGrid)
 
 export default class TestBody extends Body {
   
@@ -20,7 +21,7 @@ export default class TestBody extends Body {
       type: static_is_a_reserved_identifier ? CANNON.Body.STATIC : CANNON.Body.DYNAMIC,
     })
     
-    super(data, rigidBody, mesh.clone())
+    super(data, rigidBody, static_is_a_reserved_identifier ? staticMesh.clone() : dynamicMesh.clone())
     this.static = static_is_a_reserved_identifier
   }
 

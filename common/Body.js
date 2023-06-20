@@ -1,6 +1,6 @@
 import * as CANNON from 'cannon';
 import * as THREE from 'three';
-import { ground } from "/common/Materials.js";
+import { ground } from "/common/PhysicsMaterials.js";
 
 const _v = new THREE.Vector3();
 
@@ -23,13 +23,13 @@ export default class Body {
     if(mesh) {
       this.mesh = mesh
     }
-
+    
     data = { // default values
       position: [0, 0, 0],
       velocity: [0, 0, 0],
-      quaternion: [0, 0, 0, 0],
+      quaternion: [0, 0, 0, 1],  // the identity quaternion
       angularVelocity: [0, 0, 0],
-      ...data
+      ...data  // then overwrite with existing data values
     }
 
     this.position.set(...data.position)
