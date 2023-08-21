@@ -1,31 +1,43 @@
-import World from '../common/World.js'
-import PlayerBody from '/common/bodies/Player.js'
+import GUI from '/client/GUI.js'
+import World from '/common/World.js'
 import PeerConnection from '/link/PeerConnection.js'
 import PacketEncoder from '/link/PacketEncoder.js'
 import PacketDecoder from '/link/PacketDecoder.js'
+import PlayerController from '/client/PlayerController.js'
+import { SIGNAL_ENDPOINT, PacketType } from '/link/Constants.js'
+const { CHAT, LOAD_WORLD, ADD_BODY } = PacketType
 
-const joinCodeRegex = /^([A-HJ-NP-Z0-9]{5})$/
+const JOIN_CODE_REGEX = /^([A-HJ-NP-Z0-9]{5})$/
+
+// CONNECTING: waiting for WebSocket connect, join request, and WebRTC connect
+// LOADING: WebRTC connected, waiting for world to load
+// LOADED: world loaded
+// ATTACHED: attached to client player body
+const CONNECTING = 0, LOADING = 1, LOADED = 2, ATTACHED = 3
+
+const DT = 1/60
 
 export default class NetworkLink {
   constructor(target, username) {
     this._username = username // maybe load from LocalStorage? (prefill input of gui)
 
+    this.accumulator = 0
     this._callbacks = {}
+    this._readyState = CONNECTING
 
-    // create/load world
-    this._world = new World()
-
-    // create player's body
-    this._playerBody = new PlayerBody()
-    this._playerBody.position = { x: 0, y: 1, z: 0 }
-    this._world.addBody(this._playerBody)
+    this._readyPromise = new Promise((resolve, reject) => {
+      this._readyResolve = resolve
+      this._readyReject = reject
+    })
+    
+    this.playerController = new PlayerController()
 
     // open a WebRTC data channel with the host of the specified game
-    if (target.match(joinCodeRegex)) { // convert join code to full url
+    if (target.match(JOIN_CODE_REGEX)) { // convert join code to full url
       console.log(`prefixing ${target}`)
-      target = `wss://signal.voxilon.ml/${target}`
+      target = `${SIGNAL_ENDPOINT}/${target}`
     }
-    // normalize url
+    // normalize url (URL constructor is allowed to throw an error)
     const targetURL = new URL(target)
     targetURL.protocol = "wss:"
     targetURL.hash = ""
@@ -46,9 +58,19 @@ export default class NetworkLink {
               ordered: false,
               negotiated: true, id: 0
             })
-            this.dataChannel.onopen = e => { console.info("[dataChannel] open") }
             this.dataChannel.onclose = e => { console.info("[dataChannel] close") }
-            this.dataChannel.onmessage = ({ data }) => { this._handlePacket(data) }
+            this.dataChannel.onmessage = ({ data }) => { 
+              try {
+                this._handlePacket(data)
+              } catch(e) {
+                console.error(data)
+                GUI.showError("Error occured while handling packet", e)
+              }
+            }
+            this.dataChannel.onopen = e => {
+              console.info("[dataChannel] open")
+              this._readyState = LOADING
+            }
 
           } else { // it was denied, close websocket
             this.ws.close(1000, "Join request not approved")
@@ -69,8 +91,13 @@ export default class NetworkLink {
     }
     this.ws.onclose = ({ code, reason }) => {
       console.warn(`Websocket closed | ${code}: ${reason}`)
+      if(this._readyState === CONNECTING) {
+        this._readyReject(new Error("Websocket closed while connecting"))
+      }
     }
   }
+
+  get ready() { return this._readyPromise }
 
   get playerBody() { return this._playerBody }
   //get world() { console.error("accessing Link.world directly!!") }
@@ -80,8 +107,34 @@ export default class NetworkLink {
   /* --- Network Link methods --- */
   _handlePacket(data) {
     console.log(`[dataChannel] ${data}`)
-    const packet = PacketDecoder.chat(data)
-    this.emit('chat_message', packet)
+    const packet = PacketDecoder.decode(data)
+
+    // handle receiving packets
+    switch (packet.$) {
+      case CHAT:
+        this.emit('chat_message', packet)
+        break;
+
+      case LOAD_WORLD:
+        this._world = new World(packet.world_data)
+        this._readyState = LOADED
+        console.log("loaded world")
+        break;
+
+      case ADD_BODY:
+        const body = this._world.loadBody(packet.data)
+        // check if the loaded body was ours
+        if(packet.data.type === "voxilon:player_body" && packet.is_client_body) {
+          console.log("loaded our body:", packet)
+          this._playerBody = body
+          this._playerBody.attach(this.playerController)
+          this._readyState = ATTACHED
+          this._readyResolve()
+        }
+        break;
+      default:
+        throw new TypeError(`Unknown packet type ${packet.$}`)
+    }
   }
 
   send(packet) {
@@ -89,25 +142,26 @@ export default class NetworkLink {
   }
 
   /* --- Link interface methods --- */
+  // apply to local world, and send over WebRTC data channel
 
   playerMove(velocity) {  // vector of direction to move in
-
-    // apply to local world, and send over WebRTC data channel
-
-    //this._playerBody.rigidBody.applyImpulse(velocity)
+    this._playerBody.rigidBody.applyImpulse(velocity)
   }
-  playerRotate(quaternion) {  // sets player's rotation
-    //this._playerBody.quaternion = quaternion
-    //this._playerBody.quaternion = this._playerBody.quaternion.normalize()
-
+  playerRotate(bodyQuaternion, lookQuaternion) {  // sets player's rotation
+    this._playerBody.quaternion = bodyQuaternion
+    this._playerBody.lookQuaternion = lookQuaternion
   }
+
 
   // Chat
   sendChat(msg) {
     console.info(`[NetworkLink] Sending chat message: "${msg}"`)
-    this.send(PacketEncoder.chat(this._username, msg))
+    this.send(PacketEncoder.CHAT(this._username, msg))
   }
 
+  /* --- Identical between Direct & Network links ---- */
+  // TODO: don't duplicate this code? have a parent class for both links? some other method?
+  
   // packet event handling
   on(event, callback) {
     this._callbacks[event] = callback
@@ -119,4 +173,20 @@ export default class NetworkLink {
     }
   }
 
-}  
+  step(deltaTime) {
+    this.accumulator += deltaTime
+    let maxSteps = 10;
+
+    while (this.accumulator > DT && maxSteps > 0) {
+      this._world.step(DT)
+      this.accumulator -= DT
+      maxSteps--
+    }
+
+    if(this.accumulator > DT) {  // remove extra steps worth of time that could not be processed
+      console.warn(`Warning: stepping world took too many steps to catch up! Simulation is behind by ${Math.floor(this.accumulator / DT)}ms`)
+      this.accumulator = this.accumulator % DT
+    }
+    
+  }
+}

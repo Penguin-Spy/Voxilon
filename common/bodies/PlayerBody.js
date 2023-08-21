@@ -26,7 +26,7 @@ export default class PlayerBody extends Body {
       angularFactor: { x: 0, y: 0, z: 0 },  // prevent the player's body rotating at all by physics (will need to be removed for 0g stuff)
     })
     
-    super(data, rigidBody, local ? defaultMesh.clone() : false)
+    super(data, rigidBody, /*local ?*/ defaultMesh.clone() /*: false*/)
 
     this.onGround = false;
     this.lookQuaternion = new THREE.Quaternion(); // client-side, independent of body rotation & world stepping

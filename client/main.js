@@ -113,12 +113,11 @@ async function networkLink(button, gameCode, username) {
   console.info(`Starting network link w/ code: ${gameCode} & username: ${username}`)
   try {
     link = new linkModules.network(gameCode, username)
+    await link.ready
     start()
   } catch(e) {
     GUI.showError("Error when starting network link", e)
   }
-
-  start()
 }
 
 

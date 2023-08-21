@@ -3,11 +3,9 @@ const signal = require('./signal.js');
 const app = express();
 app.use(express.json()); // for parsing application/json
 
-// Pass signal subdomain requests to signal router
-app.use((req, res, next) => {
-  if (req.subdomains[0] === "signal") {
-    signal.router.handle(req, res, next)
-  } else next()
+// Pass signal requests to signal router
+app.use("/signal", (req, res, next) => {
+  signal.router.handle(req, res, next)
 })
 
 // Host static client & common files
@@ -25,4 +23,7 @@ app.get("/400", (req, res) => {
 const server = app.listen(8080, function() {
   console.log("Express server started")
 });
-server.on('upgrade', signal.upgrade);
+server.on('upgrade', (req, sock, head) => {
+  req.url = req.url.slice(7) // remove "/signal" prefix
+  signal.upgrade(req, sock, head)
+});

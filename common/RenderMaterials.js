@@ -10,5 +10,10 @@ tex_debugGrid.generateMipmaps = false
 tex_debugCompass.magFilter = NearestFilter
 tex_debugCompass.generateMipmaps = false
 
+const tex_grass = loader.load("grass.png")
+
+
 export const debugGrid = new MeshBasicMaterial({ map: tex_debugGrid })
 export const debugCompass = new MeshBasicMaterial({ map: tex_debugCompass })
+
+export const grass = new MeshBasicMaterial({ map: tex_grass })

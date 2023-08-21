@@ -5,6 +5,8 @@ import PlayerBody from "/common/bodies/PlayerBody.js"
 import TestBody from "/common/bodies/TestBody.js"
 import { contactMaterials } from "/common/PhysicsMaterials.js"
 
+const WORLD_VERSION = "alpha-0"
+
 const constructors = {
   "voxilon:celestial_body": CelestialBody,
   "voxilon:player_body": PlayerBody,
@@ -13,7 +15,7 @@ const constructors = {
 
 export default class World {
   constructor(data) {
-    if(data.VERSION !== "1.0") throw new Error(`Unknown world version: ${data.VERSION}`)
+    if(data.VERSION !== WORLD_VERSION) throw new Error(`Unknown world version: ${data.VERSION}`)
     
     this.name = data.name ?? "A Universe" 
     this._bodies = []
@@ -30,15 +32,15 @@ export default class World {
     this.scene = new THREE.Scene();
 
 
-    data.bodies.forEach(b => {
-      this.addBody(new constructors[b.type](b))
-    })
+    data.bodies.forEach(b => this.loadBody(b))
   }
 
-  serialize() {
-    const data = { "VERSION": "1.0" }
+  serialize(noBodies = false) {
+    const data = { "VERSION": WORLD_VERSION }
     data.name = this.name
-    data.bodies = this._bodies.map(b => b.serialize())
+    if(!noBodies) {
+      data.bodies = this._bodies.map(b => b.serialize())
+    }
     return data
   }
 
@@ -49,10 +51,17 @@ export default class World {
     })
   }
 
-  addBody(body) {
+  loadBody(data) {
+    const body = new constructors[data.type](data)
+    
     this._physics.addBody(body.rigidBody)
     if(body.mesh) this.scene.add(body.mesh)
-    return this._bodies.push(body)
+    this._bodies.push(body)
+    return body
+  }
+  
+  addBody(body) {
+    throw new Error("calling World:addBody")
   }
 
   getBody(bodyID) {
@@ -67,7 +76,7 @@ export default class World {
   }
 
   moveBody(bodyID, position, velocity) {
-    console.warn("World:moveBody called")
+    throw new Error("World:moveBody called")
     const body = this._bodies[bodyID];
     if (body) {
       body.position = position;
@@ -75,7 +84,7 @@ export default class World {
     }
   };
   rotateBody(bodyID, quaternion, angularVelocity) {
-    console.warn("World:rotateBody called")
+    throw new Error("World:rotateBody called")
     const body = this._bodies[bodyID];
     if (body) {
       body.quaternion = quaternion;

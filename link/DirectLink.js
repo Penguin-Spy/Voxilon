@@ -1,8 +1,11 @@
+import GUI from '/client/GUI.js'
 import World from '/common/World.js'
 import PeerConnection from '/link/PeerConnection.js'
 import PacketEncoder from '/link/PacketEncoder.js'
 import PacketDecoder from '/link/PacketDecoder.js'
 import PlayerController from '/client/PlayerController.js'
+import { SIGNAL_ENDPOINT, PacketType } from '/link/Constants.js'
+const { CHAT, ADD_BODY } = PacketType
 
 const DT = 1/60
 
@@ -24,7 +27,7 @@ export default class DirectLink {
 
     // create/load world
     this._world = new World({
-      VERSION: "1.0",
+      VERSION: "alpha-0",
       name: worldOptions.name,
       bodies: [
         {
@@ -59,11 +62,11 @@ export default class DirectLink {
 
     // create Integrated server
   }
-
   get playerBody() { return this._playerBody }
   //get world() { console.error("accessing Link.world directly!!") }
   get world() { return this._world }
   get username() { return this._username }
+
 
   /* --- Direct Link methods --- */
 
@@ -76,7 +79,7 @@ export default class DirectLink {
       this._username = options.username ?? this._username;
 
       // start listening for WebRTC connections
-      this.ws = new WebSocket(`wss://signal.voxilon.ml/new_session`)
+      this.ws = new WebSocket(SIGNAL_ENDPOINT + "/new_session")
       this.ws.onmessage = e => {
         const data = JSON.parse(e.data)
         console.log("[link Receive]", data)
@@ -101,9 +104,40 @@ export default class DirectLink {
               ordered: false,
               negotiated: true, id: 0
             })
-            client.dataChannel.onopen = e => { console.info(`[dataChannel:${client.id}] open`) }
             client.dataChannel.onclose = e => { console.info(`[dataChannel:${client.id}] close`) }
-            client.dataChannel.onmessage = ({ data }) => { this._handlePacket(client, data) }
+            client.dataChannel.onmessage = ({ data }) => {
+              try {
+                this._handlePacket(client, data)
+              } catch(e) {
+                console.error(data)
+                GUI.showError("Error occured while handling packet", e)
+              }
+            }
+            
+            client.dataChannel.onopen = e => {
+              console.info(`[dataChannel:${client.id}] open`)
+              
+              // send world data
+              const world_data = this._world.serialize()
+              client.dataChannel.send(PacketEncoder.LOAD_WORLD(world_data))
+              
+              // create client's player body
+              client.body = this._world.loadBody({
+                type: "voxilon:player_body",
+                position: [0, 44, 0]
+              })
+              const packet = PacketEncoder.ADD_BODY(client.body.serialize(), false)
+              const clientPacket = PacketEncoder.ADD_BODY(client.body.serialize(), true)
+              for (const broadcastClient of this._clients) {
+                if(broadcastClient === client) {
+                  console.log(`sending clientPacket to ${client.id}`, clientPacket)
+                  broadcastClient.dataChannel.send(clientPacket)
+                } else {
+                  console.log(`sending packet to ${client.id}`, packet)
+                  broadcastClient.dataChannel.send(packet)
+                }
+              }
+            }
 
             break;
           default:
@@ -122,12 +156,31 @@ export default class DirectLink {
 
   _handlePacket(client, data) {
     console.log(`[dataChannel:${client.id}] ${data}`)
-    const packet = PacketDecoder.chat(data)
-    // temp just treat everything as chat msg
-    this.emit('chat_message', packet)
-    this.broadcast(PacketEncoder.chat(packet.author, packet.msg))
+    const packet = PacketDecoder.decode(data)
+
+    // handle receiving packets
+    switch (packet.$) {
+      case CHAT:
+        this.emit('chat_message', packet)
+        this.broadcast(PacketEncoder.CHAT(packet.author, packet.msg))
+        break;
+      // ADD_BODY wouldn't be valid to send to the server
+      // clients will use a different packet to request placing stuff
+      /*case ADD_BODY:
+        const body = this._world.loadBody(packet)
+          // check if the loaded body was ours
+        if(packet.type === "voxilon:player_body" && packet.is_client_body) {
+          this._playerBody.attach(this.playerController)
+        }
+        break;*/
+      default:
+        throw new TypeError(`Unknown packet type ${packet.$}`)
+    }
   }
 
+  send(id, packet) {
+    this._clients[id].send(packet)
+  }
 
   broadcast(packet) {
     for (const client of this._clients) {
@@ -141,9 +194,6 @@ export default class DirectLink {
   playerMove(velocity) {  // vector of direction to move in
     this._playerBody.rigidBody.applyImpulse(velocity)
   }
-  /*playerLook(lookQuaternion) {
-    this._playerBody.lookQuaternion = lookQuaternion
-  }*/
   playerRotate(bodyQuaternion, lookQuaternion) {  // sets player's rotation
     this._playerBody.quaternion = bodyQuaternion
     this._playerBody.lookQuaternion = lookQuaternion
@@ -153,10 +203,13 @@ export default class DirectLink {
   sendChat(msg) {
     console.info(`[DirectLink] Sending chat message: "${msg}"`)
     // broadcast chat msg packet to all clients
-    this.broadcast(PacketEncoder.chat(this._username, msg))
+    this.broadcast(PacketEncoder.CHAT(this._username, msg))
     // send it to ourselves via the event handler
     this.emit('chat_message', { author: this._username, msg })
   }
+
+  /* --- Identical between Direct & Network links ---- */
+  // TODO: don't duplicate this code? have a parent class for both links? some other method?
 
   // packet event handling
   on(event, callback) {

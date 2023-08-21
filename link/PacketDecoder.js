@@ -1,7 +1,8 @@
-
+//import { PacketType } from '/link/Constants.js'
+//const { CHAT, ADD_BODY } = PacketType
 
 export default {
-  chat(packet) {
+  decode: function(packet) {
     return JSON.parse(packet)
   }
 }

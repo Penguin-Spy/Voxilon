@@ -20,8 +20,12 @@ export default {
     }, {
       $: 'button', content: "Multiplayer",
       class: 'big',
-      action: function() {
+      action: function(e) {
         this.forward("multiplayer")
+        if(e.shiftKey) {
+          this.notableNodes.gameCode.value = "AAAAA"
+          this.notableNodes.username.value = "Lea"
+        }
       }
     }, {
       $: 'button', content: "Settings",
