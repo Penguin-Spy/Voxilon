@@ -15,7 +15,7 @@ export default class HUD {
     this.chatInput = document.createElement('input')
     this.chatInput.hidden = true
     this.chatInput.onkeydown = e => {
-      if (e.code === "Enter") {
+      if(e.code === "Enter") {
         this.link.sendChat(this.chatInput.value)
         this.chatInput.value = ""
         this.closeChat()
@@ -30,10 +30,10 @@ export default class HUD {
     hotbar.setAttribute('class', "hotbar")
     this.frame.appendChild(hotbar)
 
-    
+
     const statusDisplay = document.createElement('div')
-    statusDisplay.setAttribute('class', "status-display")
-    
+    statusDisplay.setAttribute('class', "status-display bg bg-top bg-left")
+
     this.jetpackStatus = document.createElement('span')
     this.inertiaStatus = document.createElement('span')
     statusDisplay.appendChild(this.jetpackStatus)
@@ -57,7 +57,7 @@ export default class HUD {
 
   // update elements
   update() {
-    if(document.activeElement !== this.chatInput && !this.chatInput.hidden ) { this.closeChat() }
+    if(document.activeElement !== this.chatInput && !this.chatInput.hidden) { this.closeChat() }
   }
 
   // called by PlayerController when we need to update the status display

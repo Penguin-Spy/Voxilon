@@ -51,7 +51,7 @@ function animate(now) {
 
 function start() {
   window.Voxilon.link = link
-  
+
   link.playerController.attach(link, hud)
   renderer.attach(link)
   hud.attach(link)
@@ -77,7 +77,7 @@ let link  // current link, may be undefined
 async function directLink(button, worldOptions) {
   button.disabled = true
   GUI.cursor = "loading"
-  if (!linkModules.direct) {
+  if(!linkModules.direct) {
     try {
       linkModules.direct = (await import('/link/DirectLink.js')).default
     } catch(err) {
@@ -99,7 +99,7 @@ async function directLink(button, worldOptions) {
 async function networkLink(button, gameCode, username) {
   button.disabled = true
   GUI.cursor = "loading"
-  if (!linkModules.network) {
+  if(!linkModules.network) {
     try {
       linkModules.network = (await import('/link/NetworkLink.js')).default
     } catch(err) {
@@ -128,7 +128,7 @@ const hud = new HUD();
 
 GUI.loadScreen(main_menu, "title", { directLink, networkLink })
 
-const debugFrame = GUI.addFrame("gui-debug")
+const debugFrame = GUI.addFrame("gui-debug bg bg-bottom bg-right")
 const renderSpan = document.createElement("span")
 
 const physicsDebug = document.createElement("div")
