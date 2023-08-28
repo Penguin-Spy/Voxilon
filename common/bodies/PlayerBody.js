@@ -1,7 +1,7 @@
 import * as CANNON from 'cannon'
 import * as THREE from 'three'
 import Body from "/common/Body.js"
-import { standingPlayer } from "/common/PhysicsMaterials.js"
+import { STANDING_PLAYER } from "/common/PhysicsMaterials.js"
 import { check } from "/common/util.js"
 
 const geometry = new THREE.BoxGeometry(2, 2, 2);
@@ -17,15 +17,15 @@ export default class PlayerBody extends Body {
   // @param local boolean   is this PlayerBody for this client or another player
   constructor(data, local) {
     const mass = 70; //check(data.mass, "number")
-    
+
     const rigidBody = new CANNON.Body({
       mass: mass, // kg
       shape: new CANNON.Sphere(1),
       type: CANNON.Body.DYNAMIC,
-      material: standingPlayer,
+      material: STANDING_PLAYER,
       angularFactor: { x: 0, y: 0, z: 0 },  // prevent the player's body rotating at all by physics (will need to be removed for 0g stuff)
     })
-    
+
     super(data, rigidBody, /*local ?*/ defaultMesh.clone() /*: false*/)
 
     this.onGround = false;
@@ -45,26 +45,26 @@ export default class PlayerBody extends Body {
   }
 
   update(world, DT) {
+    super.update(world, DT)
+
     if(this.controller) {
       this.controller.updateMovement(DT)
     }
-    
-    super.update(world, DT);
 
     // check if this player body is touching the ground
     // TODO: make this smarter: check if collision vector is pointing towards the down Frame of Reference (the dir of gravity)
     const ourId = this.rigidBody.id;
-    this.onGround = world._physics.contacts.some(e => {
-	   return e.bi.id === ourId || e.bj.id === ourId
+    this.onGround = world.physics.contacts.some(e => {
+      return e.bi.id === ourId || e.bj.id === ourId
     })
 
 
-    
+
     //this.onGround = false
     /*for(const otherBody of world.gravityBodies) {
       _result.reset()
       //console.log(this.position, otherBody.position, _raycastOptions)
-      world._physics.raycastClosest(this.position, otherBody.position, _raycastOptions, _result)
+      world.physics.raycastClosest(this.position, otherBody.position, _raycastOptions, _result)
       if(_result.hasHit) {
         //console.log("Hit!", _result);
         if(_result.distance < 1.2) {

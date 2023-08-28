@@ -1,6 +1,5 @@
 import * as CANNON from 'cannon';
 import * as THREE from 'three';
-import { ground } from "/common/PhysicsMaterials.js";
 
 const _v = new THREE.Vector3();
 
@@ -17,13 +16,13 @@ export default class Body {
     rigidBody.linearDamping = 0  // conservation of momentum
     rigidBody.angularDamping = 0  // conservation of angular momentum
     this.rigidBody = rigidBody
-    
+
     // --- THREE ---
     // may be false to indicate no mesh (if client root body)
     if(mesh) {
       this.mesh = mesh
     }
-    
+
     data = { // default values
       position: [0, 0, 0],
       velocity: [0, 0, 0],
@@ -36,7 +35,7 @@ export default class Body {
     this.velocity.set(...data.velocity)
     this.quaternion.set(...data.quaternion)
     this.angularVelocity.set(...data.angularVelocity)
-    
+
     this.gravityVector = new THREE.Vector3()
   }
 
@@ -83,7 +82,7 @@ export default class Body {
         if(_v.lengthSq() >= this.gravityVector.lengthSq()) {
           this.gravityVector.copy(_v)
         }
-        
+
         // apply gravity
         this.rigidBody.applyImpulse(_v)
       }

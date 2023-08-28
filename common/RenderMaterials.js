@@ -13,7 +13,7 @@ tex_debugCompass.generateMipmaps = false
 const tex_grass = loader.load("grass.png")
 
 
-export const debugGrid = new MeshBasicMaterial({ map: tex_debugGrid })
-export const debugCompass = new MeshBasicMaterial({ map: tex_debugCompass })
+export const DEBUG_GRID = new MeshBasicMaterial({ map: tex_debugGrid })
+export const DEBUG_COMPASS = new MeshBasicMaterial({ map: tex_debugCompass })
 
-export const grass = new MeshBasicMaterial({ map: tex_grass })
+export const GRASS = new MeshBasicMaterial({ map: tex_grass })
