@@ -8,17 +8,27 @@ const _q1 = new Quaternion();
 const _q2 = new Quaternion();
 let angle = 0;
 
-const RIGHT   = new Vector3(1, 0, 0)
-const UP      = new Vector3(0, 1, 0)
+const RIGHT = new Vector3(1, 0, 0)
+const UP = new Vector3(0, 1, 0)
 const FORWARD = new Vector3(0, 0, 1)
 
 const HALF_PI = Math.PI / 2;
 
 // strength of jetpack:
-const LINEAR_DAMPING = 0.1  // 10%
+const LINEAR_DAMPING = 20   // m/s²
 const WALK_SPEED = 80       // m/s², affected by friction
 const JUMP_STRENGTH = 3     // idk the unit lol
 const FLY_SPEED = 40        // m/s²
+
+const max = Math.max, min = Math.min
+function toZero(value, delta) {
+  if(value > 0) {
+    return max(value - delta, 0)
+  } else {
+    return min(value + delta, 0)
+  }
+}
+
 
 export default class PlayerController {
 
@@ -27,14 +37,15 @@ export default class PlayerController {
     this.walkSpeed = WALK_SPEED
     this.jumpStrength = JUMP_STRENGTH
     this.flySpeed = FLY_SPEED
-    
-    this.linearDamping = LINEAR_DAMPING
-    this.jetpackActive = false;
-    
-    this.jumpLockout = 0; // counts down steps until player can jump again
-    
-    this.bodyQuaternion = new Quaternion(); // for storing edits to this before they're applied during the physics
-    this.pitch = 0;
+    this.linearDampingStrength = LINEAR_DAMPING
+
+    this.linearDampingActive = true
+    this.jetpackActive = false
+
+    this.jumpLockout = 0 // counts down steps until player can jump again
+
+    this.bodyQuaternion = new Quaternion() // for storing edits to this before they're applied during the physics
+    this.pitch = 0
 
     Input.on("toggle_intertia_damping", this.toggleIntertiaDamping.bind(this))
     Input.on("toggle_jetpack", this.toggleJetpack.bind(this))
@@ -49,11 +60,7 @@ export default class PlayerController {
   }
 
   toggleIntertiaDamping() {
-    if(this.linearDamping === 0) {
-      this.linearDamping = LINEAR_DAMPING
-    } else {
-      this.linearDamping = 0
-    }
+    this.linearDampingActive = !this.linearDampingActive
     this.hud.updateStatus(this)
   }
 
@@ -64,11 +71,11 @@ export default class PlayerController {
       this.body.quaternion.copy(this.body.lookQuaternion)
       this.pitch = 0
     } else {
-      this.body.rigidBody.material = Materials.standingPlayer
+      this.body.rigidBody.material = Materials.STANDING_PLAYER
     }
     this.hud.updateStatus(this)
   }
-  
+
   // Take input data and apply it to the player's body
   updateMovement(DT) {
     this.body.quaternion.copy(this.bodyQuaternion)
@@ -86,41 +93,41 @@ export default class PlayerController {
       this._updateGravityRotation(deltaTime)
     }
   }
-  
+
   _updateJetpackRotation(deltaTime) {
     _q1.copy(this.body.quaternion)
-    
+
     // yaw
-    if (Input.get('yaw_left')) {
-      angle = 1; 
-    } else if (Input.get('yaw_right')) {
+    if(Input.get('yaw_left')) {
+      angle = 1;
+    } else if(Input.get('yaw_right')) {
       angle = -1;
     } else {
-       angle = -Input.mouseDX()
+      angle = -Input.mouseDX()
     }
     _q2.setFromAxisAngle(UP, angle * this.lookSpeed * deltaTime)
     _q1.multiply(_q2)
-    
+
     // pitch
-    if (Input.get('pitch_up')) {
-      angle = 1; 
-    } else if (Input.get('pitch_down')) {
+    if(Input.get('pitch_up')) {
+      angle = 1;
+    } else if(Input.get('pitch_down')) {
       angle = -1;
     } else {
-       angle = -Input.mouseDY()
+      angle = -Input.mouseDY()
     }
     _q2.setFromAxisAngle(RIGHT, angle * this.lookSpeed * deltaTime)
     _q1.multiply(_q2)
 
     // roll
-    if (Input.get('roll_left')) {
+    if(Input.get('roll_left')) {
       _q2.setFromAxisAngle(FORWARD, this.lookSpeed * deltaTime)
       _q1.multiply(_q2)
-    } else if (Input.get('roll_right')) {
+    } else if(Input.get('roll_right')) {
       _q2.setFromAxisAngle(FORWARD, -this.lookSpeed * deltaTime)
       _q1.multiply(_q2)
     }
-    
+
     this.bodyQuaternion.copy(_q1)
     this.body.lookQuaternion.copy(_q1)
   }
@@ -129,12 +136,12 @@ export default class PlayerController {
     _q1.copy(this.bodyQuaternion)
 
     // yaw
-    if (Input.get('yaw_left')) {
-      angle = 1; 
-    } else if (Input.get('yaw_right')) {
+    if(Input.get('yaw_left')) {
+      angle = 1;
+    } else if(Input.get('yaw_right')) {
       angle = -1;
     } else {
-       angle = -Input.mouseDX()
+      angle = -Input.mouseDX()
     }
     _q2.setFromAxisAngle(UP, angle * this.lookSpeed * deltaTime)
     _q1.multiply(_q2)
@@ -148,12 +155,12 @@ export default class PlayerController {
     _q1.slerp(_q2, 10 * deltaTime)
 
     // pitch
-    if (Input.get('pitch_up')) {
-      angle = 1; 
-    } else if (Input.get('pitch_down')) {
+    if(Input.get('pitch_up')) {
+      angle = 1;
+    } else if(Input.get('pitch_down')) {
       angle = -1;
     } else {
-       angle = -Input.mouseDY()
+      angle = -Input.mouseDY()
     }
     this.pitch += angle * this.lookSpeed * deltaTime;
     // keep pitch within .5π & 1.5π (Straight down & straight up)
@@ -164,49 +171,50 @@ export default class PlayerController {
     }
     _q2.setFromAxisAngle(RIGHT, this.pitch)
     _q2.multiplyQuaternions(_q1, _q2)
-    
+
     this.bodyQuaternion.copy(_q1)       // gravity-aligned quaternion
     this.body.lookQuaternion.copy(_q2)  // gravity-aligned quaternion + pitch
   }
 
   _updateGravityMovement(DT) {
-    // reset material to default when in the air (standingPlayer vs. walkingPlayer)
+    // reset material to default when in the air (STANDING_PLAYER vs. WALKING_PLAYER)
     if(!this.body.onGround) {
-      this.body.rigidBody.material = Materials.standingPlayer
+      this.body.rigidBody.material = Materials.STANDING_PLAYER
       return
     }
-    
+
     _v1.set(0, 0, 0)
 
-    if (Input.get('forward')) {
+    if(Input.get('forward')) {
       _v1.z = -1
-    } else if (Input.get('backward')) {
+    } else if(Input.get('backward')) {
       _v1.z = 1
     }
 
-    if (Input.get('right')) {
+    if(Input.get('right')) {
       _v1.x = 1
-    } else if (Input.get('left')) {
+    } else if(Input.get('left')) {
       _v1.x = -1
     }
 
     _v1.normalize()
 
     if(this.jumpLockout > 0) this.jumpLockout--;
-    if (Input.get('up') && this.jumpLockout == 0) {
+    if(Input.get('up') && this.jumpLockout == 0) {
       _v1.y += this.jumpStrength
       this.jumpLockout = 10;
     }
-    
-    _v1.multiplyScalar(this.body.mass * this.walkSpeed * DT); // player movement
+
+    _v1.multiplyScalar(this.walkSpeed * DT); // player movement
     _v1.applyQuaternion(this.body.quaternion) // rotate to world space
+    _v1.add(this.body.velocity)
 
     this.link.playerMove(_v1)
 
     if(_v1.lengthSq() > 0 && this.jumpLockout == 0) {
-      this.body.rigidBody.material = Materials.walkingPlayer
+      this.body.rigidBody.material = Materials.WALKING_PLAYER
     } else {
-      this.body.rigidBody.material = Materials.standingPlayer
+      this.body.rigidBody.material = Materials.STANDING_PLAYER
     }
   }
 
@@ -216,41 +224,40 @@ export default class PlayerController {
     _v2.copy(this.body.velocity)
       .applyQuaternion(_q1.copy(this.body.quaternion).conjugate())
 
-    if (Input.get('forward')) {
+    if(Input.get('forward')) {
       _v1.z = -1
-      _v2.z = 0
-    } else if (Input.get('backward')) {
+      //_v2.z = 0
+    } else if(Input.get('backward')) {
       _v1.z = 1
-      _v2.z = 0
-    } else {
-      _v2.z *= -this.linearDamping
+      //_v2.z = 0
+    } else if(this.linearDampingActive) {
+      _v2.z = toZero(_v2.z, this.linearDampingStrength * DT)
     }
 
-    if (Input.get('right')) {
+    if(Input.get('right')) {
       _v1.x = 1
-      _v2.x = 0
-    } else if (Input.get('left')) {
+      //_v2.x = 0
+    } else if(Input.get('left')) {
       _v1.x = -1
-      _v2.x = 0
-    } else {
-      _v2.x *= -this.linearDamping
+      //_v2.x = 0
+    } else if(this.linearDampingActive) {
+      _v2.x = toZero(_v2.x, this.linearDampingStrength * DT)
     }
 
-    if (Input.get('up')) {
+    if(Input.get('up')) {
       _v1.y = 1
-      _v2.y = 0
-    } else if (Input.get('down')) {
+      //_v2.y = 0
+    } else if(Input.get('down')) {
       _v1.y = -1
-      _v2.y = 0
-    } else {
-      _v2.y *= -this.linearDamping
+      //_v2.y = 0
+    } else if(this.linearDampingActive) {
+      _v2.y = toZero(_v2.y, this.linearDampingStrength * DT)
     }
 
     _v1.normalize().multiplyScalar(this.flySpeed * DT); // player movement
-    _v1.add(_v2); // linear damping
-    _v1.multiplyScalar(this.body.mass)
-    _v1.applyQuaternion(this.body.quaternion) // rotate back to world space
+    _v2.add(_v1)
 
-    this.link.playerMove(_v1)
+    _v2.applyQuaternion(this.body.quaternion) // rotate back to world space
+    this.link.playerMove(_v2)
   }
 }

@@ -3,6 +3,7 @@ import World from '/common/World.js'
 import PeerConnection from '/link/PeerConnection.js'
 import PacketEncoder from '/link/PacketEncoder.js'
 import PacketDecoder from '/link/PacketDecoder.js'
+import Link from '/link/Link.js'
 import PlayerController from '/client/PlayerController.js'
 import { SIGNAL_ENDPOINT, PacketType } from '/link/Constants.js'
 const { CHAT, LOAD_WORLD, ADD_BODY } = PacketType
@@ -15,10 +16,9 @@ const JOIN_CODE_REGEX = /^([A-HJ-NP-Z0-9]{5})$/
 // ATTACHED: attached to client player body
 const CONNECTING = 0, LOADING = 1, LOADED = 2, ATTACHED = 3
 
-const DT = 1/60
-
-export default class NetworkLink {
+export default class NetworkLink extends Link {
   constructor(target, username) {
+    super()
     this._username = username // maybe load from LocalStorage? (prefill input of gui)
 
     this.accumulator = 0
@@ -29,11 +29,11 @@ export default class NetworkLink {
       this._readyResolve = resolve
       this._readyReject = reject
     })
-    
+
     this.playerController = new PlayerController()
 
     // open a WebRTC data channel with the host of the specified game
-    if (target.match(JOIN_CODE_REGEX)) { // convert join code to full url
+    if(target.match(JOIN_CODE_REGEX)) { // convert join code to full url
       console.log(`prefixing ${target}`)
       target = `${SIGNAL_ENDPOINT}/${target}`
     }
@@ -49,9 +49,9 @@ export default class NetworkLink {
     this.ws.onmessage = (e) => {
       const data = JSON.parse(e.data)
       console.log("[link Receive]", data)
-      switch (data.type) {
+      switch(data.type) {
         case "join":
-          if (data.approved) { // request to join was approved, continue with WebRTC
+          if(data.approved) { // request to join was approved, continue with WebRTC
             this.pc = new PeerConnection(this.ws)
 
             this.dataChannel = this.pc.createDataChannel("link", {
@@ -59,7 +59,7 @@ export default class NetworkLink {
               negotiated: true, id: 0
             })
             this.dataChannel.onclose = e => { console.info("[dataChannel] close") }
-            this.dataChannel.onmessage = ({ data }) => { 
+            this.dataChannel.onmessage = ({ data }) => {
               try {
                 this._handlePacket(data)
               } catch(e) {
@@ -110,7 +110,7 @@ export default class NetworkLink {
     const packet = PacketDecoder.decode(data)
 
     // handle receiving packets
-    switch (packet.$) {
+    switch(packet.$) {
       case CHAT:
         this.emit('chat_message', packet)
         break;
@@ -145,7 +145,7 @@ export default class NetworkLink {
   // apply to local world, and send over WebRTC data channel
 
   playerMove(velocity) {  // vector of direction to move in
-    this._playerBody.rigidBody.applyImpulse(velocity)
+    this._playerBody.velocity.copy(velocity)
   }
   playerRotate(bodyQuaternion, lookQuaternion) {  // sets player's rotation
     this._playerBody.quaternion = bodyQuaternion
@@ -157,36 +157,5 @@ export default class NetworkLink {
   sendChat(msg) {
     console.info(`[NetworkLink] Sending chat message: "${msg}"`)
     this.send(PacketEncoder.CHAT(this._username, msg))
-  }
-
-  /* --- Identical between Direct & Network links ---- */
-  // TODO: don't duplicate this code? have a parent class for both links? some other method?
-  
-  // packet event handling
-  on(event, callback) {
-    this._callbacks[event] = callback
-  }
-  emit(event, data) {
-    const callback = this._callbacks[event]
-    if (typeof callback === "function") {
-      callback(data)
-    }
-  }
-
-  step(deltaTime) {
-    this.accumulator += deltaTime
-    let maxSteps = 10;
-
-    while (this.accumulator > DT && maxSteps > 0) {
-      this._world.step(DT)
-      this.accumulator -= DT
-      maxSteps--
-    }
-
-    if(this.accumulator > DT) {  // remove extra steps worth of time that could not be processed
-      console.warn(`Warning: stepping world took too many steps to catch up! Simulation is behind by ${Math.floor(this.accumulator / DT)}ms`)
-      this.accumulator = this.accumulator % DT
-    }
-    
   }
 }

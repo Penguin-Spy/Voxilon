@@ -16,8 +16,8 @@ const constructors = {
 export default class World {
   constructor(data) {
     if(data.VERSION !== WORLD_VERSION) throw new Error(`Unknown world version: ${data.VERSION}`)
-    
-    this.name = data.name ?? "A Universe" 
+
+    this.name = data.name ?? "A Universe"
     this._bodies = []
 
     // --- CANNON ---
@@ -29,7 +29,7 @@ export default class World {
     }
 
     // --- THREE ---
-    this.scene = new THREE.Scene();
+    this._scene = new THREE.Scene();
 
 
     data.bodies.forEach(b => this.loadBody(b))
@@ -44,6 +44,8 @@ export default class World {
     return data
   }
 
+  get scene() { return this._scene }
+  get physics() { return this._physics }
   get bodies() { return this._bodies }
   get gravityBodies() {
     return this._bodies.filter(e => {
@@ -53,15 +55,11 @@ export default class World {
 
   loadBody(data) {
     const body = new constructors[data.type](data)
-    
+
     this._physics.addBody(body.rigidBody)
     if(body.mesh) this.scene.add(body.mesh)
     this._bodies.push(body)
     return body
-  }
-  
-  addBody(body) {
-    throw new Error("calling World:addBody")
   }
 
   getBody(bodyID) {
@@ -75,27 +73,10 @@ export default class World {
     return this.bodies.filter(b => b.type === type)
   }
 
-  moveBody(bodyID, position, velocity) {
-    throw new Error("World:moveBody called")
-    const body = this._bodies[bodyID];
-    if (body) {
-      body.position = position;
-      body.velocity = velocity
-    }
-  };
-  rotateBody(bodyID, quaternion, angularVelocity) {
-    throw new Error("World:rotateBody called")
-    const body = this._bodies[bodyID];
-    if (body) {
-      body.quaternion = quaternion;
-      body.angularVelocity = angularVelocity;
-    }
-  };
-
   removeBody(bodyID) {
     const body = this._bodies[bodyID];
     this._physics.removeBody(body.rigidBody)
-    if(body.mesh)this.scene.remove(body.mesh)
+    if(body.mesh) this.scene.remove(body.mesh)
     delete this._bodies[bodyID];
   }
 
