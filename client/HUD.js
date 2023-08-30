@@ -26,9 +26,22 @@ export default class HUD {
     this.frame.appendChild(chat)
 
 
-    const hotbar = document.createElement('div')
-    hotbar.setAttribute('class', "hotbar")
-    this.frame.appendChild(hotbar)
+    this.hotbar = document.createElement('div')
+    this.hotbar.setAttribute('class', "hotbar")
+    this.frame.appendChild(this.hotbar)
+    for(let i = 0; i <= 9; i++) {
+      const slot = document.createElement('button')
+      slot.setAttribute('class', "hotbar-slot")
+
+      slot.addEventListener('click', () => {
+        this.link.playerController.setHotbarSlot(i === 9 ? 0 : i + 1)
+      })
+
+      const img = document.createElement('img')
+      img.src = `/assets/gui/hotbar_${i === 9 ? 0 : i + 1}.png`
+      slot.appendChild(img)
+      this.hotbar.appendChild(slot)
+    }
 
 
     const statusDisplay = document.createElement('div')
@@ -63,7 +76,11 @@ export default class HUD {
   // called by PlayerController when we need to update the status display
   updateStatus(status) {
     this.jetpackStatus.innerText = `Jetpack: ${status.jetpackActive ? "ACTIVE" : "INACTIVE"}`
-    this.inertiaStatus.innerText = `Dampeners: ${status.linearDamping !== 0 ? "ACTIVE" : "INACTIVE"}`
+    this.inertiaStatus.innerText = `Dampeners: ${status.linearDampingActive ? "ACTIVE" : "INACTIVE"}`
+    this.hotbar.childNodes.forEach(e => e.classList.remove("selected"))
+    let slotIndex = status.selectedHotbarSlot - 1;
+    if(slotIndex === -1) slotIndex = 9;
+    this.hotbar.childNodes[slotIndex].classList.add("selected")
   }
 
   hide() { this.frame.hidden = true }

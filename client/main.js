@@ -84,7 +84,6 @@ async function directLink(button, worldOptions) {
       button.disabled = false
       GUI.cursor = "default"
       throw err
-      return false
     }
   }
 
@@ -106,7 +105,6 @@ async function networkLink(button, gameCode, username) {
       button.disabled = false
       GUI.cursor = "default"
       throw err
-      return false
     }
   }
 

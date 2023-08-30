@@ -33,6 +33,7 @@ function toZero(value, delta) {
 export default class PlayerController {
 
   constructor() {
+    /* movement */
     this.lookSpeed = 0.75
     this.walkSpeed = WALK_SPEED
     this.jumpStrength = JUMP_STRENGTH
@@ -47,8 +48,23 @@ export default class PlayerController {
     this.bodyQuaternion = new Quaternion() // for storing edits to this before they're applied during the physics
     this.pitch = 0
 
-    Input.on("toggle_intertia_damping", this.toggleIntertiaDamping.bind(this))
-    Input.on("toggle_jetpack", this.toggleJetpack.bind(this))
+    Input.on("toggle_intertia_damping", () => this.toggleIntertiaDamping())
+    Input.on("toggle_jetpack", () => this.toggleJetpack())
+
+    /* building */
+    this.selectedHotbarSlot = 1
+
+    Input.on("build", () => this.tryBuild())
+    Input.on("hotbar_1", () => this.setHotbarSlot(1)) // hmm. this is a little silly
+    Input.on("hotbar_2", () => this.setHotbarSlot(2))
+    Input.on("hotbar_3", () => this.setHotbarSlot(3))
+    Input.on("hotbar_4", () => this.setHotbarSlot(4))
+    Input.on("hotbar_5", () => this.setHotbarSlot(5))
+    Input.on("hotbar_6", () => this.setHotbarSlot(6))
+    Input.on("hotbar_7", () => this.setHotbarSlot(7))
+    Input.on("hotbar_8", () => this.setHotbarSlot(8))
+    Input.on("hotbar_9", () => this.setHotbarSlot(9))
+    Input.on("hotbar_0", () => this.setHotbarSlot(0))
   }
 
   // Attach this controller to the specified Link
@@ -57,6 +73,15 @@ export default class PlayerController {
     this.body = link._playerBody
     this.hud = hud
     hud.updateStatus(this)
+  }
+
+  setHotbarSlot(slot) {
+    this.selectedHotbarSlot = slot
+    this.hud.updateStatus(this)
+  }
+
+  tryBuild() {
+    console.log(this.selectedHotbarSlot)
   }
 
   toggleIntertiaDamping() {
@@ -68,7 +93,7 @@ export default class PlayerController {
     this.jetpackActive = !this.jetpackActive
     // if enabling jetpack,
     if(this.jetpackActive) {
-      this.body.quaternion.copy(this.body.lookQuaternion)
+      this.bodyQuaternion.copy(this.body.lookQuaternion)
       this.pitch = 0
     } else {
       this.body.rigidBody.material = Materials.STANDING_PLAYER

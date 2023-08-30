@@ -166,7 +166,25 @@ body[data-cursor="disabled"] {
 .gui-hud .hotbar {
   margin: auto;
   width: fit-content;
+  display: flex;
 }
+.hotbar-slot {
+  width: 52px;
+  height: 52px;
+  margin: 4px;
+  padding: 0;
+  pointer-events: auto;
+  background-color: var(--bg);
+  border: gray solid 2px;
+}
+.hotbar-slot.selected {
+  border-color: white;
+}
+.hotbar-slot img {
+  width: 48px;
+}
+
+
 .gui-hud .status-display {
   position: absolute;
   right: 0; bottom: 0;

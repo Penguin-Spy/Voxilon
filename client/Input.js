@@ -29,6 +29,21 @@ const controlMap = new TwoWayMap({
   "KeyZ": "toggle_intertia_damping",
   "KeyX": "toggle_jetpack",
   "Tab": "toggle_chat",
+  "Digit1": "hotbar_1",
+  "Digit2": "hotbar_2",
+  "Digit3": "hotbar_3",
+  "Digit4": "hotbar_4",
+  "Digit5": "hotbar_5",
+  "Digit6": "hotbar_6",
+  "Digit7": "hotbar_7",
+  "Digit8": "hotbar_8",
+  "Digit9": "hotbar_9",
+  "Digit0": "hotbar_0",
+  "MousePrimary": "build",      // left click
+  "MouseSecondary": "destroy",  // right click
+  "MouseAuxiliary": "pick",     // middle click
+  //"MouseX1": "",
+  //"MouseX2": "",
 })
 
 // Mapping of "control" -> function()
@@ -51,11 +66,13 @@ document.addEventListener('touchstart', handleTouch)
 document.addEventListener('touchstop', handleTouch)
 document.addEventListener('keydown', handleKeyDown)
 document.addEventListener('keyup', handleKeyUp)
+document.addEventListener('mousedown', handleMouseDown)
+document.addEventListener('mouseup', handleMouseUp)
 
 
 /* EVENT HANDLERS */
 function lockChangeAlert() {
-  if (document.pointerLockElement === canvas) {
+  if(document.pointerLockElement === canvas) {
     document.addEventListener("mousemove", handleMouseMove, false)
   } else {
     document.removeEventListener("mousemove", handleMouseMove)
@@ -71,7 +88,7 @@ function handleMouseMove(event) {
 
 function handleTouch(event) {
   console.log(event)
-  if (event.touches) {
+  if(event.touches) {
     // this.mouseSpeedX = this.oldTouchX - event.touches[0].pageX;
     // this.mouseSpeedY = this.oldTouchY - event.touches[0].pageY;
 
@@ -91,7 +108,7 @@ function handleGuiKeyDown(event) {
 
   // if nothing's selected, do custom enter behavior
   if(parent !== GUI.mainFrame) {
-    if (code === "Enter") {
+    if(code === "Enter") {
       GUI.proceed(event)
       event.preventDefault()
       return
@@ -99,15 +116,15 @@ function handleGuiKeyDown(event) {
   }
 
   // regardless of if something's selected:
-    
+
   //  do esc
-  if (code === "Escape") {
+  if(code === "Escape") {
     GUI.back()
     event.preventDefault()
     return
-  
-  //  do arrow keys & enter navigation
-  //    if nothing's selected, arrows go to 0 and .length
+
+    //  do arrow keys & enter navigation
+    //    if nothing's selected, arrows go to 0 and .length
   } else if(code === "ArrowUp" || code === "ArrowDown" || code === "Enter") {
     let index = GUI.focusableNodes.indexOf(activeElement)
     // if index === -1 (no child focused), the index over/underflow code will behave properly still
@@ -132,7 +149,7 @@ function handleGuiKeyDown(event) {
         index = GUI.focusableNodes.length - 1
       }
     }
-    
+
     GUI.focusableNodes[index].focus()
   }
 }
@@ -140,8 +157,8 @@ function handleGuiKeyDown(event) {
 // behavior of key events during gameplay
 function handleGameKeyDown(event) {
   // re-allow typing in <input>s & ignore typed text
-  if (document.activeElement.nodeName === "INPUT" // in <input>
-      && event.code !== controlMap.valueToKey("toggle_chat")) { // and not toggling chat 
+  if(document.activeElement.nodeName === "INPUT" // in <input>
+    && event.code !== controlMap.valueToKey("toggle_chat")) { // and not toggling chat
     return
   }
 
@@ -149,12 +166,12 @@ function handleGameKeyDown(event) {
   currentKeys[event.code] = true
 
   const callback = eventHandlers[controlMap.keyToValue(event.code)]
-  if (typeof callback === "function") {
+  if(typeof callback === "function") {
     callback(event)
   }
 
   // TODO: remove these conditions before production; this is for quick developing only!!
-  if (!(event.code === "F5" || (event.code === "KeyI" && event.ctrlKey && event.shiftKey) || (event.code == "KeyR" && event.ctrlKey))) {
+  if(!(event.code === "F5" || (event.code === "KeyI" && event.ctrlKey && event.shiftKey) || (event.code == "KeyR" && event.ctrlKey))) {
     event.preventDefault()
   }
 }
@@ -167,12 +184,32 @@ function handleKeyDown(event) {
       handleGuiKeyDown(event)
     }
   } catch(e) {
-    GUI.showError("Error while handilng keydown", e)
+    GUI.showError("Error while handling keydown", e)
   }
 }
 
 function handleKeyUp(event) {
   currentKeys[event.code] = false
+}
+
+const mouseButtonMap = ["MousePrimary", "MouseAuxiliary", "MouseSecondary", "MouseX1", "MouseX2"]
+function handleMouseDown(event) {
+  try {
+    if(document.pointerLockElement !== canvas) return;
+
+    const code = mouseButtonMap[event.button]
+    currentKeys[code] = true
+
+    const callback = eventHandlers[controlMap.keyToValue(code)]
+    if(typeof callback === "function") {
+      callback(event)
+    }
+  } catch(e) {
+    GUI.showError("Error while handling mousedown", e)
+  }
+}
+function handleMouseUp(event) {
+  currentKeys[mouseButtonMap[event.button]] = false
 }
 
 
@@ -203,7 +240,7 @@ export default {
 
   get(control) {
     const key = controlMap.valueToKey(control)
-    if (key !== undefined) {
+    if(key !== undefined) {
       return currentKeys[key]
     } else {
       throw new TypeError(`Invalid control: "${control}"`)
@@ -211,7 +248,7 @@ export default {
   },
 
   on(control, callback) {
-    if (controlMap.valueToKey(control) === undefined) {
+    if(controlMap.valueToKey(control) === undefined) {
       throw new TypeError(`Invalid control: "${control}"`)
     }
     if(eventHandlers[control]) {
@@ -231,5 +268,7 @@ export default {
     document.removeEventListener('touchstop', handleTouch)
     document.removeEventListener('keydown', handleKeyDown)
     document.removeEventListener('keyup', handleKeyUp)
+    document.removeEventListener('mousedown', handleMouseDown)
+    document.removeEventListener('mouseup', handleMouseUp)
   }
 }
