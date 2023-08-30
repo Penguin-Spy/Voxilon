@@ -95,7 +95,7 @@ export default class PlayerController {
   }
 
   _updateJetpackRotation(deltaTime) {
-    _q1.copy(this.body.quaternion)
+    _q1.copy(this.bodyQuaternion)
 
     // yaw
     if(Input.get('yaw_left')) {
