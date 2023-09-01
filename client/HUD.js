@@ -4,7 +4,11 @@ import GUI from '/client/GUI.js'
 export default class HUD {
   constructor() {
     this.frame = GUI.addFrame("gui-hud")
-    this.frame.hidden = true
+    this.hide()
+
+    const crosshair = document.createElement("span")
+    crosshair.innerText = "()"
+    this.frame.appendChild(crosshair)
 
 
     const chat = document.createElement('div')
@@ -34,11 +38,10 @@ export default class HUD {
       slot.setAttribute('class', "hotbar-slot")
 
       slot.addEventListener('click', () => {
-        this.link.playerController.setHotbarSlot(i === 9 ? 0 : i + 1)
+        this.link.playerController.setHotbarSlot(i)
       })
 
       const img = document.createElement('img')
-      img.src = `/assets/gui/hotbar_${i === 9 ? 0 : i + 1}.png`
       slot.appendChild(img)
       this.hotbar.appendChild(slot)
     }
@@ -77,10 +80,22 @@ export default class HUD {
   updateStatus(status) {
     this.jetpackStatus.innerText = `Jetpack: ${status.jetpackActive ? "ACTIVE" : "INACTIVE"}`
     this.inertiaStatus.innerText = `Dampeners: ${status.linearDampingActive ? "ACTIVE" : "INACTIVE"}`
-    this.hotbar.childNodes.forEach(e => e.classList.remove("selected"))
-    let slotIndex = status.selectedHotbarSlot - 1;
-    if(slotIndex === -1) slotIndex = 9;
-    this.hotbar.childNodes[slotIndex].classList.add("selected")
+  }
+
+  // called by PlayerController when we need to update the hotbar
+  updateHotbar(status) {
+    const hotbarNodes = this.hotbar.childNodes
+    for(let i = 0; i < this.hotbar.childElementCount; i++) {
+      hotbarNodes[i].classList.remove("selected")
+      const hotbarSlot = status.hotbar[i]
+      if(hotbarSlot) {
+        hotbarNodes[i].firstChild.src = `/assets/gui/${hotbarSlot.type}/${hotbarSlot.name}.png`
+        hotbarNodes[i].firstChild.hidden = false
+      } else {
+        hotbarNodes[i].firstChild.hidden = true
+      }
+    }
+    hotbarNodes[status.selectedHotbarSlot].classList.add("selected")
   }
 
   hide() { this.frame.hidden = true }

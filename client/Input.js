@@ -214,6 +214,7 @@ function handleMouseUp(event) {
 
 
 export default {
+  mouseX, mouseY,
   enablePointerLock() {
     canvas.addEventListener('click', canvas.requestPointerLock)
   },

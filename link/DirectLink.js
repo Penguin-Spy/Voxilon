@@ -207,4 +207,18 @@ export default class DirectLink extends Link {
     // send it to ourselves via the event handler
     this.emit('chat_message', { author: this._username, msg })
   }
+
+  // building
+  newContraption(entity) {
+    this._world.loadBody({
+      type: "voxilon:test_body",
+      position: entity.position.toArray(),
+      quaternion: entity.quaternion.toArray(),
+      is_static: false
+    })
+  }
+
+  editContraption() {
+    //todo: figure out how to implement snapping to grid & whatnot
+  }
 }

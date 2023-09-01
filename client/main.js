@@ -52,7 +52,7 @@ function animate(now) {
 function start() {
   window.Voxilon.link = link
 
-  link.playerController.attach(link, hud)
+  link.playerController.attach(link, hud, renderer)
   renderer.attach(link)
   hud.attach(link)
 
@@ -144,4 +144,4 @@ debugFrame.appendChild(physicsDebug)
 window.onerror = undefined;
 
 // debugging interface
-window.Voxilon = { renderer, Input, GUI, hud, link, stop, animate };
+window.Voxilon = { renderer, Input, GUI, hud, stop, animate };

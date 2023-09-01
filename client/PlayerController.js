@@ -1,5 +1,6 @@
 import Input from '/client/Input.js'
-import { Vector3, Quaternion } from 'three'
+import { Vector2, Vector3, Quaternion, Raycaster } from 'three'
+import * as THREE from 'three'
 import * as Materials from "/common/PhysicsMaterials.js"
 
 const _v1 = new Vector3();
@@ -29,6 +30,14 @@ function toZero(value, delta) {
   }
 }
 
+// outside of HUD because there's only ever one pointer
+const raycaster = new Raycaster();
+raycaster.far = 10 // intentionally twice the distance used for no intersections
+const pointer = new Vector2();
+
+//TODO: move to static property of class for each component ("previewMesh")
+const geometry = new THREE.BoxGeometry(1, 1, 1);
+const mesh = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({ color: "#ffff00" }))
 
 export default class PlayerController {
 
@@ -52,36 +61,97 @@ export default class PlayerController {
     Input.on("toggle_jetpack", () => this.toggleJetpack())
 
     /* building */
-    this.selectedHotbarSlot = 1
+    this.selectedHotbarSlot = 0
+    this.hotbar = [
+      { type: "tool", name: "welder" },
+      { type: "tool", name: "grinder" },
+      { type: "entity", name: "cube" },
+      { type: "entity", name: "slope" },
+      { type: "entity", name: "belt" },
+      { type: "entity", name: "assembler" },
+      { type: "entity", name: "refinery" },
+      { type: "entity", name: "battery" },
+      { type: "entity", name: "solar_panel" },
+      { type: "entity", name: "network_cable" }
+    ]
+
+    this.selectedItem = false
 
     Input.on("build", () => this.tryBuild())
-    Input.on("hotbar_1", () => this.setHotbarSlot(1)) // hmm. this is a little silly
-    Input.on("hotbar_2", () => this.setHotbarSlot(2))
-    Input.on("hotbar_3", () => this.setHotbarSlot(3))
-    Input.on("hotbar_4", () => this.setHotbarSlot(4))
-    Input.on("hotbar_5", () => this.setHotbarSlot(5))
-    Input.on("hotbar_6", () => this.setHotbarSlot(6))
-    Input.on("hotbar_7", () => this.setHotbarSlot(7))
-    Input.on("hotbar_8", () => this.setHotbarSlot(8))
-    Input.on("hotbar_9", () => this.setHotbarSlot(9))
-    Input.on("hotbar_0", () => this.setHotbarSlot(0))
+    Input.on("hotbar_1", () => this.setHotbarSlot(0)) // hmm. this is a little silly
+    Input.on("hotbar_2", () => this.setHotbarSlot(1))
+    Input.on("hotbar_3", () => this.setHotbarSlot(2))
+    Input.on("hotbar_4", () => this.setHotbarSlot(3))
+    Input.on("hotbar_5", () => this.setHotbarSlot(4))
+    Input.on("hotbar_6", () => this.setHotbarSlot(5))
+    Input.on("hotbar_7", () => this.setHotbarSlot(6))
+    Input.on("hotbar_8", () => this.setHotbarSlot(7))
+    Input.on("hotbar_9", () => this.setHotbarSlot(8))
+    Input.on("hotbar_0", () => this.setHotbarSlot(9))
   }
 
   // Attach this controller to the specified Link
-  attach(link, hud) {
+  attach(link, hud, renderer) {
     this.link = link
     this.body = link._playerBody
     this.hud = hud
+    this.renderer = renderer // for raycasting for building
     hud.updateStatus(this)
+    hud.updateHotbar(this)
   }
 
   setHotbarSlot(slot) {
     this.selectedHotbarSlot = slot
-    this.hud.updateStatus(this)
+    this.hud.updateHotbar(this)
+
+    this.selectedItem = this.hotbar[this.selectedHotbarSlot]
+    if(this.selectedItem.type === "entity") {
+      this.renderer.setPreviewMesh(mesh) // see comment on declaration of `mesh`
+    } else {
+      this.renderer.clearPreviewMesh()
+    }
   }
 
   tryBuild() {
-    console.log(this.selectedHotbarSlot)
+    console.log(this.selectedHotbarSlot, this.selectedItem)
+    if(this.selectedItem.type === "entity") {
+      // do entity placement stuff
+
+      this.link.newContraption({
+        position: this.renderer.previewMesh.position,
+        quaternion: this.renderer.previewMesh.quaternion,
+      })
+
+      /*pointer.set(Input.mouseX, Input.mouseY)
+      raycaster.setFromCamera(pointer, this.renderer.camera)
+
+      const intersects = raycaster.intersectObjects(this.link.world.scene.children)
+      console.log(intersects)
+      for(let i = 0; i < intersects.length; i++) {
+        if(this.selectedItem.name === "cube") {
+          intersects[i].object.material.color.set(0xff0000)
+        } else {
+          intersects[i].object.material.color.setRGB(1, 1, 1)
+        }
+      }*/
+    }
+  }
+
+  updatePreviewDistance() {
+    if(this.selectedItem) {
+      pointer.set(Input.mouseX, Input.mouseY)
+      raycaster.setFromCamera(pointer, this.renderer.camera)
+
+      const intersects = raycaster.intersectObjects(this.link.world.scene.children)
+      // if the first intersect is the preview mesh, get the 2nd one
+      const intersect = intersects[0]?.object !== this.renderer.previewMesh ? intersects[0] : intersects[1]
+      if(intersect) {
+        this.renderer.previewMeshDistance = intersect.distance
+        this.buildPreviewIntersect = intersect
+      } else {
+        this.renderer.previewMeshDistance = 5
+      }
+    }
   }
 
   toggleIntertiaDamping() {
@@ -109,6 +179,7 @@ export default class PlayerController {
     } else {
       this._updateGravityMovement(DT)
     }
+    this.updatePreviewDistance()
   }
 
   updateRotation(deltaTime) {
