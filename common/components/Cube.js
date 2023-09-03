@@ -8,7 +8,7 @@ const mesh = new THREE.Mesh(geometry, DEBUG_COMPASS)
 
 export default class Cube extends Component {
   constructor(data) {
-    const halfExtents = new CANNON.Vec3(0.55, 0.55, 0.55)
+    const halfExtents = new CANNON.Vec3(0.5, 0.5, 0.5)
     const boxShape = new CANNON.Box(halfExtents)
 
     super(data, boxShape, mesh.clone())

@@ -17,8 +17,8 @@ const HALF_PI = Math.PI / 2;
 
 // strength of jetpack:
 const LINEAR_DAMPING = 20   // m/s²
-const WALK_SPEED = 80       // m/s², affected by friction
-const JUMP_STRENGTH = 3     // idk the unit lol
+const WALK_SPEED = 20       // m/s², affected by friction
+const JUMP_STRENGTH = 12    // idk the unit lol
 const FLY_SPEED = 40        // m/s²
 
 const max = Math.max, min = Math.min
@@ -187,7 +187,6 @@ export default class PlayerController {
     if(this.jetpackActive) {
       this.bodyQuaternion.copy(this.body.lookQuaternion)
       this.pitch = 0
-    } else {
       this.body.rigidBody.material = Materials.STANDING_PLAYER
     }
     this.hud.updateStatus(this)
@@ -325,15 +324,17 @@ export default class PlayerController {
 
     _v1.multiplyScalar(this.walkSpeed * DT); // player movement
     _v1.applyQuaternion(this.body.quaternion) // rotate to world space
-    _v1.add(this.body.velocity)
 
-    this.link.playerMove(_v1)
-
+    // set material based on if player is moving
     if(_v1.lengthSq() > 0 && this.jumpLockout == 0) {
       this.body.rigidBody.material = Materials.WALKING_PLAYER
     } else {
       this.body.rigidBody.material = Materials.STANDING_PLAYER
     }
+
+    _v1.add(this.body.velocity)
+    this.link.playerMove(_v1)
+
   }
 
   _updateJetpackMovement(DT) {
