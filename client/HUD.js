@@ -68,7 +68,7 @@ export default class HUD {
 
   attach(link) {
     this.link = link
-    this.link.on('chat_message', ({ author, msg }) => this.showChatMessage(author, msg))
+    this.link.on('chat_message', ({ author, msg }) => this.showChatMessage(`<${author}> ${msg}`))
   }
 
   // update elements
@@ -110,9 +110,9 @@ export default class HUD {
     this.chatInput.blur() // removes focus from the input, returing it to the body. (great name there guys, super not confusing)
   }
 
-  showChatMessage(author, msg) {
+  showChatMessage(msg) {
     const span = document.createElement('span');
-    span.appendChild(document.createTextNode(`<${author}> ${msg}`));
+    span.appendChild(document.createTextNode(msg));
     this.chatList.appendChild(span);
     setTimeout(() => {
       this.chatList.removeChild(span)

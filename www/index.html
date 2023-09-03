@@ -1,5 +1,7 @@
 <!DOCTYPE html>
-<html><head>
+<html>
+
+<head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
   <title>Voxilon</title>
@@ -12,12 +14,14 @@
   "imports": {
     "three": "https://unpkg.com/three@0.151.3/build/three.module.js",
     "three/addons/": "https://unpkg.com/three@0.151.3/examples/jsm/",
-    "cannon": "https://unpkg.com/cannon-es@0.20.0/dist/cannon-es.js"  
+    "cannon-es": "https://unpkg.com/cannon-es@0.20.0/dist/cannon-es.js",
+    "cannon-es-debugger": "https://unpkg.com/cannon-es-debugger@1.0.0/dist/cannon-es-debugger.js"
   }
 }
   </script>
-  
-</head><body>
+</head>
+
+<body>
   <div id="gui">
     <div class="gui-messages">
       <span>Voxilon is loading...</span>
@@ -44,4 +48,6 @@
     }
   </script>
   <script type="module" src="./client/main.js"></script>
-</body></html>
+</body>
+
+</html>

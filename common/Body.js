@@ -1,4 +1,4 @@
-import * as CANNON from 'cannon';
+import * as CANNON from 'cannon-es';
 import * as THREE from 'three';
 
 const _v = new THREE.Vector3();
@@ -60,11 +60,13 @@ export default class Body {
   update(world, DT) {
     // copy cannon position & quaternion to three
     if(this.mesh) {
-      this.mesh.position.copy(this.rigidBody.interpolatedPosition)
-      this.mesh.quaternion.copy(this.rigidBody.interpolatedQuaternion)
+      //this.mesh.position.copy(this.rigidBody.interpolatedPosition)
+      //this.mesh.quaternion.copy(this.rigidBody.interpolatedQuaternion)
+      this.mesh.position.copy(this.rigidBody.position)
+      this.mesh.quaternion.copy(this.rigidBody.quaternion)
     }
 
-    if(this.rigidBody.type === CANNON.Body.DYNAMIC) {
+    if(this.rigidBody.type === CANNON.Body.DYNAMIC && world.orbitalGravityEnabled) {
       this.gravityVector.set(0, 0, 0)
       for(const otherBody of world.gravityBodies) {
 

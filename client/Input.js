@@ -44,6 +44,9 @@ const controlMap = new TwoWayMap({
   "MouseAuxiliary": "pick",     // middle click
   //"MouseX1": "",
   //"MouseX2": "",
+
+  "F3": "debug_physics_wireframe",
+  "F4": "debug_gravity_mode"
 })
 
 // Mapping of "control" -> function()

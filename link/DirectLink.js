@@ -210,12 +210,45 @@ export default class DirectLink extends Link {
 
   // building
   newContraption(entity) {
-    this._world.loadBody({
-      type: "voxilon:test_body",
-      position: entity.position.toArray(),
-      quaternion: entity.quaternion.toArray(),
-      is_static: false
-    })
+    switch(entity.name) {
+      case "cube":
+        this._world.loadBody({
+          type: "voxilon:test_body",
+          position: entity.position.toArray(),
+          quaternion: entity.quaternion.toArray(),
+          is_static: false,
+          use_box: true
+        })
+        break;
+      case "slope":
+        this._world.loadBody({
+          type: "voxilon:test_body",
+          position: entity.position.toArray(),
+          quaternion: entity.quaternion.toArray(),
+          is_static: false,
+          use_box: false
+        })
+        break;
+      case "belt":
+        this._world.loadBody({
+          type: "voxilon:contraption",
+          position: entity.position.toArray(),
+          quaternion: entity.quaternion.toArray(),
+          components: [
+            {
+              type: "voxilon:cube",
+              position: [0, 0, 0]
+            },
+            {
+              type: "voxilon:cube",
+              position: [0, 1, 0]
+            }
+          ]
+        })
+        break;
+      default:
+        console.warn("unknown entity name", entity.name)
+    }
   }
 
   editContraption() {

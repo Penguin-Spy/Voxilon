@@ -2,6 +2,7 @@ import Renderer from '/client/Renderer.js'
 import Input from '/client/Input.js'
 import GUI from '/client/GUI.js'
 import HUD from '/client/HUD.js'
+import CannonDebugger from 'cannon-es-debugger'
 
 import main_menu from '/client/screens/main_menu.js'
 
@@ -26,6 +27,9 @@ function animate(now) {
     hud.update()
 
     link.step(deltaTime)
+    if(physicsDebug.enabled) {
+      physicsDebug.debugger.update()
+    }
   } catch(e) {
     GUI.showError("Error occured while ticking", e)
     return
@@ -55,6 +59,19 @@ function start() {
   link.playerController.attach(link, hud, renderer)
   renderer.attach(link)
   hud.attach(link)
+
+  // debugger
+  physicsDebug.debugger = new CannonDebugger(link.world._scene, link.world._physics, {
+    onInit: (body, mesh) => {
+      if(body === link.playerBody.rigidBody) {
+        mesh.material = false // don't render a wireframe for the player's body (just obscures vision)
+        return
+      }
+      physicsDebug.meshes.push(mesh)
+      mesh.visible = physicsDebug.enabled
+      mesh.layers
+    }
+  })
 
   GUI.clearScreen()
   GUI.cursor = "default"
@@ -129,19 +146,39 @@ GUI.loadScreen(main_menu, "title", { directLink, networkLink })
 const debugFrame = GUI.addFrame("gui-debug bg bg-bottom bg-right")
 const renderSpan = document.createElement("span")
 
-const physicsDebug = document.createElement("div")
+const physicsDebugDiv = document.createElement("div")
 const positionSpan = document.createElement("span")
 const velocitySpan = document.createElement("span")
-physicsDebug.appendChild(positionSpan)
-physicsDebug.appendChild(document.createElement("br"))
-physicsDebug.appendChild(velocitySpan)
+physicsDebugDiv.appendChild(positionSpan)
+physicsDebugDiv.appendChild(document.createElement("br"))
+physicsDebugDiv.appendChild(velocitySpan)
 
 debugFrame.appendChild(renderSpan)
-debugFrame.appendChild(physicsDebug)
+debugFrame.appendChild(physicsDebugDiv)
 
+const physicsDebug = {
+  enabled: false,
+  meshes: [],
+  toggle: function () {
+    physicsDebug.enabled = !physicsDebug.enabled
+    physicsDebug.meshes.forEach(m => m.visible = physicsDebug.enabled)
+  }
+}
+Input.on("debug_physics_wireframe", physicsDebug.toggle)
+
+Input.on("debug_gravity_mode", function () {
+  link.world.orbitalGravityEnabled = !link.world.orbitalGravityEnabled
+  if(link.world.orbitalGravityEnabled) {
+    link.world._physics.gravity.y = 0
+    hud.showChatMessage("[debug] orbital gravity enabled")
+  } else {
+    link.world._physics.gravity.y = -9.82 // m/s²
+    hud.showChatMessage("[debug] orbital gravity disabled")
+  }
+})
 
 // remove loading error handler
 window.onerror = undefined;
 
 // debugging interface
-window.Voxilon = { renderer, Input, GUI, hud, stop, animate };
+window.Voxilon = { renderer, Input, GUI, hud, stop, animate, physicsDebug };

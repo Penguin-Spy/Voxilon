@@ -6,6 +6,7 @@ export default class Renderer {
     this.camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 1000);
 
     this.renderer = new THREE.WebGLRenderer();
+    this.renderer.setPixelRatio(window.devicePixelRatio);
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(this.renderer.domElement);
 
@@ -64,14 +65,9 @@ export default class Renderer {
   }
 
   render() {
-    this.camera.position.copy(this.body.rigidBody.interpolatedPosition)
+    //this.camera.position.copy(this.body.rigidBody.interpolatedPosition)
+    this.camera.position.copy(this.body.rigidBody.position)
     this.camera.quaternion.copy(this.body.lookQuaternion)
-
-    if(this.previewMesh) {
-      this.previewMesh.position.set(0, 0, -this.previewMeshDistance)
-      this.previewMesh.position.applyQuaternion(this.camera.quaternion)
-      this.previewMesh.position.add(this.camera.position)
-    }
 
     this.renderer.render(this.scene, this.camera);
   }

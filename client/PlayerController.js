@@ -31,9 +31,9 @@ function toZero(value, delta) {
 }
 
 // outside of HUD because there's only ever one pointer
-const raycaster = new Raycaster();
-raycaster.far = 10 // intentionally twice the distance used for no intersections
-const pointer = new Vector2();
+const _raycaster = new Raycaster();
+_raycaster.far = 10 // intentionally twice the distance used for no intersections
+const _pointer = { x: 0, y: 0 } // fake pointer bc it's always in the middle of the screen
 
 //TODO: move to static property of class for each component ("previewMesh")
 const geometry = new THREE.BoxGeometry(1, 1, 1);
@@ -118,6 +118,7 @@ export default class PlayerController {
       // do entity placement stuff
 
       this.link.newContraption({
+        name: this.selectedItem.name,
         position: this.renderer.previewMesh.position,
         quaternion: this.renderer.previewMesh.quaternion,
       })
@@ -138,18 +139,39 @@ export default class PlayerController {
   }
 
   updatePreviewDistance() {
-    if(this.selectedItem) {
-      pointer.set(Input.mouseX, Input.mouseY)
-      raycaster.setFromCamera(pointer, this.renderer.camera)
+    if(this.selectedItem.type === "entity") {
+      _raycaster.setFromCamera(_pointer, this.renderer.camera)
+      const previewMesh = this.renderer.previewMesh
 
-      const intersects = raycaster.intersectObjects(this.link.world.scene.children)
+      const intersects = _raycaster.intersectObjects(this.link.world.scene.children)
       // if the first intersect is the preview mesh, get the 2nd one
-      const intersect = intersects[0]?.object !== this.renderer.previewMesh ? intersects[0] : intersects[1]
-      if(intersect) {
-        this.renderer.previewMeshDistance = intersect.distance
+      const intersect = intersects[0]?.object !== previewMesh ? intersects[0] : intersects[1]
+
+      if(intersect) { // show preview mesh aligned against what it collided with
+        //this.previewMeshDistance = intersect.distance
         this.buildPreviewIntersect = intersect
-      } else {
-        this.renderer.previewMeshDistance = 5
+
+        // todo: set pos & quat from interesection with contraption
+
+
+        _v1.copy(intersect.point)
+        _v1.sub(intersect.object.position)
+        //_v1.addScalar(0.5)
+        _v1.floor()
+        //_v1.subScalar(0.5)
+        // _v1.applyQuaternion(intersect.object.quaternion)
+        _v1.add(intersect.object.position)
+
+        previewMesh.position.copy(_v1)//.add(intersect.face.normal.divideScalar(2))
+        // previewMesh.quaternion.copy(intersect.object.quaternion)
+
+
+
+      } else { // show preview mesh free-floating, relative to player
+        // todo: allow relative rotation
+        previewMesh.position.set(0, 0, -5)
+        previewMesh.position.applyQuaternion(this.body.lookQuaternion)
+        previewMesh.position.add(this.body.position)
       }
     }
   }

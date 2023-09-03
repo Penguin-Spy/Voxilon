@@ -1,8 +1,9 @@
-import * as CANNON from 'cannon'
+import * as CANNON from 'cannon-es'
 import * as THREE from 'three'
 import CelestialBody from "/common/bodies/CelestialBody.js"
 import PlayerBody from "/common/bodies/PlayerBody.js"
 import TestBody from "/common/bodies/TestBody.js"
+import ContraptionBody from '/common/bodies/ContraptionBody.js'
 import { contactMaterials } from "/common/PhysicsMaterials.js"
 
 const WORLD_VERSION = "alpha-0"
@@ -10,7 +11,8 @@ const WORLD_VERSION = "alpha-0"
 const constructors = {
   "voxilon:celestial_body": CelestialBody,
   "voxilon:player_body": PlayerBody,
-  "voxilon:test_body": TestBody
+  "voxilon:test_body": TestBody,
+  "voxilon:contraption": ContraptionBody
 }
 
 export default class World {
@@ -27,6 +29,7 @@ export default class World {
     for(const contactMaterial of contactMaterials) {
       this._physics.addContactMaterial(contactMaterial)
     }
+    this.orbitalGravityEnabled = true
 
     // --- THREE ---
     this._scene = new THREE.Scene();
@@ -87,6 +90,6 @@ export default class World {
       body.update(this, DT)
     })
 
-    this._physics.fixedStep(DT)
+    this._physics.step(DT)
   }
 }

@@ -1,4 +1,4 @@
-import { Material, ContactMaterial } from 'cannon';
+import { Material, ContactMaterial } from 'cannon-es';
 
 const contactMaterials = []
 
