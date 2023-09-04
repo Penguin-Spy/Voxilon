@@ -27,6 +27,10 @@ export default class PlayerBody extends Body {
     })
 
     super(data, rigidBody, /*local ?*/ defaultMesh.clone() /*: false*/)
+    // read-only properties
+    Object.defineProperties(this, {
+      type: { enumerable: true, value: "voxilon:player_body" }
+    })
 
     this.onGround = false;
     this.lookQuaternion = new THREE.Quaternion(); // client-side, independent of body rotation & world stepping
@@ -34,7 +38,6 @@ export default class PlayerBody extends Body {
     this.rigidBody.collisionFilterMask = 1; // dont get raycast intersected by our own update()
   }
 
-  get type() { return "voxilon:player_body" }
   serialize() {
     const data = super.serialize()
     return data

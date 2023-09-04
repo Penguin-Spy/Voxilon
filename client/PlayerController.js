@@ -90,10 +90,12 @@ export default class PlayerController {
     Input.on("hotbar_0", () => this.setHotbarSlot(9))
   }
 
-  // Attach this controller to the specified Link
+  /**
+   * Attach this controller to the specified Link
+   */
   attach(link, hud, renderer) {
     this.link = link
-    this.body = link._playerBody
+    this.body = link.playerBody
     this.hud = hud
     this.renderer = renderer // for raycasting for building
     hud.updateStatus(this)

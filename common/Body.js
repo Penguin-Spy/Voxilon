@@ -5,6 +5,9 @@ const _v = new THREE.Vector3();
 
 export const G = 6.6743e-11;
 
+/**
+ * Base class for all independent objects in the World
+ */
 export default class Body {
   /*
     mesh:      optional, rendering mesh (model & texture)
@@ -15,13 +18,22 @@ export default class Body {
     // --- CANNON ---
     rigidBody.linearDamping = 0  // conservation of momentum
     rigidBody.angularDamping = 0  // conservation of angular momentum
-    this.rigidBody = rigidBody
 
     // --- THREE ---
     // may be false to indicate no mesh (if client root body)
     if(mesh) {
-      this.mesh = mesh
+      Object.defineProperty(this, "mesh", { enumerable: true, value: mesh })
     }
+
+    // read-only properties
+    Object.defineProperties(this, {
+      rigidBody: { enumerable: true, value: rigidBody },
+      position: { enumerable: true, value: rigidBody.position },
+      velocity: { enumerable: true, value: rigidBody.velocity },
+      quaternion: { enumerable: true, value: rigidBody.quaternion },
+      angularVelocity: { enumerable: true, value: rigidBody.angularVelocity },
+      mass: { enumerable: true, value: rigidBody.mass }
+    })
 
     data = { // default values
       position: [0, 0, 0],
@@ -50,20 +62,11 @@ export default class Body {
     return data
   }
 
-  get position() { return this.rigidBody.position }
-  get velocity() { return this.rigidBody.velocity }
-  get quaternion() { return this.rigidBody.quaternion }
-  get angularVelocity() { return this.rigidBody.angularVelocity }
-
-  get mass() { return this.rigidBody.mass }
-
   update(world, DT) {
     // copy cannon position & quaternion to three
     if(this.mesh) {
-      //this.mesh.position.copy(this.rigidBody.interpolatedPosition)
-      //this.mesh.quaternion.copy(this.rigidBody.interpolatedQuaternion)
-      this.mesh.position.copy(this.rigidBody.position)
-      this.mesh.quaternion.copy(this.rigidBody.quaternion)
+      this.mesh.position.copy(this.rigidBody.interpolatedPosition)
+      this.mesh.quaternion.copy(this.rigidBody.interpolatedQuaternion)
     }
 
     if(this.rigidBody.type === CANNON.Body.DYNAMIC && world.orbitalGravityEnabled) {

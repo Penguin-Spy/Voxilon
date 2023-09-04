@@ -12,9 +12,16 @@ export default class Cube extends Component {
     const boxShape = new CANNON.Box(halfExtents)
 
     super(data, boxShape, mesh.clone())
+    // read-only properties
+    Object.defineProperties(this, {
+      type: { enumerable: true, value: "voxilon:cube" }
+    })
   }
 
-  get type() { return "voxilon:cube" }
+  raycast(raycaster, intersects) {
+    console.log("raycasting cube", this, raycaster, intersects)
+  }
+
   /*serialize() {
     const data = super.serialize()
     return data

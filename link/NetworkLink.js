@@ -18,11 +18,8 @@ const CONNECTING = 0, LOADING = 1, LOADED = 2, ATTACHED = 3
 
 export default class NetworkLink extends Link {
   constructor(target, username) {
-    super()
-    this._username = username // maybe load from LocalStorage? (prefill input of gui)
+    super(username) // maybe load from LocalStorage? (prefill input of gui)
 
-    this.accumulator = 0
-    this._callbacks = {}
     this._readyState = CONNECTING
 
     this._readyPromise = new Promise((resolve, reject) => {
@@ -100,9 +97,7 @@ export default class NetworkLink extends Link {
   get ready() { return this._readyPromise }
 
   get playerBody() { return this._playerBody }
-  //get world() { console.error("accessing Link.world directly!!") }
   get world() { return this._world }
-  get username() { return this._username }
 
   /* --- Network Link methods --- */
   _handlePacket(data) {

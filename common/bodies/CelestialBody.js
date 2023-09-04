@@ -18,6 +18,10 @@ function roundedCubeGeometry(radius, widthSegements, heightSegments) {
   return g;
 }
 
+// THREE raycaster interface
+const fakeLayers = { test: () => true } // do try to raycast the celestial body
+const fakeChildren = { length: 0 } // don't recurse through children
+
 export default class CelestialBody extends Body {
 
   constructor(data) {
@@ -36,16 +40,27 @@ export default class CelestialBody extends Body {
 
     super(data, rigidBody, mesh)
 
-    this.radius = radius
-    this.surfaceGravity = surfaceGravity
+    Object.defineProperties(this, {
+      // read-only properties
+      type: { enumerable: true, value: "voxilon:celestial_body" },
+      radius: { enumerable: true, value: radius },
+      surfaceGravity: { enumerable: true, value: surfaceGravity },
+      // THREE raycaster interface
+      layers: { enumerable: true, value: fakeLayers },
+      children: { enumerable: true, value: fakeChildren }
+    })
   }
 
-  get type() { return "voxilon:celestial_body" }
   serialize() {
     const data = super.serialize()
     data.radius = this.radius
     data.surfaceGravity = this.surfaceGravity
     return data
+  }
+
+  raycast(raycaster, intersects) {
+    console.log("raycasting celestial body", this, raycaster, intersects)
+    return this.mesh.raycast(raycaster, intersects)
   }
 
   /*update(world, DT) {

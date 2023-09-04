@@ -13,9 +13,10 @@ export default class TestBody extends Body {
 
   constructor(data) {
     const is_static = check(data.is_static, "boolean")
+    const is_box = check(data.is_box, "boolean")
 
     let shape
-    if(data.use_box) {
+    if(is_box) {
       const halfExtents = new CANNON.Vec3(0.5, 0.5, 0.5)
       shape = new CANNON.Box(halfExtents)
     } else {
@@ -26,17 +27,22 @@ export default class TestBody extends Body {
       mass: 1, // kg
       shape: shape,
       material: GROUND,
-      type: is_static ? CANNON.Body.STATIC : CANNON.Body.DYNAMIC,
+      type: is_static ? CANNON.Body.KINEMATIC : CANNON.Body.DYNAMIC,
     })
 
     super(data, rigidBody, is_static ? staticMesh.clone() : dynamicMesh.clone())
-    this.is_static = is_static
+    // read-only properties
+    Object.defineProperties(this, {
+      type: { enumerable: true, value: "voxilon:test_body" },
+      is_static: { enumerable: true, value: is_static },
+      is_box: { enumerable: true, value: is_box },
+    })
   }
 
-  get type() { return "voxilon:test_body" }
   serialize() {
     const data = super.serialize()
     data.is_static = this.is_static
+    data.is_box = this.is_box
     return data
   }
 }

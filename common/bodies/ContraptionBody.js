@@ -6,56 +6,65 @@ import { check } from '/common/util.js'
 
 import Cube from "/common/components/Cube.js"
 
+// don't try to raycast the contraption itself
+const fakeLayers = { test: () => false }
+
 const constructors = {
   "voxilon:cube": Cube,
   /*"voxilon:player_body": PlayerBody,
   "voxilon:test_body": TestBody*/
 }
 
-/*const geometry = new THREE.BoxGeometry(1, 1, 1);
-const staticMesh = new THREE.Mesh(geometry, DEBUG_COMPASS)*/
-//const dynamicMesh = new THREE.Mesh(geometry, DEBUG_GRID)
-
 export default class ContraptionBody extends Body {
 
   constructor(data) {
-    const components = check(data.components, Array.isArray)
+    const components_data = check(data.components, Array.isArray)
 
-    /*const rigidBody = new CANNON.Body({
-      material: GROUND,
-      type: CANNON.Body.DYNAMIC
-    })*/
     const rigidBody = new CANNON.Body({
       mass: 1, // can't be 0 or the body doesn't move (behaves like kinematic???)
       material: GROUND,
-      type: CANNON.Body.DYNAMIC,
+      type: CANNON.Body.KINEMATIC//DYNAMIC,
     })
     const mesh = new THREE.Group()
 
     super(data, rigidBody, mesh)
 
-    this._components = []
-    components.forEach(c => this.loadComponent(c))
+    const components = []
+    Object.defineProperties(this, {
+      // read-only properties
+      type: { enumerable: true, value: "voxilon:contraption" },
+      components: { enumerable: true, value: components },
+      // THREE raycaster interface
+      layers: { enumerable: true, value: fakeLayers },
+      children: { enumerable: true, value: components }
+    })
+
+    // load components
+    components_data.forEach(c => this.loadComponent(c))
   }
 
-  get type() { return "voxilon:contraption" }
   serialize() {
     const data = super.serialize()
-    data.components = this._components.map(c => c.serialize())
+    data.components = this.components.map(c => c.serialize())
     return data
   }
 
+  /**
+   * Loads a Component's serialized form and adds it to the Contraption
+   * @param data The serialized data
+   */
   loadComponent(data) {
     const component = new constructors[data.type](data)
 
     this.rigidBody.addShape(component.shape, component.position)
     if(component.mesh) this.mesh.add(component.mesh)
-    this._components.push(component)
+    this.components.push(component)
     return component
   }
 
   update(world, DT) {
     super.update(world, DT)
   }
+
 
 }

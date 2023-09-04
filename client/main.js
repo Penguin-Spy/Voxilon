@@ -61,7 +61,7 @@ function start() {
   hud.attach(link)
 
   // debugger
-  physicsDebug.debugger = new CannonDebugger(link.world._scene, link.world._physics, {
+  physicsDebug.debugger = new CannonDebugger(link.world.scene, link.world.physics, {
     onInit: (body, mesh) => {
       if(body === link.playerBody.rigidBody) {
         mesh.material = false // don't render a wireframe for the player's body (just obscures vision)
@@ -169,10 +169,10 @@ Input.on("debug_physics_wireframe", physicsDebug.toggle)
 Input.on("debug_gravity_mode", function () {
   link.world.orbitalGravityEnabled = !link.world.orbitalGravityEnabled
   if(link.world.orbitalGravityEnabled) {
-    link.world._physics.gravity.y = 0
+    link.world.physics.gravity.y = 0
     hud.showChatMessage("[debug] orbital gravity enabled")
   } else {
-    link.world._physics.gravity.y = -9.82 // m/s²
+    link.world.physics.gravity.y = -9.82 // m/s²
     hud.showChatMessage("[debug] orbital gravity disabled")
   }
 })

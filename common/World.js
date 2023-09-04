@@ -20,21 +20,27 @@ export default class World {
     if(data.VERSION !== WORLD_VERSION) throw new Error(`Unknown world version: ${data.VERSION}`)
 
     this.name = data.name ?? "A Universe"
-    this._bodies = []
 
     // --- CANNON ---
-    this._physics = new CANNON.World({
+    const physics = new CANNON.World({
       frictionGravity: new CANNON.Vec3(0, -9.82, 0) // direction doesn't matter, only magnitude is used in friction calculations
     })
     for(const contactMaterial of contactMaterials) {
-      this._physics.addContactMaterial(contactMaterial)
+      physics.addContactMaterial(contactMaterial)
     }
     this.orbitalGravityEnabled = true
 
     // --- THREE ---
-    this._scene = new THREE.Scene();
+    const scene = new THREE.Scene()
 
+    // read-only properties
+    Object.defineProperties(this, {
+      bodies: { enumerable: true, value: [] },
+      physics: { enumerable: true, value: physics },
+      scene: { enumerable: true, value: scene }
+    })
 
+    // load bodies
     data.bodies.forEach(b => this.loadBody(b))
   }
 
@@ -42,31 +48,44 @@ export default class World {
     const data = { "VERSION": WORLD_VERSION }
     data.name = this.name
     if(!noBodies) {
-      data.bodies = this._bodies.map(b => b.serialize())
+      data.bodies = this.bodies.map(b => b.serialize())
     }
     return data
   }
 
-  get scene() { return this._scene }
-  get physics() { return this._physics }
-  get bodies() { return this._bodies }
+  /**
+   * an array of all bodies that create a gravitational field
+   */
   get gravityBodies() {
-    return this._bodies.filter(e => {
-      return e.rigidBody.type === CANNON.Body.KINEMATIC && e.rigidBody.mass > 0
+    return this.bodies.filter(body => {
+      return body instanceof CelestialBody && body.rigidBody.mass > 0
+    })
+  }
+  /**
+   * an array of all bodies that can be built upon. used for building raycasting
+   * @returns {(CelestialBody|ContraptionBody)[]}
+   */
+  get builableBodies() {
+    return this.bodies.filter(body => {
+      return body instanceof CelestialBody || body instanceof ContraptionBody
     })
   }
 
+  /**
+   * Loads a Body's serialized form and adds it to the world
+   * @param data The serialized data
+   */
   loadBody(data) {
     const body = new constructors[data.type](data)
 
-    this._physics.addBody(body.rigidBody)
+    this.physics.addBody(body.rigidBody)
     if(body.mesh) this.scene.add(body.mesh)
-    this._bodies.push(body)
+    this.bodies.push(body)
     return body
   }
 
   getBody(bodyID) {
-    return this._bodies[bodyID]
+    return this.bodies[bodyID]
   }
 
   getBodyByType(type) {
@@ -77,19 +96,19 @@ export default class World {
   }
 
   removeBody(bodyID) {
-    const body = this._bodies[bodyID];
-    this._physics.removeBody(body.rigidBody)
+    const body = this.bodies[bodyID];
+    this.physics.removeBody(body.rigidBody)
     if(body.mesh) this.scene.remove(body.mesh)
-    delete this._bodies[bodyID];
+    delete this.bodies[bodyID];
   }
 
 
   step(DT) {
     // updates THREE meshes & calculates gravity
-    this._bodies.forEach(body => {
+    this.bodies.forEach(body => {
       body.update(this, DT)
     })
 
-    this._physics.step(DT)
+    this.physics.fixedStep(DT)
   }
 }

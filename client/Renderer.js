@@ -65,8 +65,7 @@ export default class Renderer {
   }
 
   render() {
-    //this.camera.position.copy(this.body.rigidBody.interpolatedPosition)
-    this.camera.position.copy(this.body.rigidBody.position)
+    this.camera.position.copy(this.body.rigidBody.interpolatedPosition)
     this.camera.quaternion.copy(this.body.lookQuaternion)
 
     this.renderer.render(this.scene, this.camera);

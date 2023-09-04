@@ -10,7 +10,7 @@ const { CHAT, ADD_BODY } = PacketType
 
 export default class DirectLink extends Link {
   constructor(worldOptions) {
-    super()
+    super("host") // maybe load from LocalStorage?
     /*
     worldOptions = {
       type: 'file',
@@ -18,15 +18,11 @@ export default class DirectLink extends Link {
     }
     */
 
-    this.accumulator = 0
-
     // networking stuff
     this._clients = []
-    this._callbacks = {}
-    this._username = "host" // maybe load from LocalStorage?
 
     // create/load world
-    this._world = new World({
+    const world = new World({
       VERSION: "alpha-0",
       name: worldOptions.name,
       bodies: [
@@ -42,11 +38,11 @@ export default class DirectLink extends Link {
         }, {
           type: "voxilon:test_body",
           position: [2, 44, -7],
-          is_static: false
+          is_static: false, is_box: false
         }, {
           type: "voxilon:test_body",
           position: [-2, 44, -7],
-          is_static: true
+          is_static: true, is_box: false
         }, {
           type: "voxilon:player_body",
           position: [0, 44, 0]
@@ -55,30 +51,29 @@ export default class DirectLink extends Link {
     })
 
     // find player's body
-    this._playerBody = this._world.getBodyByType("voxilon:player_body")
+    const playerBody = world.getBodyByType("voxilon:player_body")
 
-    this.playerController = new PlayerController();
-    this._playerBody.attach(this.playerController)
+    const playerController = new PlayerController();
+    playerBody.attach(playerController)
+
+    // read-only properties
+    Object.defineProperties(this, {
+      world: { enumerable: true, value: world },
+      playerBody: { enumerable: true, value: playerBody },
+      playerController: { enumerable: true, value: playerController },
+    })
 
     // create Integrated server
   }
-  get playerBody() { return this._playerBody }
-  //get world() { console.error("accessing Link.world directly!!") }
-  get world() { return this._world }
-  get username() { return this._username }
 
 
   /* --- Direct Link methods --- */
 
-  async publish(options) {
+  async publish() {
     try {
-      options.name = options.name ?? "A Universe";
-      console.info("Publishing w/ options:", options)
+      console.info("Publishing session to signaling server")
 
-      // get game code from signaling server
-      this._username = options.username ?? this._username;
-
-      // start listening for WebRTC connections
+      // create session & start listening for WebRTC connections
       this.ws = new WebSocket(SIGNAL_ENDPOINT + "/new_session")
       this.ws.onmessage = e => {
         const data = JSON.parse(e.data)
@@ -118,11 +113,11 @@ export default class DirectLink extends Link {
               console.info(`[dataChannel:${client.id}] open`)
 
               // send world data
-              const world_data = this._world.serialize()
+              const world_data = this.world.serialize()
               client.dataChannel.send(PacketEncoder.LOAD_WORLD(world_data))
 
               // create client's player body
-              client.body = this._world.loadBody({
+              client.body = this.world.loadBody({
                 type: "voxilon:player_body",
                 position: [0, 44, 0]
               })
@@ -192,45 +187,43 @@ export default class DirectLink extends Link {
   /* --- Link interface methods --- */
 
   playerMove(velocity) {  // vector of direction to move in
-    this._playerBody.velocity.copy(velocity)
+    this.playerBody.velocity.copy(velocity)
   }
   playerRotate(bodyQuaternion, lookQuaternion) {  // sets player's rotation
-    this._playerBody.quaternion = bodyQuaternion
-    this._playerBody.lookQuaternion = lookQuaternion
+    this.playerBody.quaternion = bodyQuaternion
+    this.playerBody.lookQuaternion = lookQuaternion
   }
 
   // Chat
   sendChat(msg) {
     console.info(`[DirectLink] Sending chat message: "${msg}"`)
     // broadcast chat msg packet to all clients
-    this.broadcast(PacketEncoder.CHAT(this._username, msg))
+    this.broadcast(PacketEncoder.CHAT(this.username, msg))
     // send it to ourselves via the event handler
-    this.emit('chat_message', { author: this._username, msg })
+    this.emit('chat_message', { author: this.username, msg })
   }
 
   // building
   newContraption(entity) {
     switch(entity.name) {
       case "cube":
-        this._world.loadBody({
+        this.world.loadBody({
           type: "voxilon:test_body",
           position: entity.position.toArray(),
           quaternion: entity.quaternion.toArray(),
-          is_static: false,
-          use_box: true
+          is_static: false, is_box: true
         })
         break;
       case "slope":
-        this._world.loadBody({
+        this.world.loadBody({
           type: "voxilon:test_body",
           position: entity.position.toArray(),
           quaternion: entity.quaternion.toArray(),
-          is_static: false,
-          use_box: false
+          is_static: false, is_box: false
         })
         break;
       case "belt":
-        this._world.loadBody({
+        this.world.loadBody({
           type: "voxilon:contraption",
           position: entity.position.toArray(),
           quaternion: entity.quaternion.toArray(),
@@ -247,7 +240,7 @@ export default class DirectLink extends Link {
         })
         break;
       default:
-        console.warn("unknown entity name", entity.name)
+        console.warn("unknown entity name:", entity.name)
     }
   }
 
