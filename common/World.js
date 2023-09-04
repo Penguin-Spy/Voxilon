@@ -65,7 +65,7 @@ export default class World {
    * an array of all bodies that can be built upon. used for building raycasting
    * @returns {(CelestialBody|ContraptionBody)[]}
    */
-  get builableBodies() {
+  get buildableBodies() {
     return this.bodies.filter(body => {
       return body instanceof CelestialBody || body instanceof ContraptionBody
     })

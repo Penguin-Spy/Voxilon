@@ -1,11 +1,11 @@
 {
   "name": "voxilon",
-  "version": "0.1.0",
+  "version": "alpha-0",
   "description": "mm yesn javascrimpt videojuego",
   "homepage": "https://github.com/Penguin-Spy/Voxilon",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "host": "node index.js"
   },
   "keywords": [],
   "author": "Penguin_Spy",

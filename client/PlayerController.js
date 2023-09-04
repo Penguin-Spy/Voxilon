@@ -145,17 +145,18 @@ export default class PlayerController {
       _raycaster.setFromCamera(_pointer, this.renderer.camera)
       const previewMesh = this.renderer.previewMesh
 
-      const intersects = _raycaster.intersectObjects(this.link.world.scene.children)
+      const intersects = _raycaster.intersectObjects(this.link.world.buildableBodies)
       // if the first intersect is the preview mesh, get the 2nd one
-      const intersect = intersects[0]?.object !== previewMesh ? intersects[0] : intersects[1]
+      const intersect = intersects[0]//intersects[0]?.object !== previewMesh ? intersects[0] : intersects[1]
 
       if(intersect) { // show preview mesh aligned against what it collided with
+        //console.log(intersects)
         //this.previewMeshDistance = intersect.distance
         this.buildPreviewIntersect = intersect
 
         // todo: set pos & quat from interesection with contraption
 
-
+        /*
         _v1.copy(intersect.point)
         _v1.sub(intersect.object.position)
         //_v1.addScalar(0.5)
@@ -166,6 +167,8 @@ export default class PlayerController {
 
         previewMesh.position.copy(_v1)//.add(intersect.face.normal.divideScalar(2))
         // previewMesh.quaternion.copy(intersect.object.quaternion)
+        */
+        previewMesh.position.copy(intersect.point)
 
 
 

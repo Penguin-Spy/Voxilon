@@ -1,3 +1,4 @@
+import { Box3, Vector3 } from 'three'
 
 // https://stackoverflow.com/questions/21070836/#21070876
 class TwoWayMap {
@@ -35,4 +36,18 @@ function check(variable, type) {
   }
 }
 
-export { TwoWayMap, check }
+/**
+ * Creates a THREE.Box3 based on the provided width, depth, and height.
+ * @param {number} width
+ * @param {number} depth
+ * @param {number} height
+ * @returns {THREE.Box3}
+ */
+function boundingBoxFromDimensions(width, depth, height) {
+  return new Box3(
+    new Vector3(-width / 2, -depth / 2, -height / 2),
+    new Vector3(width / 2, depth / 2, height / 2)
+  )
+}
+
+export { TwoWayMap, check, boundingBoxFromDimensions }

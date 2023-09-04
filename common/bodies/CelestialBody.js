@@ -59,7 +59,7 @@ export default class CelestialBody extends Body {
   }
 
   raycast(raycaster, intersects) {
-    console.log("raycasting celestial body", this, raycaster, intersects)
+    //console.log("raycasting celestial body", this, raycaster, intersects)
     return this.mesh.raycast(raycaster, intersects)
   }
 
