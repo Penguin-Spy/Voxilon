@@ -89,10 +89,10 @@ export default class HUD {
       hotbarNodes[i].classList.remove("selected")
       const hotbarSlot = status.hotbar[i]
       if(hotbarSlot) {
-        hotbarNodes[i].firstChild.src = `/assets/gui/${hotbarSlot.type}/${hotbarSlot.name}.png`
-        hotbarNodes[i].firstChild.hidden = false
+        //hotbarNodes[i].firstChild.src = `/assets/gui/${hotbarSlot.type}/${hotbarSlot.name}.png`
+        hotbarNodes[i].firstChild.src = `/assets/debug.png`
       } else {
-        hotbarNodes[i].firstChild.hidden = true
+        hotbarNodes[i].firstChild.src = `/assets/transparent.png`
       }
     }
     hotbarNodes[status.selectedHotbarSlot].classList.add("selected")

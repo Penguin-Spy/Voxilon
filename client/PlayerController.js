@@ -1,7 +1,8 @@
+import { Vector3, Quaternion, BoxGeometry, Mesh, MeshBasicMaterial } from 'three'
 import Input from '/client/Input.js'
-import { Vector2, Vector3, Quaternion, Raycaster } from 'three'
-import * as THREE from 'three'
 import * as Materials from "/common/PhysicsMaterials.js"
+import Components from '/common/components/index.js'
+import BuildingRaycaster from '/client/BuildingRaycaster.js'
 
 const _v1 = new Vector3();
 const _v2 = new Vector3();
@@ -31,13 +32,11 @@ function toZero(value, delta) {
 }
 
 // outside of HUD because there's only ever one pointer
-const _raycaster = new Raycaster();
+const _raycaster = new BuildingRaycaster();
 _raycaster.far = 10 // intentionally twice the distance used for no intersections
-const _pointer = { x: 0, y: 0 } // fake pointer bc it's always in the middle of the screen
+const _fakePointer = { x: 0, y: 0 } // fake pointer bc it's always in the middle of the screen
 
-//TODO: move to static property of class for each component ("previewMesh")
-const geometry = new THREE.BoxGeometry(1, 1, 1);
-const mesh = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({ color: "#ffff00" }))
+const defaultPreviewMesh = new Mesh(new BoxGeometry(1, 1, 1), new MeshBasicMaterial({ color: "#ffff00" }))
 
 export default class PlayerController {
 
@@ -65,14 +64,15 @@ export default class PlayerController {
     this.hotbar = [
       { type: "tool", name: "welder" },
       { type: "tool", name: "grinder" },
-      { type: "entity", name: "cube" },
-      { type: "entity", name: "slope" },
-      { type: "entity", name: "belt" },
-      { type: "entity", name: "assembler" },
+      { type: "test", name: "box" },
+      { type: "test", name: "sphere" },
+      { type: "component", name: "voxilon:cube", class: Components["voxilon:cube"] },
+      { type: "component", name: "voxilon:rectangle", class: Components["voxilon:rectangle"] },
+      /*{ type: "entity", name: "assembler" },
       { type: "entity", name: "refinery" },
       { type: "entity", name: "battery" },
       { type: "entity", name: "solar_panel" },
-      { type: "entity", name: "network_cable" }
+      { type: "entity", name: "network_cable" }*/
     ]
 
     this.selectedItem = false
@@ -107,8 +107,10 @@ export default class PlayerController {
     this.hud.updateHotbar(this)
 
     this.selectedItem = this.hotbar[this.selectedHotbarSlot]
-    if(this.selectedItem.type === "entity") {
-      this.renderer.setPreviewMesh(mesh) // see comment on declaration of `mesh`
+    if(this.selectedItem?.type === "test") { // just for testing
+      this.renderer.setPreviewMesh(defaultPreviewMesh)
+    } else if(this.selectedItem?.type === "component") {
+      this.renderer.setPreviewMesh(this.selectedItem.class.previewMesh)
     } else {
       this.renderer.clearPreviewMesh()
     }
@@ -116,59 +118,79 @@ export default class PlayerController {
 
   tryBuild() {
     console.log(this.selectedHotbarSlot, this.selectedItem)
-    if(this.selectedItem.type === "entity") {
-      // do entity placement stuff
-
-      this.link.newContraption({
-        name: this.selectedItem.name,
+    if(this.selectedItem.type === "test") { // just for testing
+      this.link.newTestBody({
+        is_box: this.selectedItem.name === "box",
         position: this.renderer.previewMesh.position,
         quaternion: this.renderer.previewMesh.quaternion,
       })
 
-      /*pointer.set(Input.mouseX, Input.mouseY)
-      raycaster.setFromCamera(pointer, this.renderer.camera)
-
-      const intersects = raycaster.intersectObjects(this.link.world.scene.children)
-      console.log(intersects)
-      for(let i = 0; i < intersects.length; i++) {
-        if(this.selectedItem.name === "cube") {
-          intersects[i].object.material.color.set(0xff0000)
-        } else {
-          intersects[i].object.material.color.setRGB(1, 1, 1)
-        }
-      }*/
+    } else if(this.selectedItem.type === "component") {
+      // do entity placement stuff
+      this.link.newContraption(
+        this.renderer.previewMesh.position,
+        this.renderer.previewMesh.quaternion,
+        {
+          type: this.selectedItem.name
+          // etc.
+        })
     }
   }
 
   updatePreviewDistance() {
-    if(this.selectedItem.type === "entity") {
-      _raycaster.setFromCamera(_pointer, this.renderer.camera)
-      const previewMesh = this.renderer.previewMesh
+    if(this.selectedItem === undefined) return
+    const previewMesh = this.renderer.previewMesh
 
-      const intersects = _raycaster.intersectObjects(this.link.world.buildableBodies)
-      // if the first intersect is the preview mesh, get the 2nd one
-      const intersect = intersects[0]//intersects[0]?.object !== previewMesh ? intersects[0] : intersects[1]
+    if(this.selectedItem.type === "test") { // just for testing
+      previewMesh.position.set(0, 0, -5)
+      previewMesh.position.applyQuaternion(this.body.lookQuaternion)
+      previewMesh.position.add(this.body.position)
+      previewMesh.quaternion.copy(this.body.lookQuaternion)
+
+    } else if(this.selectedItem.type === "component") {
+      _raycaster.setFromCamera(_fakePointer, this.renderer.camera)
+
+      const intersects = _raycaster.intersectBuildableBodies(this.link.world.buildableBodies)
+      const intersect = intersects[0]
+      this.buildPreviewIntersects = intersects
 
       if(intersect) { // show preview mesh aligned against what it collided with
-        //console.log(intersects)
-        //this.previewMeshDistance = intersect.distance
-        this.buildPreviewIntersect = intersect
-
-        // todo: set pos & quat from interesection with contraption
-
-        /*
-        _v1.copy(intersect.point)
-        _v1.sub(intersect.object.position)
-        //_v1.addScalar(0.5)
-        _v1.floor()
-        //_v1.subScalar(0.5)
-        // _v1.applyQuaternion(intersect.object.quaternion)
-        _v1.add(intersect.object.position)
-
-        previewMesh.position.copy(_v1)//.add(intersect.face.normal.divideScalar(2))
-        // previewMesh.quaternion.copy(intersect.object.quaternion)
-        */
         previewMesh.position.copy(intersect.point)
+        if(intersect.type === "component") {
+          previewMesh.quaternion.copy(intersect.object.contraption.quaternion)
+
+          const boundingBox = intersect.object.boundingBox
+
+          _v1.set(0, 0, 0)
+          switch(intersect.face) {
+            case 1:
+              _v1.x -= 1
+              break;
+            case 2:
+              _v1.x += 1
+              break;
+            case 3:
+              _v1.y -= 1
+              break;
+            case 4:
+              _v1.y += 1
+              break;
+            case 5:
+              _v1.z -= 1
+              break;
+            case 6:
+              _v1.z += 1
+              break;
+            default:
+            // not interesecting with a component, no offset
+          }
+          _v1.applyQuaternion(previewMesh.quaternion)
+          previewMesh.position.add(_v1)
+
+
+        } else { // celestial body mesh
+          previewMesh.quaternion.copy(intersect.object.quaternion)
+        }
 
 
 
@@ -177,6 +199,7 @@ export default class PlayerController {
         previewMesh.position.set(0, 0, -5)
         previewMesh.position.applyQuaternion(this.body.lookQuaternion)
         previewMesh.position.add(this.body.position)
+        previewMesh.quaternion.copy(this.body.lookQuaternion)
       }
     }
   }
@@ -205,7 +228,6 @@ export default class PlayerController {
     } else {
       this._updateGravityMovement(DT)
     }
-    this.updatePreviewDistance()
   }
 
   updateRotation(deltaTime) {
@@ -214,6 +236,7 @@ export default class PlayerController {
     } else {
       this._updateGravityRotation(deltaTime)
     }
+    this.updatePreviewDistance()
   }
 
   _updateJetpackRotation(deltaTime) {

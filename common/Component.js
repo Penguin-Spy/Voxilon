@@ -1,9 +1,10 @@
 import * as CANNON from 'cannon-es';
 import * as THREE from 'three';
 
-// THREE raycaster interface
-const fakeLayers = { test: () => true } // do try to raycast the component
-const fakeChildren = { length: 0 } // don't recurse through children
+const _ray = new THREE.Ray()
+const _inverseMatrix = new THREE.Matrix4()
+const _v1 = new THREE.Vector3()
+const _v2 = new THREE.Vector3()
 
 /**
  * Base class for all components
@@ -11,19 +12,11 @@ const fakeChildren = { length: 0 } // don't recurse through children
 export default class Component {
 
   constructor(data, shape, mesh) {
-    // --- THREE ---
-    // may be false to indicate no mesh
-    if(mesh) {
-      Object.defineProperty(this, "mesh", { enumerable: true, value: mesh })
-    }
-
     Object.defineProperties(this, {
       // read-only properties
       shape: { enumerable: true, value: shape },
-      position: { enumerable: true, value: new THREE.Vector3() },
-      // THREE raycaster interface
-      layers: { enumerable: false, value: fakeLayers },
-      children: { enumerable: false, value: fakeChildren }
+      mesh: { enumerable: true, value: mesh },
+      position: { enumerable: true, value: new THREE.Vector3() }
     })
 
     data = { // default values
@@ -42,6 +35,141 @@ export default class Component {
     return data
   }
 
+  raycast(raycaster, intersects) {
+    // bounding sphere intersect stuff
+    //_ray.copy(raycaster.ray).recast(raycaster.near)
+
+    const matrixWorld = this.mesh.matrixWorld // represents world-space pos & rotation, conveniently calculated by three.js
+
+    _inverseMatrix.copy(matrixWorld).invert()
+    // todo: calc from position instead?
+    _ray.copy(raycaster.ray).applyMatrix4(_inverseMatrix)
+
+    const intersectFace = intersectBox2(_ray, this.boundingBox, _v1)
+    if(intersectFace !== null) {
+
+      // calculate floored contraption position offset thing
+      _v2.copy(_v1)       // relative to the position of the component (it's mesh technically)
+      _v2.addScalar(0.49) // round to nearest integer position (slightly less than 0.5 to avoid jitteryness from floating-point shenanigans)
+      _v2.roundToZero()
+
+      _v2.applyMatrix4(matrixWorld) // then convert to world-space
+
+      // calculate exact distance for raycast distance sorting
+      _v1.applyMatrix4(matrixWorld)
+      const distance = raycaster.ray.origin.distanceTo(_v1)
+
+      if(distance > raycaster.far) return
+      intersects.push({
+        distance: distance,
+        point: _v2.clone(),
+        object: this,
+        face: intersectFace,
+        type: "component"
+      })
+    }
+  }
+
   update(world, DT) {
   }
+}
+
+/*function intersectBox(ray, box, target) {
+  let tmin, tmax, tymin, tymax, tzmin, tzmax;
+
+  const invdirx = 1 / ray.direction.x,
+    invdiry = 1 / ray.direction.y,
+    invdirz = 1 / ray.direction.z;
+
+  const origin = ray.origin;
+
+  if(invdirx >= 0) {
+    tmin = (box.min.x - origin.x) * invdirx;
+    tmax = (box.max.x - origin.x) * invdirx;
+
+  } else {
+    tmin = (box.max.x - origin.x) * invdirx;
+    tmax = (box.min.x - origin.x) * invdirx;
+
+  }
+
+  if(invdiry >= 0) {
+    tymin = (box.min.y - origin.y) * invdiry;
+    tymax = (box.max.y - origin.y) * invdiry;
+
+  } else {
+    tymin = (box.max.y - origin.y) * invdiry;
+    tymax = (box.min.y - origin.y) * invdiry;
+
+  }
+
+  if((tmin > tymax) || (tymin > tmax)) return null;
+  if(tymin > tmin || isNaN(tmin)) tmin = tymin;
+  if(tymax < tmax || isNaN(tmax)) tmax = tymax;
+
+  if(invdirz >= 0) {
+    tzmin = (box.min.z - origin.z) * invdirz;
+    tzmax = (box.max.z - origin.z) * invdirz;
+  } else {
+    tzmin = (box.max.z - origin.z) * invdirz;
+    tzmax = (box.min.z - origin.z) * invdirz;
+
+  }
+
+  if((tmin > tzmax) || (tzmin > tmax)) return null;
+  if(tzmin > tmin || isNaN(tmin)) tmin = tzmin;
+  if(tzmax < tmax || isNaN(tmax)) tmax = tzmax;
+  //return point closest to the ray (positive side)
+  if(tmax < 0) return null;
+
+  return ray.at(tmin >= 0 ? tmin : tmax, target);
+}*/
+
+const max = Math.max, min = Math.min
+
+// https://gamedev.stackexchange.com/a/18459, translated from C to three.js by me
+function intersectBox2(ray, box, target) {
+  const lb = box.min, rt = box.max,
+    invdirx = 1 / ray.direction.x,
+    invdiry = 1 / ray.direction.y,
+    invdirz = 1 / ray.direction.z,
+    origin = ray.origin
+
+  // lb is the corner of AABB with minimal coordinates - left bottom, rt is maximal corner
+  // r.org is origin of ray
+  const t1 = (lb.x - origin.x) * invdirx;
+  const t2 = (rt.x - origin.x) * invdirx;
+  const t3 = (lb.y - origin.y) * invdiry;
+  const t4 = (rt.y - origin.y) * invdiry;
+  const t5 = (lb.z - origin.z) * invdirz;
+  const t6 = (rt.z - origin.z) * invdirz;
+
+  const tmin = max(max(min(t1, t2), min(t3, t4)), min(t5, t6));
+  const tmax = min(min(max(t1, t2), max(t3, t4)), max(t5, t6));
+
+  // if tmax < 0, ray (line) is intersecting AABB, but the whole AABB is behind us
+  if(tmax < 0) {
+    //t = tmax;
+    return null;
+  }
+
+  // if tmin > tmax, ray doesn't intersect AABB
+  if(tmin > tmax) {
+    //t = tmax;
+    return null;
+  }
+
+  // https://computergraphics.stackexchange.com/a/9506
+  // todo: optimize this (this sucks lmao)
+  let whichT
+  if(tmin == t1) whichT = 1
+  if(tmin == t2) whichT = 2
+  if(tmin == t3) whichT = 3
+  if(tmin == t4) whichT = 4
+  if(tmin == t5) whichT = 5
+  if(tmin == t6) whichT = 6
+
+  //t = tmin;
+  ray.at(tmin >= 0 ? tmin : tmax, target)
+  return whichT;
 }

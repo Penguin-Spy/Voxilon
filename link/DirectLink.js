@@ -29,12 +29,14 @@ export default class DirectLink extends Link {
         {
           type: "voxilon:celestial_body",
           radius: 40,
-          surfaceGravity: 9.8
+          surfaceGravity: 9.8,
+          contraptions: []
         }, {
           type: "voxilon:celestial_body",
           position: [20, 60, 10],
           radius: 10,
-          surfaceGravity: 9.8
+          surfaceGravity: 9.8,
+          contraptions: []
         }, {
           type: "voxilon:test_body",
           position: [2, 44, -7],
@@ -203,48 +205,56 @@ export default class DirectLink extends Link {
     this.emit('chat_message', { author: this.username, msg })
   }
 
-  // building
-  newContraption(entity) {
-    switch(entity.name) {
-      case "cube":
-        this.world.loadBody({
-          type: "voxilon:test_body",
-          position: entity.position.toArray(),
-          quaternion: entity.quaternion.toArray(),
-          is_static: false, is_box: true
-        })
-        break;
-      case "slope":
-        this.world.loadBody({
-          type: "voxilon:test_body",
-          position: entity.position.toArray(),
-          quaternion: entity.quaternion.toArray(),
-          is_static: false, is_box: false
-        })
-        break;
-      case "belt":
-        this.world.loadBody({
-          type: "voxilon:contraption",
-          position: entity.position.toArray(),
-          quaternion: entity.quaternion.toArray(),
-          components: [
-            {
-              type: "voxilon:cube",
-              position: [0, 0, 0]
-            },
-            {
-              type: "voxilon:cube",
-              position: [0, 1, 0]
-            }
-          ]
-        })
-        break;
-      default:
-        console.warn("unknown entity name:", entity.name)
-    }
+  // --- Building ---
+
+  // debugging
+  newTestBody(stuff) {
+    this.world.loadBody({
+      type: "voxilon:test_body",
+      position: stuff.position.toArray(),
+      quaternion: stuff.quaternion.toArray(),
+      is_static: false, is_box: stuff.is_box
+    })
   }
 
-  editContraption() {
-    //todo: figure out how to implement snapping to grid & whatnot
+  /**
+   * Request to create a new contraption in the world
+   *
+   * @param {THREE.Vector3}    position       the placement position
+   * @param {THREE.Quaternion} quaternion     the placement rotation
+   * @param {object}           firstComponent data for the first component of the contraption
+   * @param {CelestialBody?}   parent         The celestial body that this contraption is attached to, or `undefined` if the contraption will be free-floating. \
+   *                                            If this is specified, `position` and `quaternion` become relative to the celestial body.
+   */
+  newContraption(position, quaternion, firstComponent, parent) {
+    this.world.loadBody({
+      type: "voxilon:contraption_body",
+      position: position.toArray(),
+      quaternion: quaternion.toArray(),
+      contraption: {
+        components: [
+          {
+            type: "voxilon:cube",
+            position: [0, 0, 0]
+            // ...firstComponent
+          },
+          {
+            type: "voxilon:cube",
+            position: [0, 1, 0]
+          }
+        ]
+      }
+    })
   }
+
+  /**
+   * Request to add a component to a contraption
+   * @param {Contraption} contraption the contraption to add to
+   * @param {object} component        data for the new component
+   */
+  editContraption(contraption, component) {
+
+  }
+
+  // TODO: removing components?
 }

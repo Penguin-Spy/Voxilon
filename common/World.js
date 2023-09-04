@@ -12,7 +12,7 @@ const constructors = {
   "voxilon:celestial_body": CelestialBody,
   "voxilon:player_body": PlayerBody,
   "voxilon:test_body": TestBody,
-  "voxilon:contraption": ContraptionBody
+  "voxilon:contraption_body": ContraptionBody
 }
 
 export default class World {

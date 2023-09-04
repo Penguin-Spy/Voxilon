@@ -55,6 +55,7 @@ export default class Renderer {
    * @param {THREE.Mesh} [mesh] The preview mesh
    */
   setPreviewMesh(mesh) {
+    if(this.previewMesh) this.clearPreviewMesh()
     this.previewMesh = mesh
     this.scene.add(mesh)
   }
