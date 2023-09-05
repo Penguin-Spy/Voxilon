@@ -12,6 +12,12 @@ tex_debugCompass.magFilter = NearestFilter
 tex_debugCompass.generateMipmaps = false
 tex_Cube.magFilter = NearestFilter
 tex_Cube.generateMipmaps = false
+export const wall_top = new MeshBasicMaterial({ map: loader.load("components/wall_top.png") })
+export const wall_bottom = new MeshBasicMaterial({ map: loader.load("components/wall_bottom.png") })
+export const wall_left = new MeshBasicMaterial({ map: loader.load("components/wall_left.png") })
+export const wall_right = new MeshBasicMaterial({ map: loader.load("components/wall_right.png") })
+export const wall_front = new MeshBasicMaterial({ map: loader.load("components/wall_front.png") })
+export const wall_back = new MeshBasicMaterial({ map: loader.load("components/wall_back.png") })
 
 const tex_grass = loader.load("grass.png")
 

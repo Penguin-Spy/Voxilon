@@ -7,6 +7,7 @@ import { ComponentDirection, rotateBoundingBox } from '/common/components/compon
 
 const _v1 = new Vector3();
 const _v2 = new Vector3();
+const _v3 = new Vector3();
 const _q1 = new Quaternion();
 const _q2 = new Quaternion();
 let angle = 0;
@@ -187,39 +188,41 @@ export default class PlayerController {
           const parent = intersect.object.parentContraption
 
           // position of adjacent empty grid space, offset by the preview mesh's bounding box
-          _v1.copy(intersect.position)
+          const pos = intersect.position // this is already a unique Vector3
 
-          const dimensions = heldComponent.boundingBox.max.clone()
-          rotateBoundingBox(dimensions, this.buildPreviewRotation)
+          _v1.set(1, 1, 1)  // min + 1
+          _v2.copy(heldComponent.boundingBox.max) // max (dimensions)
+          _v3.copy(heldComponent.offset) // offset
+          rotateBoundingBox(_v1, _v2, _v3, this.buildPreviewRotation)
 
           switch(intersect.intersectFace) {
             case 1: // hit on -x, facing +x, get width of bounding box
-              _v1.x -= dimensions.x
+              pos.x -= _v2.x
               break;
             case 2: // hit on +x, facing -x, no offset needed bc bounding box minimum is 0,0,0
-              _v1.x += 1
+              pos.x += _v1.x
               break;
             case 3:
-              _v1.y -= dimensions.y
+              pos.y -= _v2.y
               break;
             case 4:
-              _v1.y += 1
+              pos.y += _v1.y
               break;
             case 5:
-              _v1.z -= dimensions.z
+              pos.z -= _v2.z
               break;
             case 6:
-              _v1.z += 1
+              pos.z += _v1.z
               break;
           }
 
           this.buildPreview.type = "component"
           this.buildPreview.contraption = parent
-          this.buildPreview.position = _v1.clone()
+          this.buildPreview.position = pos.clone()
 
           // apply to preview mesh
-          _v1.add(heldComponent.offset).applyQuaternion(parent.quaternion)
-          previewMesh.position.copy(parent.position).add(_v1)
+          pos.add(_v3).applyQuaternion(parent.quaternion)
+          previewMesh.position.copy(parent.position).add(pos)
 
           _q1.copy(parent.quaternion)
           ComponentDirection.rotateQuaternion(_q1, this.buildPreviewRotation)

@@ -2,9 +2,10 @@ import { Box3, Vector3, Quaternion } from 'three'
 
 const _q1 = new Quaternion();
 
-const RIGHT = new Vector3(1, 0, 0)
-const UP = new Vector3(0, 1, 0)
-const FORWARD = new Vector3(0, 0, 1)
+// x is RIGHT, y is UP, z is FORWARDS
+const AXIS_X = new Vector3(1, 0, 0)
+const AXIS_Y = new Vector3(0, 1, 0)
+const AXIS_Z = new Vector3(0, 0, 1)
 const PI = Math.PI, HALF_PI = PI / 2, N_HALF_PI = -HALF_PI
 
 /**
@@ -61,126 +62,324 @@ const ComponentDirection = Object.freeze({
    * @param {ComponentDirection} direction
    */
   rotateQuaternion: function (quaternion, direction) {
-    // x is RIGHT, y is UP, z is FORWARDS
     switch(direction) {
       case ComponentDirection.PX_UP:
-        _q1.setFromAxisAngle(RIGHT, 0)
+        _q1.setFromAxisAngle(AXIS_X, 0)
         quaternion.multiply(_q1)
         break;
       case ComponentDirection.PX_RIGHT:
-        _q1.setFromAxisAngle(RIGHT, HALF_PI)
+        _q1.setFromAxisAngle(AXIS_X, HALF_PI) // rotate right
         quaternion.multiply(_q1)
         break;
       case ComponentDirection.PX_DOWN:
-        _q1.setFromAxisAngle(RIGHT, PI)
+        _q1.setFromAxisAngle(AXIS_X, PI) // rotate down
         quaternion.multiply(_q1)
         break;
       case ComponentDirection.PX_LEFT:
-        _q1.setFromAxisAngle(RIGHT, N_HALF_PI)
+        _q1.setFromAxisAngle(AXIS_X, N_HALF_PI) // rotate left
         quaternion.multiply(_q1)
         break;
-      case ComponentDirection.NX_UP:
+      case ComponentDirection.NX_UP: // remember, order of multiplication matters!!
+        _q1.setFromAxisAngle(AXIS_Y, PI) // face negative x
+        quaternion.multiply(_q1)
         break;
       case ComponentDirection.NX_RIGHT:
+        _q1.setFromAxisAngle(AXIS_Y, PI) // face negative x
+        quaternion.multiply(_q1)
+        _q1.setFromAxisAngle(AXIS_X, HALF_PI) // rotate right
+        quaternion.multiply(_q1)
         break;
       case ComponentDirection.NX_DOWN:
+        _q1.setFromAxisAngle(AXIS_Y, PI) // face negative x
+        quaternion.multiply(_q1)
+        _q1.setFromAxisAngle(AXIS_X, PI) // rotate down
+        quaternion.multiply(_q1)
         break;
       case ComponentDirection.NX_LEFT:
+        _q1.setFromAxisAngle(AXIS_Y, PI) // face negative x
+        quaternion.multiply(_q1)
+        _q1.setFromAxisAngle(AXIS_X, N_HALF_PI) // rotate left
+        quaternion.multiply(_q1)
         break;
+
       case ComponentDirection.PY_UP:
+        _q1.setFromAxisAngle(AXIS_Z, HALF_PI) // face positive y
+        quaternion.multiply(_q1)
         break;
       case ComponentDirection.PY_RIGHT:
+        _q1.setFromAxisAngle(AXIS_Z, HALF_PI) // face positive y
+        quaternion.multiply(_q1)
+        _q1.setFromAxisAngle(AXIS_X, HALF_PI) // rotate right
+        quaternion.multiply(_q1)
         break;
       case ComponentDirection.PY_DOWN:
+        _q1.setFromAxisAngle(AXIS_Z, HALF_PI) // face positive y
+        quaternion.multiply(_q1)
+        _q1.setFromAxisAngle(AXIS_X, PI) // rotate down
+        quaternion.multiply(_q1)
         break;
       case ComponentDirection.PY_LEFT:
+        _q1.setFromAxisAngle(AXIS_Z, HALF_PI) // face positive y
+        quaternion.multiply(_q1)
+        _q1.setFromAxisAngle(AXIS_X, N_HALF_PI) // rotate left
+        quaternion.multiply(_q1)
         break;
       case ComponentDirection.NY_UP:
+        _q1.setFromAxisAngle(AXIS_Z, N_HALF_PI) // face negative y
+        quaternion.multiply(_q1)
         break;
       case ComponentDirection.NY_RIGHT:
+        _q1.setFromAxisAngle(AXIS_Z, N_HALF_PI) // face negative y
+        quaternion.multiply(_q1)
+        _q1.setFromAxisAngle(AXIS_X, HALF_PI) // rotate right
+        quaternion.multiply(_q1)
         break;
       case ComponentDirection.NY_DOWN:
+        _q1.setFromAxisAngle(AXIS_Z, N_HALF_PI) // face negative y
+        quaternion.multiply(_q1)
+        _q1.setFromAxisAngle(AXIS_X, PI) // rotate down
+        quaternion.multiply(_q1)
         break;
       case ComponentDirection.NY_LEFT:
+        _q1.setFromAxisAngle(AXIS_Z, N_HALF_PI) // face negative y
+        quaternion.multiply(_q1)
+        _q1.setFromAxisAngle(AXIS_X, N_HALF_PI) // rotate left
+        quaternion.multiply(_q1)
         break;
+
       case ComponentDirection.PZ_UP:
+        _q1.setFromAxisAngle(AXIS_Y, N_HALF_PI) // face positive z
+        quaternion.multiply(_q1)
         break;
       case ComponentDirection.PZ_RIGHT:
+        _q1.setFromAxisAngle(AXIS_Y, N_HALF_PI) // face positive z
+        quaternion.multiply(_q1)
+        _q1.setFromAxisAngle(AXIS_X, HALF_PI) // rotate right
+        quaternion.multiply(_q1)
         break;
       case ComponentDirection.PZ_DOWN:
+        _q1.setFromAxisAngle(AXIS_Y, N_HALF_PI) // face positive z
+        quaternion.multiply(_q1)
+        _q1.setFromAxisAngle(AXIS_X, PI) // rotate down
+        quaternion.multiply(_q1)
         break;
       case ComponentDirection.PZ_LEFT:
+        _q1.setFromAxisAngle(AXIS_Y, N_HALF_PI) // face positive z
+        quaternion.multiply(_q1)
+        _q1.setFromAxisAngle(AXIS_X, N_HALF_PI) // rotate left
+        quaternion.multiply(_q1)
         break;
       case ComponentDirection.NZ_UP:
+        _q1.setFromAxisAngle(AXIS_Y, HALF_PI) // face negative z
+        quaternion.multiply(_q1)
         break;
       case ComponentDirection.NZ_RIGHT:
+        _q1.setFromAxisAngle(AXIS_Y, HALF_PI) // face negative z
+        quaternion.multiply(_q1)
+        _q1.setFromAxisAngle(AXIS_X, HALF_PI) // rotate right
+        quaternion.multiply(_q1)
         break;
       case ComponentDirection.NZ_DOWN:
+        _q1.setFromAxisAngle(AXIS_Y, HALF_PI) // face negative z
+        quaternion.multiply(_q1)
+        _q1.setFromAxisAngle(AXIS_X, PI) // rotate down
+        quaternion.multiply(_q1)
         break;
       case ComponentDirection.NZ_LEFT:
+        _q1.setFromAxisAngle(AXIS_Y, HALF_PI) // face negative z
+        quaternion.multiply(_q1)
+        _q1.setFromAxisAngle(AXIS_X, N_HALF_PI) // rotate left
+        quaternion.multiply(_q1)
         break;
     }
   }
 })
 
 /**
- * Rotates a bounding box such that it encompasses the component when facing the specified direction.
- * @param {THREE.Vector3} dimensions     The unoriented bounding box's maxima
+ * Rotates a bounding box and offset such that it encompasses the component when facing the specified direction.
+ * @param {THREE.Vector3} min            The unoriented bounding box's minima
+ * @param {THREE.Vector3} max            The unoriented bounding box's maxima
+ * @param {THREE.Vector3} offset         The offset from the origin to the bounding box's center
  * @param {ComponentDirection} direction The direction in which to face
  */
-
-// TODO: should this also rotate the offset? basically should the origin position stay in the same spot on the component (probably) (oh wait almost definitely) (yes 100% but i'm tired rn)
-// "bounding box and offset such that"
-//* @param {THREE.Vector3} offset         The offset from the origin to the bounding box's center
-
-function rotateBoundingBox(box, direction) {
+function rotateBoundingBox(min, max, offset, direction) {
   let swap
   switch(direction) {
     //case ComponentDirection.PX_UP: break;
-    //case ComponentDirection.PX_DOWN: break;
-    //case ComponentDirection.NX_UP: break;
-    //case ComponentDirection.NX_DOWN: break;
-    case ComponentDirection.PX_RIGHT: // z ↔ y
-    case ComponentDirection.PX_LEFT:
-    case ComponentDirection.NX_RIGHT:
-    case ComponentDirection.NX_LEFT:
-      swap = box.z
-      box.z = box.y
-      box.y = swap
+
+    case ComponentDirection.PX_RIGHT:
+      swap = offset.z     // offset: z ↔ y
+      offset.z = offset.y
+      offset.y = swap
+      swap = max.z        // box: z ↔ y
+      max.z = max.y
+      max.y = swap
       break;
-    case ComponentDirection.PY_UP: // x ↔ y
+    case ComponentDirection.PX_DOWN: // no rotation of either
+      break;
+    case ComponentDirection.PX_LEFT:
+      swap = offset.z     // offset: z ↔ y
+      offset.z = offset.y
+      offset.y = swap
+      swap = max.z        // box: z ↔ y
+      max.z = max.y
+      max.y = swap
+      break;
+
+    case ComponentDirection.NX_UP:
+      offset.x *= -1      // offset: flip on x axis
+      swap = max.x        // box: flip on x axis
+      max.x = min.x
+      min.x = swap
+      break;
+    case ComponentDirection.NX_RIGHT:
+      offset.x *= -1      // offset: flip on x axis
+      swap = max.x        // box: flip on x axis
+      max.x = min.x
+      min.x = swap
+      swap = offset.z     // offset: z ↔ y
+      offset.z = offset.y
+      offset.y = swap
+      swap = max.z        // box: z ↔ y
+      max.z = max.y
+      max.y = swap
+      break;
+    case ComponentDirection.NX_DOWN:
+      offset.x *= -1      // offset: flip on x axis
+      swap = max.x        // box: flip on x axis
+      max.x = min.x
+      min.x = swap
+      break;
+    case ComponentDirection.NX_LEFT:
+      offset.x *= -1      // offset: flip on x axis
+      swap = max.x        // box: flip on x axis
+      max.x = min.x
+      min.x = swap
+      swap = offset.z     // offset: z ↔ y
+      offset.z = offset.y
+      offset.y = swap
+      swap = max.z        // box: z ↔ y
+      max.z = max.y
+      max.y = swap
+      break;
+
+
+    case ComponentDirection.PY_UP: // box: x ↔ y
     case ComponentDirection.PY_DOWN:
     case ComponentDirection.NY_UP:
     case ComponentDirection.NY_DOWN:
-      swap = box.x
-      box.x = box.y
-      box.y = swap
+      swap = max.x
+      max.x = max.y
+      max.y = swap
       break;
-    case ComponentDirection.PY_RIGHT: //x → y, y → z, z → x
+    case ComponentDirection.PY_RIGHT: // box: x → y, y → z, z → x
     case ComponentDirection.PY_LEFT:
     case ComponentDirection.NY_RIGHT:
     case ComponentDirection.NY_LEFT:
-      swap = box.x
-      box.x = box.z
-      box.z = box.y
-      box.y = swap
+      swap = max.x
+      max.x = max.z
+      max.z = max.y
+      max.y = swap
       break;
-    case ComponentDirection.PZ_UP: // x ↔ z
+
+    case ComponentDirection.PZ_UP:
+      offset.z *= -1      // offset: flip on z axis
+      swap = offset.x     // offset: x ↔ z
+      offset.x = offset.z
+      offset.z = swap
+      swap = max.x        // box: x ↔ z
+      max.x = max.z
+      max.z = swap
+      swap = max.x        // box: flip on x axis
+      max.x = min.x
+      min.x = swap
+      break;
+    case ComponentDirection.PZ_RIGHT:
+      //offset.z *= -1      // offset: flip on z axis
+      swap = max.x        // box: x → z, z → y, y -> x
+      max.x = max.y
+      max.y = max.z
+      max.z = swap
+      swap = offset.x     // offset: x → z, z → y, y -> x
+      offset.x = offset.y
+      offset.y = offset.z
+      offset.z = swap
+      break;
     case ComponentDirection.PZ_DOWN:
-    case ComponentDirection.NZ_UP:
-    case ComponentDirection.NZ_DOWN:
-      swap = box.x
-      box.x = box.z
-      box.z = swap
+      offset.z *= -1      // offset: flip on z axis
+      swap = offset.x     // offset: x ↔ z
+      offset.x = offset.z
+      offset.z = swap
+      swap = max.x        // box: x ↔ z
+      max.x = max.z
+      max.z = swap
+      swap = max.x        // box: flip on x axis
+      max.x = min.x
+      min.x = swap
       break;
-    case ComponentDirection.PZ_RIGHT: // x → z, z → y, y -> x
     case ComponentDirection.PZ_LEFT:
+      swap = max.x        // box: x → z, z → y, y -> x
+      max.x = max.y
+      max.y = max.z
+      max.z = swap
+      swap = offset.x     // offset: x → z, z → y, y -> x
+      offset.x = offset.y
+      offset.y = offset.z
+      offset.z = swap
+      break;
+
+    case ComponentDirection.NZ_UP:
+      offset.x *= -1      // offset: flip on x axis
+      swap = offset.x     // offset: x ↔ z
+      offset.x = offset.z
+      offset.z = swap
+      swap = max.x        // box: x ↔ z
+      max.x = max.z
+      max.z = swap
+      swap = max.z        // box: flip on z axis
+      max.z = min.z
+      min.z = swap
+      break;
     case ComponentDirection.NZ_RIGHT:
+      //offset.z *= -1      // offset: flip on z axis
+      offset.x *= -1      // offset: flip on x axis
+      swap = max.x        // box: x → z, z → y, y -> x
+      max.x = max.y
+      max.y = max.z
+      max.z = swap
+      swap = offset.x     // offset: x → z, z → y, y -> x
+      offset.x = offset.y
+      offset.y = offset.z
+      offset.z = swap
+      swap = max.z        // box: flip on z axis
+      max.z = min.z
+      min.z = swap
+      break;
+    case ComponentDirection.NZ_DOWN:
+      offset.x *= -1      // offset: flip on x axis
+      swap = offset.x     // offset: x ↔ z
+      offset.x = offset.z
+      offset.z = swap
+      swap = max.x        // box: x ↔ z
+      max.x = max.z
+      max.z = swap
+      swap = max.z        // box: flip on z axis
+      max.z = min.z
+      min.z = swap
+      break;
     case ComponentDirection.NZ_LEFT:
-      swap = box.x
-      box.x = box.y
-      box.y = box.z
-      box.z = swap
+      offset.x *= -1      // offset: flip on x axis
+      swap = max.x        // box: x → z, z → y, y -> x
+      max.x = max.y
+      max.y = max.z
+      max.z = swap
+      swap = offset.x     // offset: x → z, z → y, y -> x
+      offset.x = offset.y
+      offset.y = offset.z
+      offset.z = swap
+      swap = max.z        // box: flip on z axis
+      max.z = min.z
+      min.z = swap
       break;
   }
 }
