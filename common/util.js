@@ -37,17 +37,20 @@ function check(variable, type) {
 }
 
 /**
- * Creates a THREE.Box3 based on the provided width, depth, and height.
+ * Creates an offset THREE.Box3 based on the provided width, depth, and height. \
+ * The returned offset is from the center of 0,0,0 to the center of the box.
  * @param {number} width
  * @param {number} depth
  * @param {number} height
- * @returns {THREE.Box3}
+ * @returns {[THREE.Box3|THREE.Vector3]}
  */
 function boundingBoxFromDimensions(width, depth, height) {
-  return new Box3(
-    new Vector3(-width / 2, -depth / 2, -height / 2),
-    new Vector3(width / 2, depth / 2, height / 2)
+  const box = new Box3(
+    new Vector3(0, 0, 0),
+    new Vector3(width, depth, height)
   )
+  const offset = new Vector3((width - 1) / 2, (depth - 1) / 2, (height - 1) / 2)
+  return [box, offset]
 }
 
 export { TwoWayMap, check, boundingBoxFromDimensions }

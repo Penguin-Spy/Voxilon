@@ -7,7 +7,7 @@ import { boundingBoxFromDimensions } from '/common/util.js'
 const geometry = new BoxGeometry(1, 1, 1)
 const mesh = new Mesh(geometry, DEBUG_COMPASS)
 
-const boundingBox = boundingBoxFromDimensions(1, 1, 1)
+const [boundingBox] = boundingBoxFromDimensions(1, 1, 1)
 const type = "voxilon:cube"
 
 export default class Cube extends Component {

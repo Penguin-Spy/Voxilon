@@ -5,18 +5,20 @@ const _ray = new THREE.Ray()
 const _inverseMatrix = new THREE.Matrix4()
 const _v1 = new THREE.Vector3()
 const _v2 = new THREE.Vector3()
+const _q1 = new THREE.Quaternion()
 
 /**
  * Base class for all components
  */
 export default class Component {
 
-  constructor(data, shape, mesh) {
+  constructor(data, shape, mesh, offset = new THREE.Vector3()) {
     Object.defineProperties(this, {
       // read-only properties
       shape: { enumerable: true, value: shape },
       mesh: { enumerable: true, value: mesh },
-      position: { enumerable: true, value: new THREE.Vector3() }
+      position: { enumerable: true, value: new THREE.Vector3() },
+      offset: { enumerable: true, value: offset }
     })
 
     data = { // default values
@@ -25,7 +27,7 @@ export default class Component {
     }
 
     this.position.set(...data.position)
-    this.mesh.position.copy(this.position) // offset three.js mesh by this component's position in the contraption
+    this.mesh.position.copy(this.position).add(offset) // offset three.js mesh by this component's position in the contraption
   }
 
   serialize() {
@@ -36,24 +38,54 @@ export default class Component {
   }
 
   raycast(raycaster, intersects) {
-    // bounding sphere intersect stuff
+    // TODO: bounding sphere intersect stuff
     //_ray.copy(raycaster.ray).recast(raycaster.near)
 
     const matrixWorld = this.mesh.matrixWorld // represents world-space pos & rotation, conveniently calculated by three.js
 
     _inverseMatrix.copy(matrixWorld).invert()
-    // todo: calc from position instead?
+    // todo: calc from position instead? (idk how tbh)
     _ray.copy(raycaster.ray).applyMatrix4(_inverseMatrix)
+    _ray.origin.addScalar(0.5).add(this.offset)
 
-    const intersectFace = intersectBox2(_ray, this.boundingBox, _v1)
+    const intersectFace = intersectBox(_ray, this.boundingBox, _v1)
     if(intersectFace !== null) {
 
       // calculate floored contraption position offset thing
       _v2.copy(_v1)       // relative to the position of the component (it's mesh technically)
-      _v2.addScalar(0.49) // round to nearest integer position (slightly less than 0.5 to avoid jitteryness from floating-point shenanigans)
+      _v2.subScalar(0.01) // round to nearest integer position (slightly less than 0.5 to avoid jitteryness from floating-point shenanigans)
       _v2.roundToZero()
+      _v2.add(this.position)
 
-      _v2.applyMatrix4(matrixWorld) // then convert to world-space
+      // should store the relative position (the contraption grid position) for actual placement
+      // _v2 + this.position
+      // perhaps just return that as the point/position & convert to world-space in PlayerController?
+      // would match having to do that for celestial body contraptions (probably)
+
+      //const boundingBox = intersect.object.boundingBox
+
+      switch(intersectFace) {
+        case 1:
+          _v2.x -= 1
+          break;
+        case 2:
+          _v2.x += 1
+          break;
+        case 3:
+          _v2.y -= 1
+          break;
+        case 4:
+          _v2.y += 1
+          break;
+        case 5:
+          _v2.z -= 1
+          break;
+        case 6:
+          _v2.z += 1
+          break;
+      }
+
+      //_v2.applyMatrix4(matrixWorld) // then convert to world-space
 
       // calculate exact distance for raycast distance sorting
       _v1.applyMatrix4(matrixWorld)
@@ -61,10 +93,9 @@ export default class Component {
 
       if(distance > raycaster.far) return
       intersects.push({
-        distance: distance,
-        point: _v2.clone(),
+        distance: distance, // for sorting
+        position: _v2.clone(),
         object: this,
-        face: intersectFace,
         type: "component"
       })
     }
@@ -74,61 +105,10 @@ export default class Component {
   }
 }
 
-/*function intersectBox(ray, box, target) {
-  let tmin, tmax, tymin, tymax, tzmin, tzmax;
-
-  const invdirx = 1 / ray.direction.x,
-    invdiry = 1 / ray.direction.y,
-    invdirz = 1 / ray.direction.z;
-
-  const origin = ray.origin;
-
-  if(invdirx >= 0) {
-    tmin = (box.min.x - origin.x) * invdirx;
-    tmax = (box.max.x - origin.x) * invdirx;
-
-  } else {
-    tmin = (box.max.x - origin.x) * invdirx;
-    tmax = (box.min.x - origin.x) * invdirx;
-
-  }
-
-  if(invdiry >= 0) {
-    tymin = (box.min.y - origin.y) * invdiry;
-    tymax = (box.max.y - origin.y) * invdiry;
-
-  } else {
-    tymin = (box.max.y - origin.y) * invdiry;
-    tymax = (box.min.y - origin.y) * invdiry;
-
-  }
-
-  if((tmin > tymax) || (tymin > tmax)) return null;
-  if(tymin > tmin || isNaN(tmin)) tmin = tymin;
-  if(tymax < tmax || isNaN(tmax)) tmax = tymax;
-
-  if(invdirz >= 0) {
-    tzmin = (box.min.z - origin.z) * invdirz;
-    tzmax = (box.max.z - origin.z) * invdirz;
-  } else {
-    tzmin = (box.max.z - origin.z) * invdirz;
-    tzmax = (box.min.z - origin.z) * invdirz;
-
-  }
-
-  if((tmin > tzmax) || (tzmin > tmax)) return null;
-  if(tzmin > tmin || isNaN(tmin)) tmin = tzmin;
-  if(tzmax < tmax || isNaN(tmax)) tmax = tzmax;
-  //return point closest to the ray (positive side)
-  if(tmax < 0) return null;
-
-  return ray.at(tmin >= 0 ? tmin : tmax, target);
-}*/
-
 const max = Math.max, min = Math.min
 
 // https://gamedev.stackexchange.com/a/18459, translated from C to three.js by me
-function intersectBox2(ray, box, target) {
+function intersectBox(ray, box, target) {
   const lb = box.min, rt = box.max,
     invdirx = 1 / ray.direction.x,
     invdiry = 1 / ray.direction.y,

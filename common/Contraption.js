@@ -38,18 +38,24 @@ export default class Contraption {
     components_data.forEach(c => this.loadComponent(c))
   }
 
+  /**
+   * The position of the Contraption in the world. Modifying this property has no effect, as the Contraption is bound to the position of it's parent.
+   */
   get position() {
     if(this.#positionOffset) {
       return _v1.copy(this.#rigidBody.position).add(this.#positionOffset)
     } else {
-      return this.#rigidBody.position
+      return this.#rigidBody.position // technically modifying works if there's no offset, but you shouldn't modify it anyways
     }
   }
+  /**
+   * The quaternion of the Contraption in the world. Modifying this property has no effect, as the Contraption is bound to the quaternion of it's parent.
+   */
   get quaternion() {
     if(this.#quaternionOffset) {
       return _q1.copy(this.#rigidBody.quaternion).add(this.#quaternionOffset)
     } else {
-      return this.#rigidBody.quaternion
+      return this.#rigidBody.quaternion // technically modifying works if there's no offset, but you shouldn't modify it anyways
     }
   }
 
@@ -66,10 +72,11 @@ export default class Contraption {
   loadComponent(data) {
     const component = new constructors[data.type](data)
 
-    this.#rigidBody.addShape(component.shape, component.position)
+    _v1.copy(component.position).add(component.offset)
+    this.#rigidBody.addShape(component.shape, _v1)
     if(component.mesh) this.#object3D.add(component.mesh)
     this.components.push(component)
-    component.contraption = this
+    component.parentContraption = this
     return component
   }
 

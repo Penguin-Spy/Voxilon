@@ -64,10 +64,11 @@ export default class PlayerController {
     this.hotbar = [
       { type: "tool", name: "welder" },
       { type: "tool", name: "grinder" },
-      { type: "test", name: "box" },
+      { type: "test", name: "box" }, // name is only used to check this (currently)
       { type: "test", name: "sphere" },
-      { type: "component", name: "voxilon:cube", class: Components["voxilon:cube"] },
-      { type: "component", name: "voxilon:rectangle", class: Components["voxilon:rectangle"] },
+      { type: "component", class: Components["voxilon:cube"] },
+      { type: "component", class: Components["voxilon:rectangle"] },
+
       /*{ type: "entity", name: "assembler" },
       { type: "entity", name: "refinery" },
       { type: "entity", name: "battery" },
@@ -126,14 +127,36 @@ export default class PlayerController {
       })
 
     } else if(this.selectedItem.type === "component") {
-      // do entity placement stuff
-      this.link.newContraption(
-        this.renderer.previewMesh.position,
-        this.renderer.previewMesh.quaternion,
-        {
-          type: this.selectedItem.name
-          // etc.
+      const intersect = this.buildPreviewIntersects[0]
+
+      if(intersect === undefined) { // standalone new contraption
+        console.log("standalone new contraption", intersect)
+        this.link.newContraption(
+          this.renderer.previewMesh.position,
+          this.renderer.previewMesh.quaternion,
+          {
+            type: this.selectedItem.class.type
+            // etc.
+          })
+      } else if(intersect.type === "component") { // edit existing contraption
+        console.log("edit existing contraption", intersect)
+
+        this.link.editContraption(intersect.object.parentContraption, {
+          type: this.selectedItem.class.type,
+          position: intersect.position // contraption-relative position
         })
+
+      } else { // place new contraption on celestial body
+        console.log("place new contraption on celestial body", intersect)
+
+        /*this.link.newContraption(
+          this.renderer.previewMesh.position,
+          this.renderer.previewMesh.quaternion,
+          {
+            type: this.selectedItem.name
+            // etc.
+          }, // intersect.whatever )*/
+      }
     }
   }
 
@@ -155,47 +178,27 @@ export default class PlayerController {
       this.buildPreviewIntersects = intersects
 
       if(intersect) { // show preview mesh aligned against what it collided with
-        previewMesh.position.copy(intersect.point)
         if(intersect.type === "component") {
-          previewMesh.quaternion.copy(intersect.object.contraption.quaternion)
+          const heldComponent = this.selectedItem.class
 
-          const boundingBox = intersect.object.boundingBox
+          // get world position of empty grid space adjacent to the component we raycasted
+          const parent = intersect.object.parentContraption
+          _v1.copy(intersect.position).applyQuaternion(parent.quaternion)
 
-          _v1.set(0, 0, 0)
-          switch(intersect.face) {
-            case 1:
-              _v1.x -= 1
-              break;
-            case 2:
-              _v1.x += 1
-              break;
-            case 3:
-              _v1.y -= 1
-              break;
-            case 4:
-              _v1.y += 1
-              break;
-            case 5:
-              _v1.z -= 1
-              break;
-            case 6:
-              _v1.z += 1
-              break;
-            default:
-            // not interesecting with a component, no offset
-          }
-          _v1.applyQuaternion(previewMesh.quaternion)
-          previewMesh.position.add(_v1)
+          // TODO: offset by the preview mesh's bounding box
 
+
+          // apply to preview mesh
+          previewMesh.position.copy(parent.position).add(_v1)
+          previewMesh.quaternion.copy(parent.quaternion)
 
         } else { // celestial body mesh
+          previewMesh.position.copy(intersect.point)
           previewMesh.quaternion.copy(intersect.object.quaternion)
         }
 
-
-
       } else { // show preview mesh free-floating, relative to player
-        // todo: allow relative rotation
+        // todo: allow relative rotation (home/end: pitch; del/pgdown: yaw; ins/pgup: roll)
         previewMesh.position.set(0, 0, -5)
         previewMesh.position.applyQuaternion(this.body.lookQuaternion)
         previewMesh.position.add(this.body.position)

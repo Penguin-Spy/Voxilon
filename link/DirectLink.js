@@ -207,6 +207,11 @@ export default class DirectLink extends Link {
 
   // --- Building ---
 
+  // TODO: removing components?
+  // TODO: figure out how to serialize these actions & send them to clients
+  // TODO: implement these methods on NetworkLink (serializing the request)
+  //  will probably require determining a consistent ID for contraptions & bodies (need this anyways for other sync packets)
+
   // debugging
   newTestBody(stuff) {
     this.world.loadBody({
@@ -234,14 +239,9 @@ export default class DirectLink extends Link {
       contraption: {
         components: [
           {
-            type: "voxilon:cube",
-            position: [0, 0, 0]
-            // ...firstComponent
+            ...firstComponent,
+            position: [0, 0, 0] // make sure it's at the origin
           },
-          {
-            type: "voxilon:cube",
-            position: [0, 1, 0]
-          }
         ]
       }
     })
@@ -253,8 +253,6 @@ export default class DirectLink extends Link {
    * @param {object} component        data for the new component
    */
   editContraption(contraption, component) {
-
+    contraption.loadComponent(component)
   }
-
-  // TODO: removing components?
 }
