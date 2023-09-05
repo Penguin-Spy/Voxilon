@@ -3,6 +3,7 @@ import Input from '/client/Input.js'
 import * as Materials from "/common/PhysicsMaterials.js"
 import Components from '/common/components/index.js'
 import BuildingRaycaster from '/client/BuildingRaycaster.js'
+import { ComponentDirection, rotateBoundingBox } from '/common/components/componentUtil.js'
 
 const _v1 = new Vector3();
 const _v2 = new Vector3();
@@ -68,6 +69,7 @@ export default class PlayerController {
       { type: "test", name: "sphere" },
       { type: "component", class: Components["voxilon:cube"] },
       { type: "component", class: Components["voxilon:rectangle"] },
+      { type: "component", class: Components["voxilon:wall"] },
 
       /*{ type: "entity", name: "assembler" },
       { type: "entity", name: "refinery" },
@@ -77,6 +79,8 @@ export default class PlayerController {
     ]
 
     this.selectedItem = false
+    this.buildPreview = {} // keeps track of where the component would get placed
+    this.buildPreviewRotation = 0 // current rotation of build preview component (for Contraption, todo: use quaternion for free-floating/celestial body build preview)
 
     Input.on("build", () => this.tryBuild())
     Input.on("hotbar_1", () => this.setHotbarSlot(0)) // hmm. this is a little silly
@@ -127,27 +131,27 @@ export default class PlayerController {
       })
 
     } else if(this.selectedItem.type === "component") {
-      const intersect = this.buildPreviewIntersects[0]
+      const buildPreview = this.buildPreview
 
-      if(intersect === undefined) { // standalone new contraption
-        console.log("standalone new contraption", intersect)
+      if(buildPreview.type === "standalone") { // standalone new contraption
+        console.log("standalone new contraption", buildPreview)
         this.link.newContraption(
-          this.renderer.previewMesh.position,
-          this.renderer.previewMesh.quaternion,
+          this.buildPreview.position,
+          this.buildPreview.quaternion,
           {
             type: this.selectedItem.class.type
             // etc.
           })
-      } else if(intersect.type === "component") { // edit existing contraption
-        console.log("edit existing contraption", intersect)
+      } else if(buildPreview.type === "component") { // edit existing contraption
+        console.log("edit existing contraption", buildPreview)
 
-        this.link.editContraption(intersect.object.parentContraption, {
+        this.link.editContraption(buildPreview.contraption, {
           type: this.selectedItem.class.type,
-          position: intersect.position // contraption-relative position
+          position: buildPreview.position // contraption-relative position
         })
 
       } else { // place new contraption on celestial body
-        console.log("place new contraption on celestial body", intersect)
+        console.log("place new contraption on celestial body", buildPreview)
 
         /*this.link.newContraption(
           this.renderer.previewMesh.position,
@@ -175,26 +179,57 @@ export default class PlayerController {
 
       const intersects = _raycaster.intersectBuildableBodies(this.link.world.buildableBodies)
       const intersect = intersects[0]
-      this.buildPreviewIntersects = intersects
+      this._debugIntersects = intersects
 
       if(intersect) { // show preview mesh aligned against what it collided with
         if(intersect.type === "component") {
           const heldComponent = this.selectedItem.class
-
-          // get world position of empty grid space adjacent to the component we raycasted
           const parent = intersect.object.parentContraption
-          _v1.copy(intersect.position).applyQuaternion(parent.quaternion)
 
-          // TODO: offset by the preview mesh's bounding box
+          // position of adjacent empty grid space, offset by the preview mesh's bounding box
+          _v1.copy(intersect.position)
 
+          const dimensions = heldComponent.boundingBox.max.clone()
+          rotateBoundingBox(dimensions, this.buildPreviewRotation)
+
+          switch(intersect.intersectFace) {
+            case 1: // hit on -x, facing +x, get width of bounding box
+              _v1.x -= dimensions.x
+              break;
+            case 2: // hit on +x, facing -x, no offset needed bc bounding box minimum is 0,0,0
+              _v1.x += 1
+              break;
+            case 3:
+              _v1.y -= dimensions.y
+              break;
+            case 4:
+              _v1.y += 1
+              break;
+            case 5:
+              _v1.z -= dimensions.z
+              break;
+            case 6:
+              _v1.z += 1
+              break;
+          }
+
+          this.buildPreview.type = "component"
+          this.buildPreview.contraption = parent
+          this.buildPreview.position = _v1.clone()
 
           // apply to preview mesh
+          _v1.add(heldComponent.offset).applyQuaternion(parent.quaternion)
           previewMesh.position.copy(parent.position).add(_v1)
-          previewMesh.quaternion.copy(parent.quaternion)
+
+          _q1.copy(parent.quaternion)
+          ComponentDirection.rotateQuaternion(_q1, this.buildPreviewRotation)
+          previewMesh.quaternion.copy(_q1)
+
 
         } else { // celestial body mesh
           previewMesh.position.copy(intersect.point)
           previewMesh.quaternion.copy(intersect.object.quaternion)
+          this.buildPreview.type = "celestial_body"
         }
 
       } else { // show preview mesh free-floating, relative to player
@@ -203,6 +238,10 @@ export default class PlayerController {
         previewMesh.position.applyQuaternion(this.body.lookQuaternion)
         previewMesh.position.add(this.body.position)
         previewMesh.quaternion.copy(this.body.lookQuaternion)
+
+        this.buildPreview.type = "standalone"
+        this.buildPreview.position = previewMesh.position
+        this.buildPreview.quaternion = previewMesh.quaternion
       }
     }
   }

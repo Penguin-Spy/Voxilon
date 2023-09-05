@@ -12,7 +12,7 @@ const _q1 = new THREE.Quaternion()
  */
 export default class Component {
 
-  constructor(data, shape, mesh, offset = new THREE.Vector3()) {
+  constructor(data, shape, mesh, offset) {
     Object.defineProperties(this, {
       // read-only properties
       shape: { enumerable: true, value: shape },
@@ -57,36 +57,6 @@ export default class Component {
       _v2.roundToZero()
       _v2.add(this.position)
 
-      // should store the relative position (the contraption grid position) for actual placement
-      // _v2 + this.position
-      // perhaps just return that as the point/position & convert to world-space in PlayerController?
-      // would match having to do that for celestial body contraptions (probably)
-
-      //const boundingBox = intersect.object.boundingBox
-
-      switch(intersectFace) {
-        case 1:
-          _v2.x -= 1
-          break;
-        case 2:
-          _v2.x += 1
-          break;
-        case 3:
-          _v2.y -= 1
-          break;
-        case 4:
-          _v2.y += 1
-          break;
-        case 5:
-          _v2.z -= 1
-          break;
-        case 6:
-          _v2.z += 1
-          break;
-      }
-
-      //_v2.applyMatrix4(matrixWorld) // then convert to world-space
-
       // calculate exact distance for raycast distance sorting
       _v1.applyMatrix4(matrixWorld)
       const distance = raycaster.ray.origin.distanceTo(_v1)
@@ -95,6 +65,7 @@ export default class Component {
       intersects.push({
         distance: distance, // for sorting
         position: _v2.clone(),
+        intersectFace: intersectFace,
         object: this,
         type: "component"
       })

@@ -4,15 +4,15 @@ import Component from "/common/Component.js"
 import { DEBUG_GRID } from "/common/RenderMaterials.js"
 import { boundingBoxFromDimensions } from '/common/components/componentUtil.js'
 
-const geometry = new BoxGeometry(1, 1, 2)
+const geometry = new BoxGeometry(2, 2, 3)
 const mesh = new Mesh(geometry, DEBUG_GRID)
 
-const [boundingBox, offset] = boundingBoxFromDimensions(1, 1, 2)
-const type = "voxilon:rectangle"
+const [boundingBox, offset] = boundingBoxFromDimensions(2, 2, 3)
+const type = "voxilon:wall"
 
-export default class Rectangle extends Component {
+export default class Wall extends Component {
   constructor(data) {
-    const halfExtents = new Vec3(0.5, 0.5, 1)
+    const halfExtents = new Vec3(1, 1, 1.5)
     const boxShape = new Box(halfExtents)
 
     super(data, boxShape, mesh.clone(), offset)
