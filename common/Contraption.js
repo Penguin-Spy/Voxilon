@@ -30,7 +30,6 @@ export default class Contraption {
     const components = []
     Object.defineProperties(this, {
       // read-only properties
-      type: { enumerable: true, value: "voxilon:contraption_body" },
       components: { enumerable: true, value: components }
     })
 
@@ -72,9 +71,8 @@ export default class Contraption {
   loadComponent(data) {
     const component = new constructors[data.type](data)
 
-    _v1.copy(component.position).add(component.offset)
-    this.#rigidBody.addShape(component.shape, _v1)
-    if(component.mesh) this.#object3D.add(component.mesh)
+    component.attachShape(this.#rigidBody)
+    component.attachMesh(this.#object3D)
     this.components.push(component)
     component.parentContraption = this
     return component

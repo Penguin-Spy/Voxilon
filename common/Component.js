@@ -1,7 +1,10 @@
-import * as CANNON from 'cannon-es';
-import * as THREE from 'three';
+import * as THREE from 'three'
+import { check } from '/common/util.js'
+import { ComponentDirection, rotateBoundingBox } from '/common/components/componentUtil.js'
 
 const _ray = new THREE.Ray()
+const _matrix4 = new THREE.Matrix4()
+const _otherMatrix = new THREE.Matrix4()
 const _inverseMatrix = new THREE.Matrix4()
 const _v1 = new THREE.Vector3()
 const _v2 = new THREE.Vector3()
@@ -12,39 +15,78 @@ const _q1 = new THREE.Quaternion()
  */
 export default class Component {
 
-  constructor(data, shape, mesh, offset) {
+  constructor(data, shape, mesh) {
+    console.info(data)
+    //const data_position = check(data.position, Array.isArray)
+    //const rotation = check(data.rotation, "number")
+
+    data = { // default values
+      position: [0, 0, 0],
+      rotation: 0,
+      ...data // then overwrite with existing data values
+    }
+
     Object.defineProperties(this, {
       // read-only properties
       shape: { enumerable: true, value: shape },
       mesh: { enumerable: true, value: mesh },
       position: { enumerable: true, value: new THREE.Vector3() },
-      offset: { enumerable: true, value: offset }
+      rotation: { enumerable: true, value: data.rotation }
     })
 
-    data = { // default values
-      position: [0, 0, 0],
-      ...data // then overwrite with existing data values
-    }
-
     this.position.set(...data.position)
-    this.mesh.position.copy(this.position).add(offset) // offset three.js mesh by this component's position in the contraption
+
+    this.offset = this.constructor.offset.clone()
+    this.boundingBox = this.constructor.boundingBox.clone()
+
+    rotateBoundingBox(this.boundingBox.min, this.boundingBox.max, this.offset, this.rotation)
+    this.mesh.position.copy(this.position).add(this.offset) // offset three.js mesh by this component's position in the contraption
+    ComponentDirection.rotateQuaternion(this.mesh.quaternion, this.rotation)
   }
 
   serialize() {
     const data = {}
     data.type = this.type
     data.position = this.position.toArray()
+    data.rotation = this.rotation
     return data
+  }
+
+  /**
+   * Attach this component's shape to the given rigidBody
+   * @param {CANNON.Body} rigidBody
+   */
+  attachShape(rigidBody) {
+    _v1.copy(this.position).add(this.offset)
+    _q1.identity()
+    ComponentDirection.rotateQuaternion(_q1, this.rotation)
+    rigidBody.addShape(this.shape, _v1, _q1)
+  }
+  /**
+   * Attach this component's mesh to the given Object3D
+   * @param {THREE.Object3D} object3D
+   */
+  attachMesh(object3D) {
+    object3D.add(this.mesh)
   }
 
   raycast(raycaster, intersects) {
     // TODO: bounding sphere intersect stuff
     //_ray.copy(raycaster.ray).recast(raycaster.near)
 
-    const matrixWorld = this.mesh.matrixWorld // represents world-space pos & rotation, conveniently calculated by three.js
+    // calculate transformation matrix for the center of this component
+    _v1.copy(this.position).add(this.offset)
+    _v1.applyQuaternion(this.parentContraption.quaternion)
+    _q1.identity()
+    //_q1.copy(this.parentContraption.quaternion)
+    //_v1.add(this.parentContraption.position)
+    _v2.set(1, 1, 1)
+    _matrix4.compose(_v1, _q1, _v2)
+    _matrix4.multiply(this.mesh.parent.matrixWorld, _matrix4)
 
-    _inverseMatrix.copy(matrixWorld).invert()
-    // todo: calc from position instead? (idk how tbh)
+    //_matrix4.copy(this.mesh.matrixWorld)
+
+    _inverseMatrix.copy(_matrix4).invert() // convert the ray from world-space to local component-space
     _ray.copy(raycaster.ray).applyMatrix4(_inverseMatrix)
     _ray.origin.addScalar(0.5).add(this.offset)
 
@@ -58,7 +100,7 @@ export default class Component {
       _v2.add(this.position)
 
       // calculate exact distance for raycast distance sorting
-      _v1.applyMatrix4(matrixWorld)
+      _v1.applyMatrix4(_matrix4)
       const distance = raycaster.ray.origin.distanceTo(_v1)
 
       if(distance > raycaster.far) return

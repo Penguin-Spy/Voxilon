@@ -205,18 +205,9 @@ const ComponentDirection = Object.freeze({
 function rotateBoundingBox(min, max, offset, direction) {
   let swap
   switch(direction) {
-    //case ComponentDirection.PX_UP: break;
-
+    //case ComponentDirection.PX_UP: break;   // no rotation of either
+    //case ComponentDirection.PX_DOWN: break;
     case ComponentDirection.PX_RIGHT:
-      swap = offset.z     // offset: z ↔ y
-      offset.z = offset.y
-      offset.y = swap
-      swap = max.z        // box: z ↔ y
-      max.z = max.y
-      max.y = swap
-      break;
-    case ComponentDirection.PX_DOWN: // no rotation of either
-      break;
     case ComponentDirection.PX_LEFT:
       swap = offset.z     // offset: z ↔ y
       offset.z = offset.y
@@ -227,34 +218,18 @@ function rotateBoundingBox(min, max, offset, direction) {
       break;
 
     case ComponentDirection.NX_UP:
-      offset.x *= -1      // offset: flip on x axis
+    case ComponentDirection.NX_DOWN:
+      /*offset.x *= -1      // offset: flip on x axis
       swap = max.x        // box: flip on x axis
       max.x = min.x
-      min.x = swap
+      min.x = swap*/
       break;
     case ComponentDirection.NX_RIGHT:
-      offset.x *= -1      // offset: flip on x axis
-      swap = max.x        // box: flip on x axis
-      max.x = min.x
-      min.x = swap
-      swap = offset.z     // offset: z ↔ y
-      offset.z = offset.y
-      offset.y = swap
-      swap = max.z        // box: z ↔ y
-      max.z = max.y
-      max.y = swap
-      break;
-    case ComponentDirection.NX_DOWN:
-      offset.x *= -1      // offset: flip on x axis
-      swap = max.x        // box: flip on x axis
-      max.x = min.x
-      min.x = swap
-      break;
     case ComponentDirection.NX_LEFT:
-      offset.x *= -1      // offset: flip on x axis
+      /*offset.x *= -1      // offset: flip on x axis
       swap = max.x        // box: flip on x axis
       max.x = min.x
-      min.x = swap
+      min.x = swap*/
       swap = offset.z     // offset: z ↔ y
       offset.z = offset.y
       offset.y = swap
@@ -264,59 +239,64 @@ function rotateBoundingBox(min, max, offset, direction) {
       break;
 
 
-    case ComponentDirection.PY_UP: // box: x ↔ y
+    case ComponentDirection.PY_UP:
     case ComponentDirection.PY_DOWN:
+      swap = offset.x     // offset: x ↔ y
+      offset.x = offset.y
+      offset.y = swap
+      swap = max.x        // box: x ↔ y
+      max.x = max.y
+      max.y = swap
+      break;
+    case ComponentDirection.PY_RIGHT:
+    case ComponentDirection.PY_LEFT:
+      swap = offset.x     // offset: x → y, y → z, z → x
+      offset.x = offset.z
+      offset.z = offset.y
+      offset.y = swap
+      swap = max.x        // box: x → y, y → z, z → x
+      max.x = max.z
+      max.z = max.y
+      max.y = swap
+      break;
+
     case ComponentDirection.NY_UP:
     case ComponentDirection.NY_DOWN:
-      swap = max.x
+      swap = offset.x     // offset: x ↔ y
+      offset.x = offset.y
+      offset.y = swap
+      swap = max.x        // box: x ↔ y
       max.x = max.y
       max.y = swap
       break;
-    case ComponentDirection.PY_RIGHT: // box: x → y, y → z, z → x
-    case ComponentDirection.PY_LEFT:
     case ComponentDirection.NY_RIGHT:
     case ComponentDirection.NY_LEFT:
-      swap = max.x
+      swap = offset.x     // offset: x → y, y → z, z → x
+      offset.x = offset.z
+      offset.z = offset.y
+      offset.y = swap
+      swap = max.x        // box: x → y, y → z, z → x
       max.x = max.z
       max.z = max.y
       max.y = swap
       break;
 
+
     case ComponentDirection.PZ_UP:
-      offset.z *= -1      // offset: flip on z axis
+    case ComponentDirection.PZ_DOWN:
+      //offset.z *= -1      // offset: flip on z axis
       swap = offset.x     // offset: x ↔ z
       offset.x = offset.z
       offset.z = swap
       swap = max.x        // box: x ↔ z
       max.x = max.z
       max.z = swap
-      swap = max.x        // box: flip on x axis
-      max.x = min.x
-      min.x = swap
+      //swap = max.x        // box: flip on x axis
+      //max.x = min.x
+      //min.x = swap
       break;
     case ComponentDirection.PZ_RIGHT:
-      //offset.z *= -1      // offset: flip on z axis
-      swap = max.x        // box: x → z, z → y, y -> x
-      max.x = max.y
-      max.y = max.z
-      max.z = swap
-      swap = offset.x     // offset: x → z, z → y, y -> x
-      offset.x = offset.y
-      offset.y = offset.z
-      offset.z = swap
-      break;
-    case ComponentDirection.PZ_DOWN:
-      offset.z *= -1      // offset: flip on z axis
-      swap = offset.x     // offset: x ↔ z
-      offset.x = offset.z
-      offset.z = swap
-      swap = max.x        // box: x ↔ z
-      max.x = max.z
-      max.z = swap
-      swap = max.x        // box: flip on x axis
-      max.x = min.x
-      min.x = swap
-      break;
+    //  offset.z *= -1      // offset: flip on z axis
     case ComponentDirection.PZ_LEFT:
       swap = max.x        // box: x → z, z → y, y -> x
       max.x = max.y
@@ -329,57 +309,33 @@ function rotateBoundingBox(min, max, offset, direction) {
       break;
 
     case ComponentDirection.NZ_UP:
-      offset.x *= -1      // offset: flip on x axis
+    case ComponentDirection.NZ_DOWN:
+      //offset.x *= -1      // offset: flip on x axis
       swap = offset.x     // offset: x ↔ z
       offset.x = offset.z
       offset.z = swap
       swap = max.x        // box: x ↔ z
       max.x = max.z
       max.z = swap
-      swap = max.z        // box: flip on z axis
-      max.z = min.z
-      min.z = swap
+      //swap = max.z        // box: flip on z axis
+      //max.z = min.z
+      //min.z = swap
       break;
     case ComponentDirection.NZ_RIGHT:
-      //offset.z *= -1      // offset: flip on z axis
-      offset.x *= -1      // offset: flip on x axis
-      swap = max.x        // box: x → z, z → y, y -> x
-      max.x = max.y
-      max.y = max.z
-      max.z = swap
-      swap = offset.x     // offset: x → z, z → y, y -> x
-      offset.x = offset.y
-      offset.y = offset.z
-      offset.z = swap
-      swap = max.z        // box: flip on z axis
-      max.z = min.z
-      min.z = swap
-      break;
-    case ComponentDirection.NZ_DOWN:
-      offset.x *= -1      // offset: flip on x axis
-      swap = offset.x     // offset: x ↔ z
-      offset.x = offset.z
-      offset.z = swap
-      swap = max.x        // box: x ↔ z
-      max.x = max.z
-      max.z = swap
-      swap = max.z        // box: flip on z axis
-      max.z = min.z
-      min.z = swap
-      break;
+    //  offset.z *= -1      // offset: flip on z axis
     case ComponentDirection.NZ_LEFT:
-      offset.x *= -1      // offset: flip on x axis
-      swap = max.x        // box: x → z, z → y, y -> x
-      max.x = max.y
-      max.y = max.z
-      max.z = swap
+      //offset.x *= -1      // offset: flip on x axis
       swap = offset.x     // offset: x → z, z → y, y -> x
       offset.x = offset.y
       offset.y = offset.z
       offset.z = swap
-      swap = max.z        // box: flip on z axis
-      max.z = min.z
-      min.z = swap
+      swap = max.x        // box: x → z, z → y, y -> x
+      max.x = max.y
+      max.y = max.z
+      max.z = swap
+      //swap = max.z        // box: flip on z axis
+      //max.z = min.z
+      //min.z = swap
       break;
   }
 }

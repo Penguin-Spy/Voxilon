@@ -148,7 +148,8 @@ export default class PlayerController {
 
         this.link.editContraption(buildPreview.contraption, {
           type: this.selectedItem.class.type,
-          position: buildPreview.position // contraption-relative position
+          position: buildPreview.position, // contraption-relative position
+          rotation: this.buildPreviewRotation
         })
 
       } else { // place new contraption on celestial body

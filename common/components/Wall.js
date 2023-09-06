@@ -22,11 +22,10 @@ export default class Wall extends Component {
     const halfExtents = new Vec3(1.5, 0.5, 1)
     const boxShape = new Box(halfExtents)
 
-    super(data, boxShape, mesh.clone(), offset)
+    super(data, boxShape, mesh.clone())
     // read-only properties
     Object.defineProperties(this, {
-      type: { enumerable: true, value: type },
-      boundingBox: { enumerable: true, value: boundingBox }
+      type: { enumerable: true, value: type }
     })
   }
 
