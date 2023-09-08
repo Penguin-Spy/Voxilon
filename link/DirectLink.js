@@ -240,7 +240,8 @@ export default class DirectLink extends Link {
         components: [
           {
             ...firstComponent,
-            position: [0, 0, 0] // make sure it's at the origin
+            position: [0, 0, 0], // make sure it's at the origin
+            rotation: 0
           },
         ]
       }

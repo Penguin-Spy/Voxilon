@@ -4,7 +4,6 @@ import { ComponentDirection, rotateBoundingBox } from '/common/components/compon
 
 const _ray = new THREE.Ray()
 const _matrix4 = new THREE.Matrix4()
-const _otherMatrix = new THREE.Matrix4()
 const _inverseMatrix = new THREE.Matrix4()
 const _v1 = new THREE.Vector3()
 const _v2 = new THREE.Vector3()
@@ -16,7 +15,6 @@ const _q1 = new THREE.Quaternion()
 export default class Component {
 
   constructor(data, shape, mesh) {
-    console.info(data)
     //const data_position = check(data.position, Array.isArray)
     //const rotation = check(data.rotation, "number")
 
@@ -36,11 +34,12 @@ export default class Component {
 
     this.position.set(...data.position)
 
+    // calculate rotated bounding box & offset
     this.offset = this.constructor.offset.clone()
     this.boundingBox = this.constructor.boundingBox.clone()
-
     rotateBoundingBox(this.boundingBox.min, this.boundingBox.max, this.offset, this.rotation)
-    this.mesh.position.copy(this.position).add(this.offset) // offset three.js mesh by this component's position in the contraption
+    // offset & rotate three.js mesh by this component's position in the contraption
+    this.mesh.position.copy(this.position).add(this.offset)
     ComponentDirection.rotateQuaternion(this.mesh.quaternion, this.rotation)
   }
 
@@ -78,13 +77,9 @@ export default class Component {
     _v1.copy(this.position).add(this.offset)
     _v1.applyQuaternion(this.parentContraption.quaternion)
     _q1.identity()
-    //_q1.copy(this.parentContraption.quaternion)
-    //_v1.add(this.parentContraption.position)
     _v2.set(1, 1, 1)
     _matrix4.compose(_v1, _q1, _v2)
     _matrix4.multiply(this.mesh.parent.matrixWorld, _matrix4)
-
-    //_matrix4.copy(this.mesh.matrixWorld)
 
     _inverseMatrix.copy(_matrix4).invert() // convert the ray from world-space to local component-space
     _ray.copy(raycaster.ray).applyMatrix4(_inverseMatrix)
@@ -141,28 +136,19 @@ function intersectBox(ray, box, target) {
   const tmax = min(min(max(t1, t2), max(t3, t4)), max(t5, t6));
 
   // if tmax < 0, ray (line) is intersecting AABB, but the whole AABB is behind us
-  if(tmax < 0) {
-    //t = tmax;
+  // if tmin > tmax, ray doesn't intersect AABB
+  if(tmax < 0 || tmin > tmax) {
     return null;
   }
 
-  // if tmin > tmax, ray doesn't intersect AABB
-  if(tmin > tmax) {
-    //t = tmax;
-    return null;
-  }
+  // calculate intersection point & store it in target
+  ray.at(tmin >= 0 ? tmin : tmax, target)
 
   // https://computergraphics.stackexchange.com/a/9506
-  // todo: optimize this (this sucks lmao)
-  let whichT
-  if(tmin == t1) whichT = 1
-  if(tmin == t2) whichT = 2
-  if(tmin == t3) whichT = 3
-  if(tmin == t4) whichT = 4
-  if(tmin == t5) whichT = 5
-  if(tmin == t6) whichT = 6
-
-  //t = tmin;
-  ray.at(tmin >= 0 ? tmin : tmax, target)
-  return whichT;
+  if(tmin === t1) return 1
+  if(tmin === t2) return 2
+  if(tmin === t3) return 3
+  if(tmin === t4) return 4
+  if(tmin === t5) return 5
+  if(tmin === t6) return 6
 }

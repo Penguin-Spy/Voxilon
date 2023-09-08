@@ -80,8 +80,17 @@ export default class PlayerController {
     ]
 
     this.selectedItem = false
-    this.buildPreview = {} // keeps track of where the component would get placed
-    this.buildPreviewRotation = 0 // current rotation of build preview component (for Contraption, todo: use quaternion for free-floating/celestial body build preview)
+    this.buildPreview = { // keeps track of current build preview data, such as where the component would get placed
+      rotation: 0, // current rotation of build preview component (for Contraption, todo: use quaternion for free-floating/celestial body build preview)
+      rotationQuaternion: new Quaternion(), // current quaternion of the current component rotation
+      previousQuaternion: new Quaternion(), // for slerping
+      slerpPercent: 0,                      // also for slerping
+      // filled in at runtime:
+      // type: "component" | "standalone" | "celestial_body"
+      // position: THREE.Vector3       // placement position
+      // quaternion: THREE.Quaternion  // placement quaternion
+      // contraption: Contraption      // parent contraption when placing a component
+    }
 
     Input.on("build", () => this.tryBuild())
     Input.on("hotbar_1", () => this.setHotbarSlot(0)) // hmm. this is a little silly
@@ -94,6 +103,13 @@ export default class PlayerController {
     Input.on("hotbar_8", () => this.setHotbarSlot(7))
     Input.on("hotbar_9", () => this.setHotbarSlot(8))
     Input.on("hotbar_0", () => this.setHotbarSlot(9))
+
+    Input.on("rotate_pitch_up", () => this.rotateBuildPreview("pitch_up"))
+    Input.on("rotate_pitch_down", () => this.rotateBuildPreview("pitch_down"))
+    Input.on("rotate_yaw_left", () => this.rotateBuildPreview("yaw_left"))
+    Input.on("rotate_yaw_right", () => this.rotateBuildPreview("yaw_right"))
+    Input.on("rotate_roll_left", () => this.rotateBuildPreview("roll_left"))
+    Input.on("rotate_roll_right", () => this.rotateBuildPreview("roll_right"))
   }
 
   /**
@@ -113,32 +129,36 @@ export default class PlayerController {
     this.hud.updateHotbar(this)
 
     this.selectedItem = this.hotbar[this.selectedHotbarSlot]
+
     if(this.selectedItem?.type === "test") { // just for testing
       this.renderer.setPreviewMesh(defaultPreviewMesh)
+      this.buildPreview.mesh = defaultPreviewMesh
     } else if(this.selectedItem?.type === "component") {
-      this.renderer.setPreviewMesh(this.selectedItem.class.previewMesh)
+      this.buildPreview.mesh = this.selectedItem.class.previewMesh
+      this.renderer.setPreviewMesh(this.buildPreview.mesh)
     } else {
       this.renderer.clearPreviewMesh()
+      this.buildPreview.mesh = undefined
     }
   }
 
   tryBuild() {
     console.log(this.selectedHotbarSlot, this.selectedItem)
+    const buildPreview = this.buildPreview
+
     if(this.selectedItem.type === "test") { // just for testing
       this.link.newTestBody({
         is_box: this.selectedItem.name === "box",
-        position: this.renderer.previewMesh.position,
-        quaternion: this.renderer.previewMesh.quaternion,
+        position: buildPreview.mesh.position,
+        quaternion: buildPreview.mesh.quaternion,
       })
 
     } else if(this.selectedItem.type === "component") {
-      const buildPreview = this.buildPreview
-
       if(buildPreview.type === "standalone") { // standalone new contraption
         console.log("standalone new contraption", buildPreview)
         this.link.newContraption(
-          this.buildPreview.position,
-          this.buildPreview.quaternion,
+          buildPreview.position,
+          buildPreview.quaternion,
           {
             type: this.selectedItem.class.type
             // etc.
@@ -149,15 +169,15 @@ export default class PlayerController {
         this.link.editContraption(buildPreview.contraption, {
           type: this.selectedItem.class.type,
           position: buildPreview.position, // contraption-relative position
-          rotation: this.buildPreviewRotation
+          rotation: buildPreview.rotation
         })
 
       } else { // place new contraption on celestial body
         console.log("place new contraption on celestial body", buildPreview)
 
         /*this.link.newContraption(
-          this.renderer.previewMesh.position,
-          this.renderer.previewMesh.quaternion,
+          buildPreview.mesh.position,
+          buildPreview.mesh.quaternion,
           {
             type: this.selectedItem.name
             // etc.
@@ -166,9 +186,11 @@ export default class PlayerController {
     }
   }
 
-  updatePreviewDistance() {
+  updateBuildPreview() {
     if(this.selectedItem === undefined) return
-    const previewMesh = this.renderer.previewMesh
+
+    const buildPreview = this.buildPreview
+    const previewMesh = buildPreview.mesh
 
     if(this.selectedItem.type === "test") { // just for testing
       previewMesh.position.set(0, 0, -5)
@@ -194,7 +216,7 @@ export default class PlayerController {
           _v1.set(1, 1, 1)  // min + 1
           _v2.copy(heldComponent.boundingBox.max) // max (dimensions)
           _v3.copy(heldComponent.offset) // offset
-          rotateBoundingBox(_v1, _v2, _v3, this.buildPreviewRotation)
+          rotateBoundingBox(_v1, _v2, _v3, buildPreview.rotation)
 
           switch(intersect.intersectFace) {
             case 1: // hit on -x, facing +x, get width of bounding box
@@ -217,23 +239,27 @@ export default class PlayerController {
               break;
           }
 
-          this.buildPreview.type = "component"
-          this.buildPreview.contraption = parent
-          this.buildPreview.position = pos.clone()
+          buildPreview.type = "component"
+          buildPreview.contraption = parent
+          buildPreview.position = pos.clone()
+
+          // update rotation quaternion
+          _q1.copy(buildPreview.rotationQuaternion)
+          if(buildPreview.slerpPercent < 1) {
+            buildPreview.slerpPercent += 0.05
+            _q1.slerp(buildPreview.previousQuaternion, 1 - buildPreview.slerpPercent)
+          }
 
           // apply to preview mesh
           pos.add(_v3).applyQuaternion(parent.quaternion)
           previewMesh.position.copy(parent.position).add(pos)
-
-          _q1.copy(parent.quaternion)
-          ComponentDirection.rotateQuaternion(_q1, this.buildPreviewRotation)
-          previewMesh.quaternion.copy(_q1)
+          previewMesh.quaternion.copy(parent.quaternion).multiply(_q1)
 
 
         } else { // celestial body mesh
           previewMesh.position.copy(intersect.point)
           previewMesh.quaternion.copy(intersect.object.quaternion)
-          this.buildPreview.type = "celestial_body"
+          buildPreview.type = "celestial_body"
         }
 
       } else { // show preview mesh free-floating, relative to player
@@ -243,11 +269,43 @@ export default class PlayerController {
         previewMesh.position.add(this.body.position)
         previewMesh.quaternion.copy(this.body.lookQuaternion)
 
-        this.buildPreview.type = "standalone"
-        this.buildPreview.position = previewMesh.position
-        this.buildPreview.quaternion = previewMesh.quaternion
+        buildPreview.type = "standalone"
+        buildPreview.position = previewMesh.position
+        buildPreview.quaternion = previewMesh.quaternion
       }
     }
+  }
+
+  /**
+   * Rotates the current build preview based on the player's current facing direction
+   * @param {string} direction basically which rotation input was pressed
+   */
+  rotateBuildPreview(direction) {
+    const buildPreview = this.buildPreview
+
+    switch(direction) {
+      case "pitch_up":
+        buildPreview.rotation += 1
+        if(buildPreview.rotation > 23) buildPreview.rotation = 0
+        break;
+      case "pitch_down":
+        buildPreview.rotation -= 1
+        if(buildPreview.rotation < 0) buildPreview.rotation = 23
+        break;
+      case "yaw_left":
+        break;
+      case "yaw_right":
+        break;
+      case "roll_left":
+        break;
+      case "roll_right":
+        break;
+    }
+
+    buildPreview.previousQuaternion.copy(buildPreview.rotationQuaternion)
+    buildPreview.rotationQuaternion.identity()
+    ComponentDirection.rotateQuaternion(buildPreview.rotationQuaternion, buildPreview.rotation)
+    buildPreview.slerpPercent = 0
   }
 
   toggleIntertiaDamping() {
@@ -282,7 +340,7 @@ export default class PlayerController {
     } else {
       this._updateGravityRotation(deltaTime)
     }
-    this.updatePreviewDistance()
+    this.updateBuildPreview()
   }
 
   _updateJetpackRotation(deltaTime) {
@@ -343,7 +401,7 @@ export default class PlayerController {
     _q2.setFromUnitVectors(_v2, _v1)  // angle to rotate bodyUP to gravityUP
     _q2.multiply(_q1)  // include current body rotation
 
-    _q1.slerp(_q2, 10 * deltaTime)
+    _q1.slerp(_q2, min(10 * deltaTime, 1))
 
     // pitch
     if(Input.get('pitch_up')) {

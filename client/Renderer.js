@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 
 export default class Renderer {
+  #previewMesh = false
 
   constructor() {
     this.camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -14,8 +15,6 @@ export default class Renderer {
       this.resize(window.innerWidth, window.innerHeight);
     });
 
-    this.previewMesh = false
-    this.previewMeshDistance = 5
   }
 
   resize(width, height) {
@@ -55,14 +54,14 @@ export default class Renderer {
    * @param {THREE.Mesh} [mesh] The preview mesh
    */
   setPreviewMesh(mesh) {
-    if(this.previewMesh) this.clearPreviewMesh()
-    this.previewMesh = mesh
+    if(this.#previewMesh) this.clearPreviewMesh()
+    this.#previewMesh = mesh
     this.scene.add(mesh)
   }
 
   clearPreviewMesh() {
-    this.scene.remove(this.previewMesh)
-    this.previewMesh = false
+    this.scene.remove(this.#previewMesh)
+    this.#previewMesh = false
   }
 
   render() {

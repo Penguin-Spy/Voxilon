@@ -26,9 +26,11 @@ const controlMap = new TwoWayMap({
   "ArrowRight": "yaw_right",
   "KeyQ": "roll_left",
   "KeyE": "roll_right",
+
   "KeyZ": "toggle_intertia_damping",
   "KeyX": "toggle_jetpack",
   "Tab": "toggle_chat",
+
   "Digit1": "hotbar_1",
   "Digit2": "hotbar_2",
   "Digit3": "hotbar_3",
@@ -39,6 +41,13 @@ const controlMap = new TwoWayMap({
   "Digit8": "hotbar_8",
   "Digit9": "hotbar_9",
   "Digit0": "hotbar_0",
+  "Home": "rotate_pitch_up",
+  "End": "rotate_pitch_down",
+  "Delete": "rotate_yaw_left",
+  "PageDown": "rotate_yaw_right",
+  "Insert": "rotate_roll_left",
+  "PageUp": "rotate_roll_right",
+
   "MousePrimary": "build",      // left click
   "MouseSecondary": "destroy",  // right click
   "MouseAuxiliary": "pick",     // middle click

@@ -8,6 +8,15 @@ const AXIS_Y = new Vector3(0, 1, 0)
 const AXIS_Z = new Vector3(0, 0, 1)
 const PI = Math.PI, HALF_PI = PI / 2, N_HALF_PI = -HALF_PI
 
+const ROTATE_RIGHT = new Quaternion().setFromAxisAngle(AXIS_X, HALF_PI)  // rotate right
+const ROTATE_DOWN = new Quaternion().setFromAxisAngle(AXIS_X, PI)        // rotate down
+const ROTATE_LEFT = new Quaternion().setFromAxisAngle(AXIS_X, N_HALF_PI) // rotate left
+const FACE_NX = new Quaternion().setFromAxisAngle(AXIS_Y, PI)            // face negative x
+const FACE_PY = new Quaternion().setFromAxisAngle(AXIS_Z, HALF_PI)       // face positive y
+const FACE_NY = new Quaternion().setFromAxisAngle(AXIS_Z, N_HALF_PI)     // face negative y
+const FACE_PZ = new Quaternion().setFromAxisAngle(AXIS_Y, N_HALF_PI)     // face positive z
+const FACE_NZ = new Quaternion().setFromAxisAngle(AXIS_Y, HALF_PI)       // face negative z
+
 /**
  * Creates an offset THREE.Box3 based on the provided width, depth, and height. \
  * The returned offset is from the center of 0,0,0 to the center of the box.
@@ -61,135 +70,80 @@ const ComponentDirection = Object.freeze({
    * @param {THREE.Quaternion} quaternion
    * @param {ComponentDirection} direction
    */
+  // remember, order of multiplication matters!!
   rotateQuaternion: function (quaternion, direction) {
     switch(direction) {
-      case ComponentDirection.PX_UP:
-        _q1.setFromAxisAngle(AXIS_X, 0)
-        quaternion.multiply(_q1)
-        break;
+      //case ComponentDirection.PX_UP: break;
       case ComponentDirection.PX_RIGHT:
-        _q1.setFromAxisAngle(AXIS_X, HALF_PI) // rotate right
-        quaternion.multiply(_q1)
+        quaternion.multiply(ROTATE_RIGHT)
         break;
       case ComponentDirection.PX_DOWN:
-        _q1.setFromAxisAngle(AXIS_X, PI) // rotate down
-        quaternion.multiply(_q1)
+        quaternion.multiply(ROTATE_DOWN)
         break;
       case ComponentDirection.PX_LEFT:
-        _q1.setFromAxisAngle(AXIS_X, N_HALF_PI) // rotate left
-        quaternion.multiply(_q1)
+        quaternion.multiply(ROTATE_LEFT)
         break;
-      case ComponentDirection.NX_UP: // remember, order of multiplication matters!!
-        _q1.setFromAxisAngle(AXIS_Y, PI) // face negative x
-        quaternion.multiply(_q1)
+      case ComponentDirection.NX_UP:
+        quaternion.multiply(FACE_NX)
         break;
       case ComponentDirection.NX_RIGHT:
-        _q1.setFromAxisAngle(AXIS_Y, PI) // face negative x
-        quaternion.multiply(_q1)
-        _q1.setFromAxisAngle(AXIS_X, HALF_PI) // rotate right
-        quaternion.multiply(_q1)
+        quaternion.multiply(FACE_NX).multiply(ROTATE_RIGHT)
         break;
       case ComponentDirection.NX_DOWN:
-        _q1.setFromAxisAngle(AXIS_Y, PI) // face negative x
-        quaternion.multiply(_q1)
-        _q1.setFromAxisAngle(AXIS_X, PI) // rotate down
-        quaternion.multiply(_q1)
+        quaternion.multiply(FACE_NX).multiply(ROTATE_DOWN)
         break;
       case ComponentDirection.NX_LEFT:
-        _q1.setFromAxisAngle(AXIS_Y, PI) // face negative x
-        quaternion.multiply(_q1)
-        _q1.setFromAxisAngle(AXIS_X, N_HALF_PI) // rotate left
-        quaternion.multiply(_q1)
+        quaternion.multiply(FACE_NX).multiply(ROTATE_LEFT)
         break;
 
       case ComponentDirection.PY_UP:
-        _q1.setFromAxisAngle(AXIS_Z, HALF_PI) // face positive y
-        quaternion.multiply(_q1)
+        quaternion.multiply(FACE_PY)
         break;
       case ComponentDirection.PY_RIGHT:
-        _q1.setFromAxisAngle(AXIS_Z, HALF_PI) // face positive y
-        quaternion.multiply(_q1)
-        _q1.setFromAxisAngle(AXIS_X, HALF_PI) // rotate right
-        quaternion.multiply(_q1)
+        quaternion.multiply(FACE_PY).multiply(ROTATE_RIGHT)
         break;
       case ComponentDirection.PY_DOWN:
-        _q1.setFromAxisAngle(AXIS_Z, HALF_PI) // face positive y
-        quaternion.multiply(_q1)
-        _q1.setFromAxisAngle(AXIS_X, PI) // rotate down
-        quaternion.multiply(_q1)
+        quaternion.multiply(FACE_PY).multiply(ROTATE_DOWN)
         break;
       case ComponentDirection.PY_LEFT:
-        _q1.setFromAxisAngle(AXIS_Z, HALF_PI) // face positive y
-        quaternion.multiply(_q1)
-        _q1.setFromAxisAngle(AXIS_X, N_HALF_PI) // rotate left
-        quaternion.multiply(_q1)
+        quaternion.multiply(FACE_PY).multiply(ROTATE_LEFT)
         break;
       case ComponentDirection.NY_UP:
-        _q1.setFromAxisAngle(AXIS_Z, N_HALF_PI) // face negative y
-        quaternion.multiply(_q1)
+        quaternion.multiply(FACE_NY)
         break;
       case ComponentDirection.NY_RIGHT:
-        _q1.setFromAxisAngle(AXIS_Z, N_HALF_PI) // face negative y
-        quaternion.multiply(_q1)
-        _q1.setFromAxisAngle(AXIS_X, HALF_PI) // rotate right
-        quaternion.multiply(_q1)
+        quaternion.multiply(FACE_NY).multiply(ROTATE_RIGHT)
         break;
       case ComponentDirection.NY_DOWN:
-        _q1.setFromAxisAngle(AXIS_Z, N_HALF_PI) // face negative y
-        quaternion.multiply(_q1)
-        _q1.setFromAxisAngle(AXIS_X, PI) // rotate down
-        quaternion.multiply(_q1)
+        quaternion.multiply(FACE_NY).multiply(ROTATE_DOWN)
         break;
       case ComponentDirection.NY_LEFT:
-        _q1.setFromAxisAngle(AXIS_Z, N_HALF_PI) // face negative y
-        quaternion.multiply(_q1)
-        _q1.setFromAxisAngle(AXIS_X, N_HALF_PI) // rotate left
-        quaternion.multiply(_q1)
+        quaternion.multiply(FACE_NY).multiply(ROTATE_LEFT)
         break;
 
       case ComponentDirection.PZ_UP:
-        _q1.setFromAxisAngle(AXIS_Y, N_HALF_PI) // face positive z
-        quaternion.multiply(_q1)
+        quaternion.multiply(FACE_PZ)
         break;
       case ComponentDirection.PZ_RIGHT:
-        _q1.setFromAxisAngle(AXIS_Y, N_HALF_PI) // face positive z
-        quaternion.multiply(_q1)
-        _q1.setFromAxisAngle(AXIS_X, HALF_PI) // rotate right
-        quaternion.multiply(_q1)
+        quaternion.multiply(FACE_PZ).multiply(ROTATE_RIGHT)
         break;
       case ComponentDirection.PZ_DOWN:
-        _q1.setFromAxisAngle(AXIS_Y, N_HALF_PI) // face positive z
-        quaternion.multiply(_q1)
-        _q1.setFromAxisAngle(AXIS_X, PI) // rotate down
-        quaternion.multiply(_q1)
+        quaternion.multiply(FACE_PZ).multiply(ROTATE_DOWN)
         break;
       case ComponentDirection.PZ_LEFT:
-        _q1.setFromAxisAngle(AXIS_Y, N_HALF_PI) // face positive z
-        quaternion.multiply(_q1)
-        _q1.setFromAxisAngle(AXIS_X, N_HALF_PI) // rotate left
-        quaternion.multiply(_q1)
+        quaternion.multiply(FACE_PZ).multiply(ROTATE_LEFT)
         break;
       case ComponentDirection.NZ_UP:
-        _q1.setFromAxisAngle(AXIS_Y, HALF_PI) // face negative z
-        quaternion.multiply(_q1)
+        quaternion.multiply(FACE_NZ)
         break;
       case ComponentDirection.NZ_RIGHT:
-        _q1.setFromAxisAngle(AXIS_Y, HALF_PI) // face negative z
-        quaternion.multiply(_q1)
-        _q1.setFromAxisAngle(AXIS_X, HALF_PI) // rotate right
-        quaternion.multiply(_q1)
+        quaternion.multiply(FACE_NZ).multiply(ROTATE_RIGHT)
         break;
       case ComponentDirection.NZ_DOWN:
-        _q1.setFromAxisAngle(AXIS_Y, HALF_PI) // face negative z
-        quaternion.multiply(_q1)
-        _q1.setFromAxisAngle(AXIS_X, PI) // rotate down
-        quaternion.multiply(_q1)
+        quaternion.multiply(FACE_NZ).multiply(ROTATE_DOWN)
         break;
       case ComponentDirection.NZ_LEFT:
-        _q1.setFromAxisAngle(AXIS_Y, HALF_PI) // face negative z
-        quaternion.multiply(_q1)
-        _q1.setFromAxisAngle(AXIS_X, N_HALF_PI) // rotate left
-        quaternion.multiply(_q1)
+        quaternion.multiply(FACE_NZ).multiply(ROTATE_LEFT)
         break;
     }
   }
