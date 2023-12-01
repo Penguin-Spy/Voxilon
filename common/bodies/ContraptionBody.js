@@ -11,9 +11,9 @@ export default class ContraptionBody extends Body {
     const contraption_data = check(data.contraption, "object")
 
     const rigidBody = new CANNON.Body({
-      mass: 1, // can't be 0 or the body doesn't move (behaves like kinematic???)
+      mass: 70, // can't be 0 or the body doesn't move (behaves like kinematic???)
       material: GROUND,
-      type: CANNON.Body.KINEMATIC//DYNAMIC,
+      type: CANNON.Body.DYNAMIC,
     })
     const mesh = new THREE.Group()
 

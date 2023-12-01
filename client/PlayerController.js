@@ -1,4 +1,4 @@
-import { Vector3, Quaternion, BoxGeometry, Mesh, MeshBasicMaterial } from 'three'
+import { Vector3, Quaternion, Euler, BoxGeometry, Mesh, MeshBasicMaterial } from 'three'
 import Input from '/client/Input.js'
 import * as Materials from "/common/PhysicsMaterials.js"
 import Components from '/common/components/index.js'
@@ -10,6 +10,7 @@ const _v2 = new Vector3();
 const _v3 = new Vector3();
 const _q1 = new Quaternion();
 const _q2 = new Quaternion();
+const _euler = new Euler();
 let angle = 0;
 
 const RIGHT = new Vector3(1, 0, 0)
@@ -277,31 +278,40 @@ export default class PlayerController {
   }
 
   /**
-   * Rotates the current build preview based on the player's current facing direction
+   * Rotates the current build preview
    * @param {string} direction basically which rotation input was pressed
    */
   rotateBuildPreview(direction) {
     const buildPreview = this.buildPreview
 
+    // temporary simple rotation controls
+    let componentAxis = Math.floor(buildPreview.rotation / 4)
+    let componentRotation = buildPreview.rotation % 4
     switch(direction) {
       case "pitch_up":
-        buildPreview.rotation += 1
-        if(buildPreview.rotation > 23) buildPreview.rotation = 0
+        componentRotation -= 1
+        if(componentRotation < 0) componentRotation = 3
         break;
       case "pitch_down":
-        buildPreview.rotation -= 1
-        if(buildPreview.rotation < 0) buildPreview.rotation = 23
+        componentRotation += 1
+        if(componentRotation > 3) componentRotation = 0
         break;
       case "yaw_left":
+        componentAxis -= 1
+        if(componentAxis < 0) componentAxis = 5
         break;
       case "yaw_right":
+        componentAxis += 1
+        if(componentAxis > 5) componentAxis = 0
         break;
-      case "roll_left":
+      /*case "roll_left":
         break;
       case "roll_right":
-        break;
+        break;*/
     }
+    buildPreview.rotation = componentAxis * 4 + componentRotation
 
+    // set up slerping
     buildPreview.previousQuaternion.copy(buildPreview.rotationQuaternion)
     buildPreview.rotationQuaternion.identity()
     ComponentDirection.rotateQuaternion(buildPreview.rotationQuaternion, buildPreview.rotation)
@@ -511,4 +521,23 @@ export default class PlayerController {
     _v2.applyQuaternion(this.body.quaternion) // rotate back to world space
     this.link.playerMove(_v2)
   }
+}
+
+/**
+ * Converts a quaternion to an axis and angle
+ * @param {Quaternion} q   The input quaternion
+ * @param {Vector3} target The output axis
+ * @returns {number}       The output angle
+ */
+// https://discourse.threejs.org/t/how-to-convert-to-quaternion-to-axisangle/36975
+function toAxisAngle(q, target) {
+  const angle = 2 * Math.acos(q.w)
+  const s = Math.sqrt(1 - q.w * q.w)
+
+  const x = q.x / s
+  const y = q.y / s
+  const z = q.z / s
+
+  target.set(x, y, z)
+  return angle
 }

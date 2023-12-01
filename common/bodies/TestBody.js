@@ -24,7 +24,7 @@ export default class TestBody extends Body {
     }
 
     const rigidBody = new CANNON.Body({
-      mass: 1, // kg
+      mass: 70, // kg
       shape: shape,
       material: GROUND,
       type: is_static ? CANNON.Body.KINEMATIC : CANNON.Body.DYNAMIC,
