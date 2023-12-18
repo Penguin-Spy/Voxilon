@@ -8,9 +8,10 @@ export default {
     {
       $: 'button', content: "Singleplayer",
       class: 'big', id: "startButton", proceedAction: true,
-      action: function(e) {
+      action: function (e) {
         if(e.shiftKey) {
           this.actions.directLink(this.notableNodes.startButton, {
+            type: "new",
             name: "Debug World"
           })
         } else {
@@ -20,7 +21,7 @@ export default {
     }, {
       $: 'button', content: "Multiplayer",
       class: 'big',
-      action: function(e) {
+      action: function (e) {
         this.forward("multiplayer")
         if(e.shiftKey) {
           this.notableNodes.gameCode.value = "AAAAA"
@@ -30,7 +31,7 @@ export default {
     }, {
       $: 'button', content: "Settings",
       class: 'big',
-      action: function() {
+      action: function () {
         alert("Settings clicked")
         throw new Error("test error")
       }
@@ -43,7 +44,7 @@ export default {
     {
       $: 'button', content: "Create new Universe",
       class: "big", proceedAction: true,
-      action: function() {
+      action: function () {
         this.forward("new_universe")
       }
     }, {
@@ -51,7 +52,7 @@ export default {
       type: "file", accept: ".vox"
     }, {
       $: 'button', class: "big back", content: "Back",
-      action: function() { this.back() }
+      action: function () { this.back() }
     }
   ],
   new_universe: [
@@ -61,18 +62,18 @@ export default {
     {
       $: 'input', class: "big", id: "worldName",
       type: "text", placeholder: "universe name"
-    }, 
+    },
     {
       $: 'button', content: "Start",
       class: "big", id: "startButton", proceedAction: true,
-      action: function() {
+      action: function () {
         this.actions.directLink(this.notableNodes.startButton, {
           name: this.notableNodes.worldName.value
         })
       }
     }, {
       $: 'button', class: "big back", content: "Back",
-      action: function() { this.back() }
+      action: function () { this.back() }
     }
   ],
   multiplayer: [
@@ -87,14 +88,14 @@ export default {
     }, {
       $: 'button', content: "Join",
       class: "big", id: "startButton", proceedAction: true,
-      action: function() {
+      action: function () {
         const gameCode = this.notableNodes.gameCode.value
         const username = this.notableNodes.username.value
         this.actions.networkLink(this.notableNodes.startButton, gameCode, username)
       }
     }, {
       $: 'button', class: "big back", content: "Back",
-      action: function() { this.back() }
+      action: function () { this.back() }
     }
   ]
 }

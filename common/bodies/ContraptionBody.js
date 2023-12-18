@@ -1,4 +1,4 @@
-import * as CANNON from 'cannon-es'
+import * as CANNON from 'cannon'
 import * as THREE from 'three'
 import Contraption from '/common/Contraption.js'
 import Body from "/common/Body.js"
@@ -19,7 +19,7 @@ export default class ContraptionBody extends Body {
 
     super(data, rigidBody, mesh)
 
-    const contraption = new Contraption(contraption_data, rigidBody, mesh)
+    const contraption = new Contraption(contraption_data, this)
     Object.defineProperties(this, {
       // read-only properties
       type: { enumerable: true, value: "voxilon:contraption_body" },

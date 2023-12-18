@@ -1,67 +1,78 @@
-import { Vector3, Quaternion } from 'three'
+import Component from "/common/Component.js"
+import Body from "/common/Body.js"
+
+import * as THREE from 'three'
+import { ComponentDirection } from '/common/components/componentUtil.js'
 import { check } from '/common/util.js'
 import constructors from '/common/components/index.js'
 
-const _v1 = new Vector3()
-const _q1 = new Quaternion()
+const _v = new THREE.Vector3()
+const _q = new THREE.Quaternion()
 
 /**
  * Represents a single contraption in any form (attached to a celestial body, or free-floating)
  */
 export default class Contraption {
-  #rigidBody; #object3D; #positionOffset; #quaternionOffset;
+  #parent;
+  /** @type {THREE.Vector3} */
+  positionOffset;
+  /** @type {THREE.Quaternion} */
+  quaternionOffset;
 
   /**
-   * @param {object}         data                data for the contraption
-   * @param {CANNON.Body}    rigidBody           the rigidBody to add shapes to
-   * @param {THREE.Object3D} object3D            the Object3D to add meshes to
-   * @param {THREE.Vector3?} positionOffset      optional offset of this contraption from the rigidBody's position
-   * @param {THREE.Quaternion?} quaternionOffset optional offset of this contraption from the rigidBody's rotation
+   * @param {object}  data      data for the contraption
+   * @param {Body}    parent    parent body of the contraption (ContraptionBody or CelestialBody)
    */
-  constructor(data, rigidBody, object3D, positionOffset, quaternionOffset) {
+  constructor(data, parent) {
+    const components_data = check(data.components, "object[]")
 
-    const components_data = check(data.components, Array.isArray)
-
-    this.#rigidBody = rigidBody
-    this.#object3D = object3D
-    this.#positionOffset = positionOffset
-    this.#quaternionOffset = quaternionOffset
+    data = {
+      positionOffset: [0, 0, 0],
+      quaternionOffset: [0, 0, 0, 1],
+      ...data,
+    }
 
     const components = []
     Object.defineProperties(this, {
       // read-only properties
+      positionOffset: { enumerable: true, value: new THREE.Vector3() },
+      quaternionOffset: { enumerable: true, value: new THREE.Quaternion() },
       components: { enumerable: true, value: components }
     })
+
+    this.#parent = parent
+    this.positionOffset.set(...data.positionOffset)
+    this.quaternionOffset.set(...data.quaternionOffset)
 
     // load components
     components_data.forEach(c => this.loadComponent(c))
   }
 
-  /**
-   * The position of the Contraption in the world. Modifying this property has no effect, as the Contraption is bound to the position of it's parent.
-   */
-  get position() {
-    if(this.#positionOffset) {
-      return _v1.copy(this.#rigidBody.position).add(this.#positionOffset)
-    } else {
-      return this.#rigidBody.position // technically modifying works if there's no offset, but you shouldn't modify it anyways
-    }
-  }
-  /**
-   * The quaternion of the Contraption in the world. Modifying this property has no effect, as the Contraption is bound to the quaternion of it's parent.
-   */
-  get quaternion() {
-    if(this.#quaternionOffset) {
-      return _q1.copy(this.#rigidBody.quaternion).add(this.#quaternionOffset)
-    } else {
-      return this.#rigidBody.quaternion // technically modifying works if there's no offset, but you shouldn't modify it anyways
+  serialize() {
+    return {
+      positionOffset: this.positionOffset.toArray(),
+      quaternionOffset: this.quaternionOffset.toArray(),
+      components: this.components.map(c => c.serialize())
     }
   }
 
-  serialize() {
-    return {
-      components: this.components.map(c => c.serialize())
-    }
+  /**
+   * Transforms a contraption-space position to it's world-space position
+   * @param {THREE.Vector3} v  the position; modified in-place
+   */
+  toWorldPosition(v) {
+    v.add(this.positionOffset)
+    v.applyQuaternion(this.getOriginWorldQuaternion())
+    v.add(this.#parent.position)
+  }
+  /**
+   * Gets the world-space quaternion of this contraption
+   */
+  getOriginWorldQuaternion() {
+    const q = new THREE.Quaternion();
+    q.copy(this.#parent.quaternion)
+    q.multiply(this.quaternionOffset)
+    return q
   }
 
   /**
@@ -69,10 +80,24 @@ export default class Contraption {
    * @param data The serialized data
    */
   loadComponent(data) {
+    /** @type {Component} */
     const component = new constructors[data.type](data)
 
-    component.attachShape(this.#rigidBody)
-    component.attachMesh(this.#object3D)
+    // calculate position offset from origin (center) of parent rigidBody
+    _v.copy(component.position).add(component.offset).add(this.positionOffset)
+    _v.applyQuaternion(this.quaternionOffset)
+    // calculate quaternion offset from parent rigidBody
+    _q.copy(this.quaternionOffset)
+    ComponentDirection.rotateQuaternion(_q, component.rotation)
+
+    // add shape to rigidbody
+    this.#parent.rigidBody.addShape(component.shape, _v, _q)
+    // add mesh to parent mesh
+    component.mesh.position.copy(_v)
+    component.mesh.quaternion.copy(_q)
+    this.#parent.mesh.add(component.mesh)
+
+    // store references
     this.components.push(component)
     component.parentContraption = this
     return component
@@ -81,5 +106,4 @@ export default class Contraption {
   update(world, DT) {
     this.components.forEach(c => c.update(world, DT))
   }
-
 }

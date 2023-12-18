@@ -1,4 +1,4 @@
-import * as CANNON from 'cannon-es'
+import * as CANNON from 'cannon'
 import * as THREE from 'three'
 import Body from "/common/Body.js"
 import { STANDING_PLAYER } from "/common/PhysicsMaterials.js"
@@ -36,6 +36,7 @@ export default class PlayerBody extends Body {
     this.lookQuaternion = new THREE.Quaternion(); // client-side, independent of body rotation & world stepping
     this.controller = null;
     this.rigidBody.collisionFilterMask = 1; // dont get raycast intersected by our own update()
+    this.noclip = false;
   }
 
   serialize() {
@@ -47,19 +48,28 @@ export default class PlayerBody extends Body {
     this.controller = playerController
   }
 
+  setNoclip(state) {
+    this.rigidBody.collisionResponse = !state
+    this.noclip = state
+  }
+
   update(world, DT) {
-    super.update(world, DT)
+    if(!this.noclip) { // noclip will also skip updating the player mesh's position
+      super.update(world, DT)
+
+      // check if this player body is touching the ground
+      // TODO: make this smarter: check if collision vector is pointing towards the down Frame of Reference (the dir of gravity)
+      const ourId = this.rigidBody.id;
+      this.onGround = world.physics.contacts.some(e => {
+        return e.bi.id === ourId || e.bj.id === ourId
+      })
+    } else {
+      this.onGround = false
+    }
 
     if(this.controller) {
       this.controller.updateMovement(DT)
     }
-
-    // check if this player body is touching the ground
-    // TODO: make this smarter: check if collision vector is pointing towards the down Frame of Reference (the dir of gravity)
-    const ourId = this.rigidBody.id;
-    this.onGround = world.physics.contacts.some(e => {
-      return e.bi.id === ourId || e.bj.id === ourId
-    })
 
 
 

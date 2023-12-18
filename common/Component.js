@@ -13,9 +13,18 @@ const _q1 = new THREE.Quaternion()
  * Base class for all components
  */
 export default class Component {
+  /** @type {THREE.Mesh} */
+  mesh;
+  /** @type {CANNON.Shape} */
+  shape;
 
+  /**
+   * @param {component_data} data
+   * @param {CANNON.Shape} shape
+   * @param {THREE.Mesh} mesh
+   */
   constructor(data, shape, mesh) {
-    //const data_position = check(data.position, Array.isArray)
+    //const data_position = check(data.position, "number[]")
     //const rotation = check(data.rotation, "number")
 
     data = { // default values
@@ -51,35 +60,18 @@ export default class Component {
     return data
   }
 
-  /**
-   * Attach this component's shape to the given rigidBody
-   * @param {CANNON.Body} rigidBody
-   */
-  attachShape(rigidBody) {
-    _v1.copy(this.position).add(this.offset)
-    _q1.identity()
-    ComponentDirection.rotateQuaternion(_q1, this.rotation)
-    rigidBody.addShape(this.shape, _v1, _q1)
-  }
-  /**
-   * Attach this component's mesh to the given Object3D
-   * @param {THREE.Object3D} object3D
-   */
-  attachMesh(object3D) {
-    object3D.add(this.mesh)
-  }
-
   raycast(raycaster, intersects) {
     // TODO: bounding sphere intersect stuff
     //_ray.copy(raycaster.ray).recast(raycaster.near)
 
     // calculate transformation matrix for the center of this component
     _v1.copy(this.position).add(this.offset)
-    _v1.applyQuaternion(this.parentContraption.quaternion)
-    _q1.identity()
+    this.parentContraption.toWorldPosition(_v1)
+
+    _q1.copy(this.parentContraption.getOriginWorldQuaternion())
     _v2.set(1, 1, 1)
     _matrix4.compose(_v1, _q1, _v2)
-    _matrix4.multiply(this.mesh.parent.matrixWorld, _matrix4)
+
 
     _inverseMatrix.copy(_matrix4).invert() // convert the ray from world-space to local component-space
     _ray.copy(raycaster.ray).applyMatrix4(_inverseMatrix)

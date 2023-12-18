@@ -1,4 +1,4 @@
-import * as CANNON from 'cannon-es'
+import * as CANNON from 'cannon'
 import * as THREE from 'three'
 import CelestialBody from "/common/bodies/CelestialBody.js"
 import PlayerBody from "/common/bodies/PlayerBody.js"

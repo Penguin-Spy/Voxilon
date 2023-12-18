@@ -1,4 +1,4 @@
-import * as CANNON from 'cannon-es'
+import * as CANNON from 'cannon'
 import * as THREE from 'three'
 import Contraption from '/common/Contraption.js'
 import { default as Body, G } from '/common/Body.js'
@@ -23,7 +23,7 @@ export default class CelestialBody extends Body {
   constructor(data) {
     const radius = check(data.radius, "number")
     const surfaceGravity = check(data.surfaceGravity, "number")
-    const contraptions_data = check(data.contraptions, Array.isArray)
+    const contraptions_data = check(data.contraptions, "object[]")
 
     const geometry = roundedCubeGeometry(radius, 64, 32); //new THREE.SphereGeometry(radius, 64, 32)
     const mesh = new THREE.Mesh(geometry, GRASS)
@@ -47,7 +47,7 @@ export default class CelestialBody extends Body {
     })
 
     contraptions_data.forEach(c_data => {
-      contraptions.push(new Contraption(c_data, rigidBody, mesh))
+      contraptions.push(new Contraption(c_data, this))
     })
   }
 
@@ -59,9 +59,19 @@ export default class CelestialBody extends Body {
     return data
   }
 
+  addContraption(contraption_data) {
+    this.contraptions.push(new Contraption(contraption_data, this))
+  }
+
   raycast(raycaster, intersects) {
     //console.log("raycasting celestial body", this, raycaster, intersects)
-    return this.mesh.raycast(raycaster, intersects)
+    const fake_intersects = []
+    this.mesh.raycast(raycaster, fake_intersects)
+    if(fake_intersects.length > 0) {
+      fake_intersects[0].object = this
+      intersects.push(fake_intersects[0])
+    }
+    return
   }
 
   update(world, DT) {

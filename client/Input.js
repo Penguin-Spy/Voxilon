@@ -55,7 +55,8 @@ const controlMap = new TwoWayMap({
   //"MouseX2": "",
 
   "F3": "debug_physics_wireframe",
-  "F4": "debug_gravity_mode"
+  "F4": "debug_noclip",
+  "F6": "debug_gravity_mode"
 })
 
 // Mapping of "control" -> function()

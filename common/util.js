@@ -17,16 +17,19 @@ class TwoWayMap {
 }
 
 /**
- * type safety checks during world load
+ * type safety checks during deserialization
  * @param {any} variable The value to check the type of
- * @param {string|Function} type The expected type string, or a function to check if the variable is the correct type.
+ * @param {string} type The expected type string. Denote arrays with `type[]`
  */
 function check(variable, type) {
-  if(typeof type === "function" && type(variable)) {
-    return variable
-    /*} else { // we can't give much more info about what didn't match
-      throw new TypeError(`Encountered incorrect type when loading; value did not match tester function.`)
-    }*/
+  if(type.endsWith("[]") && Array.isArray(variable)) {
+    // assumes the array is continuous and only contains one type
+    if(variable[0] === undefined || typeof variable[0] === type.substring(0, type.length - 2)) {
+      return variable
+    } else {
+      console.error("Full array contents:", variable)
+      throw new TypeError(`Encountered incorrect type when loading. Expected ${type}, got array of ${typeof variable[0]}.`)
+    }
   } else if(typeof variable === type) {
     return variable
   } else {

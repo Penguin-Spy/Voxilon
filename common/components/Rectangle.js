@@ -1,4 +1,4 @@
-import { Vec3, Box } from 'cannon-es'
+import { Vec3, Box } from 'cannon'
 import { BoxGeometry, Mesh } from 'three'
 import Component from "/common/Component.js"
 import { DEBUG_GRID } from "/common/RenderMaterials.js"

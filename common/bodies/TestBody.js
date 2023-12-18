@@ -1,4 +1,4 @@
-import * as CANNON from 'cannon-es'
+import * as CANNON from 'cannon'
 import * as THREE from 'three'
 import Body from "/common/Body.js"
 import { GROUND } from "/common/PhysicsMaterials.js"

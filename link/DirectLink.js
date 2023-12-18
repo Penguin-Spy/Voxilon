@@ -11,46 +11,48 @@ const { CHAT, ADD_BODY } = PacketType
 export default class DirectLink extends Link {
   constructor(worldOptions) {
     super("host") // maybe load from LocalStorage?
-    /*
-    worldOptions = {
-      type: 'file',
-      file: [object File]
-    }
-    */
 
     // networking stuff
     this._clients = []
 
     // create/load world
-    const world = new World({
-      VERSION: "alpha-0",
-      name: worldOptions.name,
-      bodies: [
-        {
-          type: "voxilon:celestial_body",
-          radius: 40,
-          surfaceGravity: 9.8,
-          contraptions: []
-        }, {
-          type: "voxilon:celestial_body",
-          position: [20, 60, 10],
-          radius: 10,
-          surfaceGravity: 9.8,
-          contraptions: []
-        }, {
-          type: "voxilon:test_body",
-          position: [2, 44, -7],
-          is_static: false, is_box: false
-        }, {
-          type: "voxilon:test_body",
-          position: [-2, 44, -7],
-          is_static: true, is_box: false
-        }, {
-          type: "voxilon:player_body",
-          position: [0, 44, 0]
-        }
-      ]
-    })
+    let world
+    if(worldOptions.type === "load") {
+      world = new World(worldOptions.data)
+    } else if(worldOptions.type === "new") {
+      world = new World({
+        VERSION: "alpha-0",
+        name: worldOptions.name,
+        bodies: [
+          {
+            type: "voxilon:celestial_body",
+            radius: 40,
+            surfaceGravity: 9.8,
+            contraptions: []
+          }, {
+            type: "voxilon:celestial_body",
+            position: [20, 60, 10],
+            radius: 10,
+            surfaceGravity: 9.8,
+            contraptions: []
+          }, {
+            type: "voxilon:test_body",
+            position: [2, 44, -7],
+            is_static: false, is_box: false
+          }, {
+            type: "voxilon:test_body",
+            position: [-2, 44, -7],
+            is_static: true, is_box: false
+          }, {
+            type: "voxilon:player_body",
+            position: [0, 44, 0]
+          }
+        ]
+      })
+    } else {
+      throw new TypeError(`Unknown world type ${worldOptions.type}`)
+    }
+
 
     // find player's body
     const playerBody = world.getBodyByType("voxilon:player_body")
@@ -232,20 +234,36 @@ export default class DirectLink extends Link {
    *                                            If this is specified, `position` and `quaternion` become relative to the celestial body.
    */
   newContraption(position, quaternion, firstComponent, parent) {
-    this.world.loadBody({
-      type: "voxilon:contraption_body",
-      position: position.toArray(),
-      quaternion: quaternion.toArray(),
-      contraption: {
-        components: [
-          {
-            ...firstComponent,
-            position: [0, 0, 0], // make sure it's at the origin
-            rotation: 0
-          },
-        ]
-      }
-    })
+    if(!parent) {
+      this.world.loadBody({
+        type: "voxilon:contraption_body",
+        position: position.toArray(),
+        quaternion: quaternion.toArray(),
+        contraption: {
+          components: [
+            {
+              ...firstComponent,
+              position: [0, 0, 0], // make sure it's at the origin
+              rotation: 0
+            },
+          ]
+        }
+      })
+    } else {
+      parent.addContraption(
+        { // contraption data
+          components: [
+            {
+              ...firstComponent,
+              position: [0, 0, 0], // make sure it's at the origin
+              rotation: 0
+            },
+          ],
+          positionOffset: position.toArray(), // position/rotation offset
+          quaternionOffset: quaternion.toArray(),
+        }
+      )
+    }
   }
 
   /**

@@ -1,4 +1,6 @@
-import { Vector3, Quaternion, Euler, BoxGeometry, Mesh, MeshBasicMaterial } from 'three'
+import Contraption from '/common/Contraption.js'
+
+import { Vector3, Quaternion, Matrix4, BoxGeometry, Mesh, MeshBasicMaterial } from 'three'
 import Input from '/client/Input.js'
 import * as Materials from "/common/PhysicsMaterials.js"
 import Components from '/common/components/index.js'
@@ -10,7 +12,6 @@ const _v2 = new Vector3();
 const _v3 = new Vector3();
 const _q1 = new Quaternion();
 const _q2 = new Quaternion();
-const _euler = new Euler();
 let angle = 0;
 
 const RIGHT = new Vector3(1, 0, 0)
@@ -62,6 +63,16 @@ export default class PlayerController {
     Input.on("toggle_intertia_damping", () => this.toggleIntertiaDamping())
     Input.on("toggle_jetpack", () => this.toggleJetpack())
 
+    Input.on("debug_noclip", () => {
+      if(this.body) {
+        this.body.setNoclip(!this.body.noclip)
+        this.hud.showChatMessage("[debug] noclip " + (this.body.noclip ? "enabled" : "disabled"))
+        if(this.body.noclip && !this.jetpackActive) {
+          this.toggleJetpack()
+        }
+      }
+    })
+
     /* building */
     this.selectedHotbarSlot = 0
     this.hotbar = [
@@ -91,6 +102,7 @@ export default class PlayerController {
       // position: THREE.Vector3       // placement position
       // quaternion: THREE.Quaternion  // placement quaternion
       // contraption: Contraption      // parent contraption when placing a component
+      // celestialBody: CelestialBody  // if type == "celestial_body", the body the build preview is intersecting with
     }
 
     Input.on("build", () => this.tryBuild())
@@ -175,14 +187,15 @@ export default class PlayerController {
 
       } else { // place new contraption on celestial body
         console.log("place new contraption on celestial body", buildPreview)
-
-        /*this.link.newContraption(
-          buildPreview.mesh.position,
-          buildPreview.mesh.quaternion,
+        this.link.newContraption(
+          buildPreview.position,
+          buildPreview.quaternion,
           {
-            type: this.selectedItem.name
+            type: this.selectedItem.class.type
             // etc.
-          }, // intersect.whatever )*/
+          },
+          buildPreview.celestialBody
+        )
       }
     }
   }
@@ -209,6 +222,7 @@ export default class PlayerController {
       if(intersect) { // show preview mesh aligned against what it collided with
         if(intersect.type === "component") {
           const heldComponent = this.selectedItem.class
+          /** @type {Contraption} */
           const parent = intersect.object.parentContraption
 
           // position of adjacent empty grid space, offset by the preview mesh's bounding box
@@ -252,15 +266,28 @@ export default class PlayerController {
           }
 
           // apply to preview mesh
-          pos.add(_v3).applyQuaternion(parent.quaternion)
-          previewMesh.position.copy(parent.position).add(pos)
-          previewMesh.quaternion.copy(parent.quaternion).multiply(_q1)
+          pos.add(_v3)
+          parent.toWorldPosition(pos)
+
+          _q2.copy(parent.getOriginWorldQuaternion())
+          _q2.multiply(_q1)
+
+          previewMesh.position.copy(pos)
+          previewMesh.quaternion.copy(_q2)
 
 
         } else { // celestial body mesh
           previewMesh.position.copy(intersect.point)
-          previewMesh.quaternion.copy(intersect.object.quaternion)
+          //previewMesh.quaternion.copy(intersect.object.quaternion)
+          previewMesh.quaternion.identity()
+
+          _q1.copy(intersect.object.quaternion).conjugate()
+
           buildPreview.type = "celestial_body"
+          buildPreview.celestialBody = intersect.object
+          buildPreview.position = intersect.point.clone().sub(intersect.object.position).applyQuaternion(_q1)
+          //buildPreview.quaternion = new Quaternion()
+          buildPreview.quaternion = _q1.clone()
         }
 
       } else { // show preview mesh free-floating, relative to player

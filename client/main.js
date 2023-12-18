@@ -162,6 +162,7 @@ const physicsDebug = {
   toggle: function () {
     physicsDebug.enabled = !physicsDebug.enabled
     physicsDebug.meshes.forEach(m => m.visible = physicsDebug.enabled)
+    hud.showChatMessage("[debug] physics wireframe " + (physicsDebug.enabled ? "enabled" : "disabled"))
   }
 }
 Input.on("debug_physics_wireframe", physicsDebug.toggle)

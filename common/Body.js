@@ -1,4 +1,4 @@
-import * as CANNON from 'cannon-es';
+import * as CANNON from 'cannon';
 import * as THREE from 'three';
 
 const _v = new THREE.Vector3();
