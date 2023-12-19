@@ -1,26 +1,28 @@
-import { TextureLoader, NearestFilter, MeshBasicMaterial } from 'three'
+import { TextureLoader, NearestFilter, MeshBasicMaterial, SRGBColorSpace } from 'three'
 
 const loader = new TextureLoader()
 loader.setPath("/assets/")
 
-const tex_debugGrid = loader.load("debug.png")
-const tex_debugCompass = loader.load("debug2.png")
-const tex_Cube = loader.load("components/cube.png")
-tex_debugGrid.magFilter = NearestFilter
-tex_debugGrid.generateMipmaps = false
-tex_debugCompass.magFilter = NearestFilter
-tex_debugCompass.generateMipmaps = false
-tex_Cube.magFilter = NearestFilter
-tex_Cube.generateMipmaps = false
-export const wall_top = new MeshBasicMaterial({ map: loader.load("components/wall_top.png") })
-export const wall_bottom = new MeshBasicMaterial({ map: loader.load("components/wall_bottom.png") })
-export const wall_left = new MeshBasicMaterial({ map: loader.load("components/wall_left.png") })
-export const wall_right = new MeshBasicMaterial({ map: loader.load("components/wall_right.png") })
-export const wall_front = new MeshBasicMaterial({ map: loader.load("components/wall_front.png") })
-export const wall_back = new MeshBasicMaterial({ map: loader.load("components/wall_back.png") })
+// loads a texture & applies default settings
+function loadTexture(path) {
+  const tex = loader.load(path)
+  tex.magFilter = NearestFilter
+  tex.generateMipmaps = false
+  tex.colorSpace = SRGBColorSpace
+  return tex
+}
 
-const tex_grass = loader.load("grass.png")
+const tex_debugGrid = loadTexture("debug.png")
+const tex_debugCompass = loadTexture("debug2.png")
+const tex_Cube = loadTexture("components/cube.png")
+export const wall_top = new MeshBasicMaterial({ map: loadTexture("components/wall_top.png") })
+export const wall_bottom = new MeshBasicMaterial({ map: loadTexture("components/wall_bottom.png") })
+export const wall_left = new MeshBasicMaterial({ map: loadTexture("components/wall_left.png") })
+export const wall_right = new MeshBasicMaterial({ map: loadTexture("components/wall_right.png") })
+export const wall_front = new MeshBasicMaterial({ map: loadTexture("components/wall_front.png") })
+export const wall_back = new MeshBasicMaterial({ map: loadTexture("components/wall_back.png") })
 
+const tex_grass = loadTexture("grass.png")
 
 export const DEBUG_GRID = new MeshBasicMaterial({ map: tex_debugGrid })
 export const DEBUG_COMPASS = new MeshBasicMaterial({ map: tex_debugCompass })
