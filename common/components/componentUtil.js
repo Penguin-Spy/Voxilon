@@ -34,6 +34,29 @@ function boundingBoxFromDimensions(width, depth, height) {
   return [box, offset]
 }
 
+/**
+ * Clones a component's mesh to create the mesh for it's build preview
+ * @param {THREE.Mesh} mesh The component's original mesh (is not modified)
+ * @returns {THREE.Mesh} A clone of the mesh
+ */
+function generatePreviewMesh(mesh) {
+  const previewMesh = mesh.clone()
+
+  if(Array.isArray(previewMesh.material)) {
+    previewMesh.material.forEach((material, i, materials) => {
+      materials[i] = material.clone()
+      materials[i].transparent = true
+      materials[i].opacity = 0.8
+    })
+  } else {
+    previewMesh.material = previewMesh.material.clone()
+    previewMesh.material.transparent = true
+    previewMesh.material.opacity = 0.8
+  }
+
+  return previewMesh
+}
+
 // component direction generation
 /**
  * @enum {number}
@@ -304,4 +327,4 @@ function rotateComponentDirection(componentDirection, axis, direction) {
   // todo: implement this (for rotating stuff in the build preview)
 }
 
-export { boundingBoxFromDimensions, ComponentDirection, rotateBoundingBox }
+export { boundingBoxFromDimensions, generatePreviewMesh, ComponentDirection, rotateBoundingBox }

@@ -2,7 +2,7 @@ import { Vec3, Box } from 'cannon'
 import { BoxGeometry, Mesh } from 'three'
 import Component from "/common/Component.js"
 import { DEBUG_COMPASS } from "/common/RenderMaterials.js"
-import { boundingBoxFromDimensions } from '/common/components/componentUtil.js'
+import { boundingBoxFromDimensions, generatePreviewMesh } from '/common/components/componentUtil.js'
 
 const geometry = new BoxGeometry(1, 1, 1)
 const mesh = new Mesh(geometry, DEBUG_COMPASS)
@@ -25,5 +25,5 @@ export default class Cube extends Component {
   static type = type
   static boundingBox = boundingBox
   static offset = offset
-  static previewMesh = mesh.clone()
+  static previewMesh = generatePreviewMesh(mesh)
 }

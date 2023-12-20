@@ -2,7 +2,7 @@ import { Vec3, Box } from 'cannon'
 import { BoxGeometry, Mesh } from 'three'
 import Component from "/common/Component.js"
 import { wall_top, wall_bottom, wall_front, wall_back, wall_left, wall_right } from "/common/RenderMaterials.js"
-import { boundingBoxFromDimensions } from '/common/components/componentUtil.js'
+import { boundingBoxFromDimensions, generatePreviewMesh } from '/common/components/componentUtil.js'
 
 const geometry = new BoxGeometry(3, 1, 2)
 const mesh = new Mesh(geometry, [
@@ -32,5 +32,5 @@ export default class Wall extends Component {
   static type = type
   static boundingBox = boundingBox
   static offset = offset
-  static previewMesh = mesh.clone()
+  static previewMesh = generatePreviewMesh(mesh)
 }

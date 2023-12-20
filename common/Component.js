@@ -65,7 +65,7 @@ export default class Component {
     //_ray.copy(raycaster.ray).recast(raycaster.near)
 
     // calculate transformation matrix for the center of this component
-    _v1.copy(this.position).add(this.offset)
+    _v1.copy(this.position)
     this.parentContraption.toWorldPosition(_v1)
 
     _q1.copy(this.parentContraption.getOriginWorldQuaternion())
@@ -75,7 +75,7 @@ export default class Component {
 
     _inverseMatrix.copy(_matrix4).invert() // convert the ray from world-space to local component-space
     _ray.copy(raycaster.ray).applyMatrix4(_inverseMatrix)
-    _ray.origin.addScalar(0.5).add(this.offset)
+    _ray.origin.addScalar(0.5)
 
     const intersectFace = intersectBox(_ray, this.boundingBox, _v1)
     if(intersectFace !== null) {
@@ -88,6 +88,7 @@ export default class Component {
 
       // calculate exact distance for raycast distance sorting
       _v1.applyMatrix4(_matrix4)
+      _v1.subScalar(0.5)
       const distance = raycaster.ray.origin.distanceTo(_v1)
 
       if(distance > raycaster.far) return
@@ -108,6 +109,11 @@ export default class Component {
 const max = Math.max, min = Math.min
 
 // https://gamedev.stackexchange.com/a/18459, translated from C to three.js by me
+/**
+ * @param {THREE.Ray} ray
+ * @param {THREE.Box3} box
+ * @param {THREE.Vector3} target
+ */
 function intersectBox(ray, box, target) {
   const lb = box.min, rt = box.max,
     invdirx = 1 / ray.direction.x,
