@@ -169,8 +169,10 @@ export default class PlayerController {
     } else if(this.selectedItem.type === "component") {
       if(buildPreview.type === "standalone") { // standalone new contraption
         console.log("standalone new contraption", buildPreview)
+        _v1.copy(this.selectedItem.class.offset)
+        _v1.applyQuaternion(buildPreview.quaternion)
         this.link.newContraption(
-          buildPreview.position,
+          buildPreview.position.sub(_v1),
           buildPreview.quaternion,
           {
             type: this.selectedItem.class.type
@@ -187,8 +189,10 @@ export default class PlayerController {
 
       } else { // place new contraption on celestial body
         console.log("place new contraption on celestial body", buildPreview)
+        _v1.copy(this.selectedItem.class.offset)
+        _v1.applyQuaternion(buildPreview.quaternion)
         this.link.newContraption(
-          buildPreview.position,
+          buildPreview.position.sub(_v1),
           buildPreview.quaternion,
           {
             type: this.selectedItem.class.type
@@ -204,6 +208,7 @@ export default class PlayerController {
     if(this.selectedItem === undefined) return
 
     const buildPreview = this.buildPreview
+    /** @type {THREE.Mesh} */
     const previewMesh = buildPreview.mesh
 
     if(this.selectedItem.type === "test") { // just for testing
@@ -277,17 +282,42 @@ export default class PlayerController {
 
 
         } else { // celestial body mesh
+          /*
+          a is the player's vector
+          b is the intersect point vector
+
+          oproj_b(a)  is the vector perpendicular to b and facing towards a
+
+          threejs syntax:
+          project a onto b (proj_b(a)) : a.projectOntoVector(b)
+          vector component a ⊥ b (oproj_b(a)) : a.projectOnPlane(b)
+          */
+          _v1.copy(this.body.position).sub(intersect.object.position).normalize() // player vector
+          _v2.copy(intersect.point).sub(intersect.object.position).normalize()    // object vector
+
+          _v1.projectOnPlane(_v2).normalize()
+
+          _v3.copy(_v1).add(intersect.point)
+          this.renderer.setPointPosition("red", _v3)
+
           previewMesh.position.copy(intersect.point)
-          //previewMesh.quaternion.copy(intersect.object.quaternion)
-          previewMesh.quaternion.identity()
+
+          previewMesh.up.copy(_v2)
+          previewMesh.lookAt(_v3)
+
+          //previewMesh.quaternion.identity()
+          //previewMesh.quaternion.copy(_q1)
+
+          this.renderer.setPointPosition("yellow", intersect.point)
+
 
           _q1.copy(intersect.object.quaternion).conjugate()
 
           buildPreview.type = "celestial_body"
           buildPreview.celestialBody = intersect.object
-          buildPreview.position = intersect.point.clone().sub(intersect.object.position).applyQuaternion(_q1)
+          buildPreview.position = intersect.point.clone().sub(intersect.object.position)//.applyQuaternion(_q1)
           //buildPreview.quaternion = new Quaternion()
-          buildPreview.quaternion = _q1.clone()
+          buildPreview.quaternion = _q1.clone() //_q1.identity()
         }
 
       } else { // show preview mesh free-floating, relative to player

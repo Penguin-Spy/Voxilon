@@ -68,6 +68,7 @@ export default {
       class: "big", id: "startButton", proceedAction: true,
       action: function () {
         this.actions.directLink(this.notableNodes.startButton, {
+          type: "new",
           name: this.notableNodes.worldName.value
         })
       }

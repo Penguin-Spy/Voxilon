@@ -275,9 +275,6 @@ export default {
     this.disablePointerLock()
     document.exitPointerLock()
 
-    document.removeEventListener('pointerlockchange', lockChangeAlert, false)
-    document.removeEventListener('mozpointerlockchange', lockChangeAlert, false)
-
     document.removeEventListener('touchstart', handleTouch)
     document.removeEventListener('touchstop', handleTouch)
     document.removeEventListener('keydown', handleKeyDown)
