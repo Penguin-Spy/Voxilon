@@ -7,18 +7,20 @@ import Components from '/common/components/index.js'
 import BuildingRaycaster from '/client/BuildingRaycaster.js'
 import { ComponentDirection, rotateBoundingBox } from '/common/components/componentUtil.js'
 
-const _v1 = new Vector3();
-const _v2 = new Vector3();
-const _v3 = new Vector3();
-const _q1 = new Quaternion();
-const _q2 = new Quaternion();
-let angle = 0;
+const _v1 = new Vector3()
+const _v2 = new Vector3()
+const _v3 = new Vector3()
+const _q1 = new Quaternion()
+const _q2 = new Quaternion()
+const _matrix4 = new Matrix4()
+let angle = 0
 
 const RIGHT = new Vector3(1, 0, 0)
 const UP = new Vector3(0, 1, 0)
 const FORWARD = new Vector3(0, 0, 1)
+const ZERO = new Vector3(0, 0, 0)
 
-const HALF_PI = Math.PI / 2;
+const HALF_PI = Math.PI / 2
 
 // strength of jetpack:
 const LINEAR_DAMPING = 20   // m/s²
@@ -167,17 +169,37 @@ export default class PlayerController {
       })
 
     } else if(this.selectedItem.type === "component") {
+
       if(buildPreview.type === "standalone") { // standalone new contraption
         console.log("standalone new contraption", buildPreview)
+
         _v1.copy(this.selectedItem.class.offset)
         _v1.applyQuaternion(buildPreview.quaternion)
-        this.link.newContraption(
+
+        this.link.newStandaloneContraption(
           buildPreview.position.sub(_v1),
           buildPreview.quaternion,
           {
             type: this.selectedItem.class.type
             // etc.
           })
+
+      } else if(buildPreview.type === "celestial_body") {
+        console.log("place new contraption on celestial body", buildPreview)
+
+        _v1.copy(this.selectedItem.class.offset)
+        _v1.applyQuaternion(buildPreview.quaternion)
+
+        this.link.newAnchoredContraption(
+          buildPreview.celestialBody,
+          buildPreview.position.sub(_v1),
+          buildPreview.quaternion,
+          {
+            type: this.selectedItem.class.type
+            // etc.
+          },
+        )
+
       } else if(buildPreview.type === "component") { // edit existing contraption
         console.log("edit existing contraption", buildPreview)
 
@@ -187,19 +209,8 @@ export default class PlayerController {
           rotation: buildPreview.rotation
         })
 
-      } else { // place new contraption on celestial body
-        console.log("place new contraption on celestial body", buildPreview)
-        _v1.copy(this.selectedItem.class.offset)
-        _v1.applyQuaternion(buildPreview.quaternion)
-        this.link.newContraption(
-          buildPreview.position.sub(_v1),
-          buildPreview.quaternion,
-          {
-            type: this.selectedItem.class.type
-            // etc.
-          },
-          buildPreview.celestialBody
-        )
+      } else {
+        throw new TypeError("Invalid buildpreview type: " + buildPreview.type)
       }
     }
   }
@@ -273,13 +284,10 @@ export default class PlayerController {
           // apply to preview mesh
           pos.add(_v3)
           parent.toWorldPosition(pos)
-
-          _q2.copy(parent.getOriginWorldQuaternion())
-          _q2.multiply(_q1)
+          parent.toWorldQuaternion(_q1)
 
           previewMesh.position.copy(pos)
-          previewMesh.quaternion.copy(_q2)
-
+          previewMesh.quaternion.copy(_q1)
 
         } else { // celestial body mesh
           /*
@@ -295,29 +303,18 @@ export default class PlayerController {
           _v1.copy(this.body.position).sub(intersect.object.position).normalize() // player vector
           _v2.copy(intersect.point).sub(intersect.object.position).normalize()    // object vector
 
-          _v1.projectOnPlane(_v2).normalize()
-
-          _v3.copy(_v1).add(intersect.point)
-          this.renderer.setPointPosition("red", _v3)
+          _v1.projectOnPlane(_v2).normalize() // get vector tangent to the surface facing the player
+          _matrix4.lookAt(ZERO, _v1, _v2) // get rotation to face along that vector (with up being the object vector; perpendicular to the surface)
+          previewMesh.quaternion.setFromRotationMatrix(_matrix4)
 
           previewMesh.position.copy(intersect.point)
-
-          previewMesh.up.copy(_v2)
-          previewMesh.lookAt(_v3)
-
-          //previewMesh.quaternion.identity()
-          //previewMesh.quaternion.copy(_q1)
-
-          this.renderer.setPointPosition("yellow", intersect.point)
-
 
           _q1.copy(intersect.object.quaternion).conjugate()
 
           buildPreview.type = "celestial_body"
           buildPreview.celestialBody = intersect.object
-          buildPreview.position = intersect.point.clone().sub(intersect.object.position)//.applyQuaternion(_q1)
-          //buildPreview.quaternion = new Quaternion()
-          buildPreview.quaternion = _q1.clone() //_q1.identity()
+          buildPreview.position = intersect.point.clone().sub(intersect.object.position).applyQuaternion(_q1)
+          buildPreview.quaternion = previewMesh.quaternion.clone().premultiply(_q1)
         }
 
       } else { // show preview mesh free-floating, relative to player

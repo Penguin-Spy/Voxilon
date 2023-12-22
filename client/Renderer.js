@@ -18,58 +18,12 @@ export default class Renderer {
     });
 
     // debug point visualization
-    this.pointPositions = {
-      "green": [0, 0, 0],
-      "red": [0, 0, 0],
-      "blue": [0, 0, 0],
-      "yellow": [0, 0, 0]
+    this.points = {
+      "green": new THREE.Mesh(new THREE.SphereGeometry(0.25), new THREE.MeshBasicMaterial({ color: "#00ff00" })),
+      "red": new THREE.Mesh(new THREE.SphereGeometry(0.25), new THREE.MeshBasicMaterial({ color: "#ff0000" })),
+      "blue": new THREE.Mesh(new THREE.SphereGeometry(0.25), new THREE.MeshBasicMaterial({ color: "#0000ff" })),
+      "yellow": new THREE.Mesh(new THREE.SphereGeometry(0.25), new THREE.MeshBasicMaterial({ color: "#ffff00" }))
     }
-    const pointColors = []
-    _color.setRGB(0, 1, 0)
-    _color.toArray(pointColors, 0)
-    _color.setRGB(1, 0, 0)
-    _color.toArray(pointColors, 3)
-    _color.setRGB(0, 0, 1)
-    _color.toArray(pointColors, 6)
-    _color.setRGB(1, 1, 0)
-    _color.toArray(pointColors, 9)
-
-    const geometry = new THREE.BufferGeometry()
-    geometry.setAttribute('customColor', new THREE.Float32BufferAttribute(pointColors, 3))
-
-    const material = new THREE.ShaderMaterial({
-      uniforms: {
-        color: { value: new THREE.Color(0xffffff) },
-        alphaTest: { value: 0.9 }
-      },
-      vertexShader: `
-			attribute vec3 customColor;
-
-			varying vec3 vColor;
-
-			void main() {
-				vColor = customColor;
-				vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
-
-				gl_PointSize = 300.0 / -mvPosition.z;
-
-				gl_Position = projectionMatrix * mvPosition;
-			}
-`,
-      fragmentShader: `
-			uniform vec3 color;
-			uniform float alphaTest;
-
-			varying vec3 vColor;
-
-			void main() {
-				gl_FragColor = vec4( color * vColor, 1.0 );
-
-				if ( gl_FragColor.a < alphaTest ) discard;
-			}`
-    })
-
-    this.points = new THREE.Points(geometry, material)
   }
 
   resize(width, height) {
@@ -103,7 +57,9 @@ export default class Renderer {
       ])
     this.scene.background.magFilter = THREE.NearestFilter
 
-    this.scene.add(this.points)
+    for(const point of Object.values(this.points)) {
+      this.scene.add(point)
+    }
   }
 
   /**
@@ -111,20 +67,7 @@ export default class Renderer {
    * @param {THREE.Vector3} pos
    */
   setPointPosition(name, pos) {
-    this.pointPositions[name] = pos.toArray()
-    const pointNames = Object.keys(Voxilon.renderer.pointPositions)
-
-    const posArray = new Float32Array(pointNames.length * 3)
-    let i = 0
-    for(const pointName of pointNames) {
-      const point = this.pointPositions[pointName]
-      posArray[i] = point[0]
-      posArray[i + 1] = point[1]
-      posArray[i + 2] = point[2]
-      i += 3
-    }
-
-    this.points.geometry.setAttribute("position", new THREE.BufferAttribute(posArray, 3))
+    this.points[name].position.copy(pos)
   }
 
   /**

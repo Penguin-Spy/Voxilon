@@ -225,45 +225,50 @@ export default class DirectLink extends Link {
   }
 
   /**
-   * Request to create a new contraption in the world
-   *
-   * @param {THREE.Vector3}    position       the placement position
-   * @param {THREE.Quaternion} quaternion     the placement rotation
+   * Request to create a new standalone contraption in the world
+   * @param {THREE.Vector3}    position       the contraption position
+   * @param {THREE.Quaternion} quaternion     the contraption's own rotation
    * @param {object}           firstComponent data for the first component of the contraption
-   * @param {CelestialBody?}   parent         The celestial body that this contraption is attached to, or `undefined` if the contraption will be free-floating. \
-   *                                            If this is specified, `position` and `quaternion` become relative to the celestial body.
    */
-  newContraption(position, quaternion, firstComponent, parent) {
-    if(!parent) {
-      this.world.loadBody({
-        type: "voxilon:contraption_body",
-        position: position.toArray(),
+  newStandaloneContraption(position, quaternion, firstComponent) {
+    this.world.loadBody({
+      type: "voxilon:contraption_body",
+      position: position.toArray(),
+      quaternion: quaternion.toArray(),
+      contraption: {
+        components: [
+          {
+            ...firstComponent,
+            position: [0, 0, 0], // make sure it's at the origin
+            rotation: 0
+          },
+        ]
+      }
+    })
+  }
+
+  /**
+   * Request to create a new anchored contraption (attached to a celestial body)
+   *
+   * @param {CelestialBody}    parent         the celestial body that this contraption is attached to
+   * @param {THREE.Vector3}    positionOffset the contraption position relative to the celestial body
+   * @param {THREE.Quaternion} quaternion     the contraption's own rotation
+   * @param {object}           firstComponent data for the first component of the contraption
+   */
+  newAnchoredContraption(parent, positionOffset, quaternion, firstComponent) {
+    parent.addContraption(
+      { // contraption data
+        components: [
+          {
+            ...firstComponent,
+            position: [0, 0, 0], // make sure it's at the origin
+            rotation: 0
+          },
+        ],
+        positionOffset: positionOffset.toArray(), // position/rotation offset
         quaternion: quaternion.toArray(),
-        contraption: {
-          components: [
-            {
-              ...firstComponent,
-              position: [0, 0, 0], // make sure it's at the origin
-              rotation: 0
-            },
-          ]
-        }
-      })
-    } else {
-      parent.addContraption(
-        { // contraption data
-          components: [
-            {
-              ...firstComponent,
-              position: [0, 0, 0], // make sure it's at the origin
-              rotation: 0
-            },
-          ],
-          positionOffset: position.toArray(), // position/rotation offset
-          quaternionOffset: quaternion.toArray(),
-        }
-      )
-    }
+      }
+    )
   }
 
   /**

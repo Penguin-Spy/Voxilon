@@ -67,8 +67,8 @@ export default class Component {
     // calculate transformation matrix for the center of this component
     _v1.copy(this.position)
     this.parentContraption.toWorldPosition(_v1)
-
-    _q1.copy(this.parentContraption.getOriginWorldQuaternion())
+    _q1.identity()
+    this.parentContraption.toWorldQuaternion(_q1)
     _v2.set(1, 1, 1)
     _matrix4.compose(_v1, _q1, _v2)
 
@@ -87,8 +87,8 @@ export default class Component {
       _v2.add(this.position)
 
       // calculate exact distance for raycast distance sorting
-      _v1.applyMatrix4(_matrix4)
       _v1.subScalar(0.5)
+      _v1.applyMatrix4(_matrix4)
       const distance = raycaster.ray.origin.distanceTo(_v1)
 
       if(distance > raycaster.far) return
