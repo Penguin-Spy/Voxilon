@@ -65,16 +65,6 @@ export default class PlayerController {
     Input.on("toggle_intertia_damping", () => this.toggleIntertiaDamping())
     Input.on("toggle_jetpack", () => this.toggleJetpack())
 
-    Input.on("debug_noclip", () => {
-      if(this.body) {
-        this.body.setNoclip(!this.body.noclip)
-        this.hud.showChatMessage("[debug] noclip " + (this.body.noclip ? "enabled" : "disabled"))
-        if(this.body.noclip && !this.jetpackActive) {
-          this.toggleJetpack()
-        }
-      }
-    })
-
     /* building */
     this.selectedHotbarSlot = 0
     this.hotbar = [

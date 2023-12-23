@@ -1,7 +1,5 @@
 import * as THREE from 'three';
 
-const _color = new THREE.Color()
-
 export default class Renderer {
   #previewMesh = false
 
@@ -15,15 +13,7 @@ export default class Renderer {
 
     window.addEventListener('resize', () => {
       this.resize(window.innerWidth, window.innerHeight);
-    });
-
-    // debug point visualization
-    this.points = {
-      "green": new THREE.Mesh(new THREE.SphereGeometry(0.25), new THREE.MeshBasicMaterial({ color: "#00ff00" })),
-      "red": new THREE.Mesh(new THREE.SphereGeometry(0.25), new THREE.MeshBasicMaterial({ color: "#ff0000" })),
-      "blue": new THREE.Mesh(new THREE.SphereGeometry(0.25), new THREE.MeshBasicMaterial({ color: "#0000ff" })),
-      "yellow": new THREE.Mesh(new THREE.SphereGeometry(0.25), new THREE.MeshBasicMaterial({ color: "#ffff00" }))
-    }
+    })
   }
 
   resize(width, height) {
@@ -56,18 +46,6 @@ export default class Renderer {
         'nz.png'  // -z   6
       ])
     this.scene.background.magFilter = THREE.NearestFilter
-
-    for(const point of Object.values(this.points)) {
-      this.scene.add(point)
-    }
-  }
-
-  /**
-   * @param {"green"|"red"|"blue"|"yellow"} name
-   * @param {THREE.Vector3} pos
-   */
-  setPointPosition(name, pos) {
-    this.points[name].position.copy(pos)
   }
 
   /**
