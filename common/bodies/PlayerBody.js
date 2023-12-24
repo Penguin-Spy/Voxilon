@@ -16,7 +16,7 @@ const _v2 = new THREE.Vector3();*/
 export default class PlayerBody extends Body {
   // @param local boolean   is this PlayerBody for this client or another player
   constructor(data, local) {
-    const mass = 70; //check(data.mass, "number")
+    const mass = 30; //check(data.mass, "number")
 
     const rigidBody = new CANNON.Body({
       mass: mass, // kg

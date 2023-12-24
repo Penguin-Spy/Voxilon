@@ -12,17 +12,13 @@ const type = "voxilon:cube"
 
 export default class Cube extends Component {
   constructor(data) {
-    const halfExtents = new Vec3(0.5, 0.5, 0.5)
-    const boxShape = new Box(halfExtents)
+    const boxShape = new Box(new Vec3(0.5, 0.5, 0.5))
 
     super(data, boxShape, mesh.clone())
-    // read-only properties
-    Object.defineProperties(this, {
-      type: { enumerable: true, value: type }
-    })
   }
 
   static type = type
+  static mass = 1
   static boundingBox = boundingBox
   static offset = offset
   static previewMesh = generatePreviewMesh(mesh)

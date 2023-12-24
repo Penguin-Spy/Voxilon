@@ -12,17 +12,13 @@ const type = "voxilon:rectangle"
 
 export default class Rectangle extends Component {
   constructor(data) {
-    const halfExtents = new Vec3(0.5, 0.5, 1)
-    const boxShape = new Box(halfExtents)
+    const boxShape = new Box(new Vec3(0.5, 0.5, 1))
 
     super(data, boxShape, mesh.clone())
-    // read-only properties
-    Object.defineProperties(this, {
-      type: { enumerable: true, value: type }
-    })
   }
 
   static type = type
+  static mass = 4
   static boundingBox = boundingBox
   static offset = offset
   static previewMesh = generatePreviewMesh(mesh)

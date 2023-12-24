@@ -1,3 +1,5 @@
+import Contraption from "/common/Contraption.js"
+
 import * as THREE from 'three'
 import { check } from '/common/util.js'
 import { ComponentDirection, rotateBoundingBox } from '/common/components/componentUtil.js'
@@ -14,9 +16,20 @@ const _q1 = new THREE.Quaternion()
  */
 export default class Component {
   /** @type {THREE.Mesh} */
-  mesh;
+  mesh = null
   /** @type {CANNON.Shape} */
-  shape;
+  shape = null
+  /** @type {THREE.Vector3} */
+  position
+  /** @type {ComponentDirection} */
+  rotation
+  /** @type {string} */
+  type
+  /** @type {number} */
+  mass
+
+  /** @type {Contraption} */
+  #parentContraption = null
 
   /**
    * @param {component_data} data
@@ -35,17 +48,23 @@ export default class Component {
 
     Object.defineProperties(this, {
       // read-only properties
-      shape: { enumerable: true, value: shape },
       mesh: { enumerable: true, value: mesh },
+      shape: { enumerable: true, value: shape },
       position: { enumerable: true, value: new THREE.Vector3() },
-      rotation: { enumerable: true, value: data.rotation }
+      rotation: { enumerable: true, value: data.rotation },
+      // static properties
+      type: { enumerable: true, value: this.constructor.type },
+      mass: { enumerable: true, value: this.constructor.mass }  // constant mass in kg (affects center of mass of contraption)
     })
 
     this.position.set(...data.position)
 
     // calculate rotated bounding box & offset
+    /** @type {THREE.Vector3} */
     this.offset = this.constructor.offset.clone()
+    /** @type {THREE.Box3} */
     this.boundingBox = this.constructor.boundingBox.clone()
+
     rotateBoundingBox(this.boundingBox.min, this.boundingBox.max, this.offset, this.rotation)
     // offset & rotate three.js mesh by this component's position in the contraption
     this.mesh.position.copy(this.position).add(this.offset)
@@ -54,10 +73,23 @@ export default class Component {
 
   serialize() {
     const data = {}
-    data.type = this.type
+    data.type = this.constructor.type
     data.position = this.position.toArray()
     data.rotation = this.rotation
     return data
+  }
+
+  /** Sets the parent contraption for this component
+   * @param {Contraption} contraption
+   */
+  setParent(contraption) {
+    this.#parentContraption = contraption
+  }
+  /** Returns this component's parent contraption
+   * @returns {Contraption}
+   */
+  getParent() {
+    return this.#parentContraption
   }
 
   raycast(raycaster, intersects) {
@@ -66,9 +98,9 @@ export default class Component {
 
     // calculate transformation matrix for the center of this component
     _v1.copy(this.position)
-    this.parentContraption.toWorldPosition(_v1)
+    this.#parentContraption.toWorldPosition(_v1)
     _q1.identity()
-    this.parentContraption.toWorldQuaternion(_q1)
+    this.#parentContraption.toWorldQuaternion(_q1)
     _v2.set(1, 1, 1)
     _matrix4.compose(_v1, _q1, _v2)
 

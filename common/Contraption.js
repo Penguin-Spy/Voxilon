@@ -32,12 +32,12 @@ export default class Contraption {
       ...data,
     }
 
-    const components = []
+    /** @type {Component[]} */
+    this.components = []
     Object.defineProperties(this, {
       // read-only properties
       positionOffset: { enumerable: true, value: new THREE.Vector3() },
-      quaternion: { enumerable: true, value: new THREE.Quaternion() },
-      components: { enumerable: true, value: components }
+      quaternion: { enumerable: true, value: new THREE.Quaternion() }
     })
 
     this.#parent = parent
@@ -45,7 +45,7 @@ export default class Contraption {
     this.quaternion.set(...data.quaternion)
 
     // load components
-    components_data.forEach(c => this.loadComponent(c))
+    components_data.forEach(c => this.loadComponent(c, false))
   }
 
   serialize() {
@@ -79,9 +79,11 @@ export default class Contraption {
 
   /**
    * Loads a Component's serialized form and adds it to the Contraption
-   * @param data The serialized data
+   * @param {object}  data                    The serialized data
+   * @param {boolean} [updateMassProperties]  should loading this component update the contraption's parent's mass properties; defaults to true
+   *                                            if skipped, the parent's mass properties must be updated afterwards or it will behave weirdly
    */
-  loadComponent(data) {
+  loadComponent(data, updateMassProperties = true) {
     /** @type {Component} */
     const component = new constructors[data.type](data)
 
@@ -103,7 +105,12 @@ export default class Contraption {
 
     // store references
     this.components.push(component)
-    component.parentContraption = this
+    component.setParent(this)
+
+    if(updateMassProperties) {
+      this.#parent.updateMassProperties()
+    }
+
     return component
   }
 

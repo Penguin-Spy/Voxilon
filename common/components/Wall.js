@@ -19,17 +19,13 @@ const type = "voxilon:wall"
 
 export default class Wall extends Component {
   constructor(data) {
-    const halfExtents = new Vec3(1.5, 0.5, 1)
-    const boxShape = new Box(halfExtents)
+    const boxShape = new Box(new Vec3(1.5, 0.5, 1))
 
     super(data, boxShape, mesh.clone())
-    // read-only properties
-    Object.defineProperties(this, {
-      type: { enumerable: true, value: type }
-    })
   }
 
   static type = type
+  static mass = 6
   static boundingBox = boundingBox
   static offset = offset
   static previewMesh = generatePreviewMesh(mesh)

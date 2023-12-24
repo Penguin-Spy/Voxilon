@@ -9,10 +9,10 @@ export const G = 6.6743e-11;
  * Base class for all independent objects in the World
  */
 export default class Body {
-  /*
-    mesh:      optional, rendering mesh (model & texture)
-    rigidBody: optional, CannonJS physics body
-  */
+  /** @type {CANNON.Body} */
+  rigidBody
+  /** @type {THREE.Mesh|undefined} may be undefined if the body has no mesh*/
+  mesh
 
   constructor(data, rigidBody, mesh) {
     // --- CANNON ---
@@ -31,8 +31,7 @@ export default class Body {
       position: { enumerable: true, value: rigidBody.position },
       velocity: { enumerable: true, value: rigidBody.velocity },
       quaternion: { enumerable: true, value: rigidBody.quaternion },
-      angularVelocity: { enumerable: true, value: rigidBody.angularVelocity },
-      mass: { enumerable: true, value: rigidBody.mass }
+      angularVelocity: { enumerable: true, value: rigidBody.angularVelocity }
     })
 
     data = { // default values
@@ -62,6 +61,13 @@ export default class Body {
     return data
   }
 
+  /**
+   * Updates the total mass and center of mass of this body if relevant
+   */
+  updateMassProperties() {
+    // no effect for most Bodies
+  }
+
   update(world, DT) {
     // copy cannon position & quaternion to three
     if(this.mesh) {
@@ -78,7 +84,7 @@ export default class Body {
         _v.normalize()                 // direction of force
 
         // force
-        _v.multiplyScalar(G * this.mass * otherBody.mass / rSquared)
+        _v.multiplyScalar(G * this.rigidBody.mass * otherBody.rigidBody.mass / rSquared)
 
         // acceleration
         _v/*.divideScalar(this.mass)*/.multiplyScalar(DT)

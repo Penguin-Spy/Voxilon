@@ -229,7 +229,7 @@ export default class PlayerController {
         if(intersect.type === "component") {
           const heldComponent = this.selectedItem.class
           /** @type {Contraption} */
-          const parent = intersect.object.parentContraption
+          const parent = intersect.object.getParent()
 
           // position of adjacent empty grid space, offset by the preview mesh's bounding box
           const pos = intersect.position // this is already a unique Vector3

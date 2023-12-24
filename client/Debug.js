@@ -13,6 +13,8 @@ class Debug {
   #hud
   /** @type {THREE.Mesh[]} */
   #wireframeMeshes
+  /** @type {Map<CANNON.Body,THREE.Mesh>} */
+  #rigidBodyPosMeshes
   /** @type {boolean} */
   #physicsWireframeEnabled
 
@@ -20,6 +22,7 @@ class Debug {
 
   constructor() {
     this.#wireframeMeshes = []
+    this.#rigidBodyPosMeshes = new Map()
     this.#physicsWireframeEnabled = false
 
     // debug text in the top right
@@ -47,8 +50,10 @@ class Debug {
     Input.on("debug_physics_wireframe", () => {
       if(!this.#hud) return;
       this.#physicsWireframeEnabled = !this.#physicsWireframeEnabled
-      this.#wireframeMeshes.forEach(m => m.visible = this.#physicsWireframeEnabled)
       this.#hud.showChatMessage("[debug] physics wireframe " + (this.#physicsWireframeEnabled ? "enabled" : "disabled"))
+
+      this.#wireframeMeshes.forEach(m => m.visible = this.#physicsWireframeEnabled)
+      this.#rigidBodyPosMeshes.forEach(m => m.visible = this.#physicsWireframeEnabled)
     })
   }
 
@@ -75,6 +80,13 @@ class Debug {
         }
         this.#wireframeMeshes.push(mesh)
         mesh.visible = this.#physicsWireframeEnabled
+
+        // add point for center of mass (but only once)
+        if(!this.#rigidBodyPosMeshes.has(body)) {
+          const mesh = new THREE.Mesh(new THREE.SphereGeometry(0.25), new THREE.MeshBasicMaterial({ color: "#00aaaa" }))
+          this.#rigidBodyPosMeshes.set(body, mesh)
+          scene.add(mesh)
+        }
       }
     })
 
@@ -115,6 +127,9 @@ class Debug {
 
     if(this.#physicsWireframeEnabled) {
       this.debugger.update()
+      for(const [body, mesh] of this.#rigidBodyPosMeshes) {
+        mesh.position.copy(body.position)
+      }
     }
   }
 
