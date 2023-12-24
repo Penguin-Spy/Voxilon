@@ -1,3 +1,9 @@
+/* index.js © Penguin_Spy 2023
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
+
 const express = require('express');
 const signal = require('./signal.js');
 const app = express();
@@ -20,7 +26,7 @@ app.get("/400", (req, res) => {
 })
 
 // Start server & respond to upgrade requests
-const server = app.listen(8080, function() {
+const server = app.listen(8080, function () {
   console.log("Express server started")
 });
 server.on('upgrade', (req, sock, head) => {

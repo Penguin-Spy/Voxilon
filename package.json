@@ -1,6 +1,6 @@
 {
   "name": "voxilon",
-  "version": "alpha-0.1",
+  "version": "alpha-3_1",
   "description": "mm yesn javascrimpt videojuego",
   "homepage": "https://github.com/Penguin-Spy/Voxilon",
   "main": "index.js",
@@ -9,7 +9,7 @@
   },
   "keywords": [],
   "author": "Penguin_Spy",
-  "license": "GPL-3.0-or-later",
+  "license": "MPL-2.0",
   "dependencies": {
     "express": "^4.17.1",
     "ws": "^7.4.3"

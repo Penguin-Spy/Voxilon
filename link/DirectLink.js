@@ -21,7 +21,7 @@ export default class DirectLink extends Link {
       world = new World(worldOptions.data)
     } else if(worldOptions.type === "new") {
       world = new World({
-        VERSION: "alpha-0",
+        VERSION: "alpha_1",
         name: worldOptions.name,
         bodies: [
           {

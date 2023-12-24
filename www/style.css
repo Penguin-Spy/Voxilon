@@ -214,6 +214,18 @@ body[data-cursor="disabled"] {
   font-weight: normal;
   margin: 0 0 24px;
 }
+.gui-mainFrame[data-screen="main_menu"] .version {
+  position: fixed;
+  bottom: 24px;
+  right: 4px;
+}
+.gui-mainFrame[data-screen="main_menu"] .source {
+  position: fixed;
+  bottom: 4px;
+  right: 4px;
+  color: unset;
+  cursor: alias;
+}
 
 
 /* Loading screen (before main.js has loaded & ran) */

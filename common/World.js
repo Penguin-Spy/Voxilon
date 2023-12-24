@@ -6,7 +6,7 @@ import TestBody from "/common/bodies/TestBody.js"
 import ContraptionBody from '/common/bodies/ContraptionBody.js'
 import { contactMaterials } from "/common/PhysicsMaterials.js"
 
-const WORLD_VERSION = "alpha-0"
+const WORLD_VERSION = "alpha_1" // just the data version
 
 const constructors = {
   "voxilon:celestial_body": CelestialBody,
