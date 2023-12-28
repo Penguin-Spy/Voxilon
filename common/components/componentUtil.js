@@ -34,6 +34,21 @@ function boundingBoxFromDimensions(width, depth, height) {
   return [box, offset]
 }
 
+
+function makeMaterialTransparent(material) {
+  if(Array.isArray(material)) {
+    material.forEach((material, i, materials) => {
+      materials[i] = material.clone()
+      materials[i].transparent = true
+      materials[i].opacity = 0.8
+    })
+  } else {
+    material = material.clone()
+    material.transparent = true
+    material.opacity = 0.8
+  }
+  return material
+}
 /**
  * Clones a component's mesh to create the mesh for it's build preview
  * @param {THREE.Mesh} mesh The component's original mesh (is not modified)
@@ -42,16 +57,12 @@ function boundingBoxFromDimensions(width, depth, height) {
 function generatePreviewMesh(mesh) {
   const previewMesh = mesh.clone()
 
-  if(Array.isArray(previewMesh.material)) {
-    previewMesh.material.forEach((material, i, materials) => {
-      materials[i] = material.clone()
-      materials[i].transparent = true
-      materials[i].opacity = 0.8
-    })
+  if(previewMesh.material) {
+    previewMesh.material = makeMaterialTransparent(previewMesh.material)
   } else {
-    previewMesh.material = previewMesh.material.clone()
-    previewMesh.material.transparent = true
-    previewMesh.material.opacity = 0.8
+    for(const child of previewMesh.children) {
+      child.material = makeMaterialTransparent(child.material)
+    }
   }
 
   return previewMesh

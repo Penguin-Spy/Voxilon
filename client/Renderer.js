@@ -48,6 +48,8 @@ export default class Renderer {
         'nz.png'  // -z   6
       ])
     this.scene.background.magFilter = THREE.NearestFilter
+
+    this.scene.add(new THREE.AmbientLight(0x404040, 60))
   }
 
   /**

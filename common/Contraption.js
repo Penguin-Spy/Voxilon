@@ -115,6 +115,10 @@ export default class Contraption {
   }
 
   update(world, DT) {
-    this.components.forEach(c => c.update(world, DT))
+    for(const component of this.components) {
+      if(component.update) {
+        component.update(world, DT)
+      }
+    }
   }
 }

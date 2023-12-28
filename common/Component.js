@@ -134,8 +134,8 @@ export default class Component {
     }
   }
 
-  update(world, DT) {
-  }
+  /*update(world, DT) {
+  }*/
 }
 
 const max = Math.max, min = Math.min

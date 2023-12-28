@@ -75,6 +75,8 @@ export default class PlayerController {
       { type: "component", class: Components["voxilon:cube"] },
       { type: "component", class: Components["voxilon:rectangle"] },
       { type: "component", class: Components["voxilon:wall"] },
+      { type: "component", class: Components["voxilon:thruster"] },
+      { type: "component", class: Components["voxilon:control_seat"] },
 
       /*{ type: "entity", name: "assembler" },
       { type: "entity", name: "refinery" },
