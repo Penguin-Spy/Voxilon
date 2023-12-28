@@ -68,13 +68,15 @@ export default class Body {
     // no effect for most Bodies
   }
 
-  update(world, DT) {
+  preRender() {
     // copy cannon position & quaternion to three
     if(this.mesh) {
       this.mesh.position.copy(this.rigidBody.interpolatedPosition)
       this.mesh.quaternion.copy(this.rigidBody.interpolatedQuaternion)
     }
+  }
 
+  update(world, DT) {
     if(this.rigidBody.type === CANNON.Body.DYNAMIC && world.orbitalGravityEnabled) {
       this.gravityVector.set(0, 0, 0)
       for(const otherBody of world.gravityBodies) {

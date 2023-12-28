@@ -102,12 +102,18 @@ export default class World {
     delete this.bodies[bodyID];
   }
 
+  preRender() {
+    // updates THREE meshes
+    for(const body of this.bodies) {
+      body.preRender()
+    }
+  }
 
   step(DT) {
-    // updates THREE meshes & calculates gravity
-    this.bodies.forEach(body => {
+    // calculates gravity & updates bodies' additional behavior (i.e. contraptions' components)
+    for(const body of this.bodies) {
       body.update(this, DT)
-    })
+    }
 
     this.physics.fixedStep(DT)
   }

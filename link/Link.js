@@ -21,6 +21,10 @@ export default class Link {
     }
   }
 
+  preRender() {
+    this.world.preRender()
+  }
+
   step(deltaTime) {
     this.#accumulator += deltaTime
     let maxSteps = 10;

@@ -80,7 +80,7 @@ export default class PlayerBody extends Body {
     }
 
     if(this.controller) {
-      this.controller.updateMovement(DT)
+      this.controller.update(DT)
     }
   }
 }

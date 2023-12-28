@@ -74,9 +74,19 @@ export default class CelestialBody extends Body {
     return
   }
 
+  preRender() {
+    super.preRender()
+
+    for(const contraption of this.contraptions) {
+      contraption.preRender()
+    }
+  }
+
   update(world, DT) {
     super.update(world, DT)
 
-    this.contraptions.forEach(c => c.update(world, DT))
+    for(const contraption of this.contraptions) {
+      contraption.update(world, DT)
+    }
   }
 }

@@ -114,6 +114,14 @@ export default class Contraption {
     return component
   }
 
+  preRender() {
+    for(const component of this.components) {
+      if(component.preRender) {
+        component.preRender()
+      }
+    }
+  }
+
   update(world, DT) {
     for(const component of this.components) {
       if(component.update) {

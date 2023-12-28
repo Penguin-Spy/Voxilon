@@ -79,6 +79,12 @@ export default class ContraptionBody extends Body {
     rigidBody.updateBoundingRadius()
   }
 
+  preRender() {
+    super.preRender()
+
+    this.contraption.preRender()
+  }
+
   update(world, DT) {
     super.update(world, DT)
 

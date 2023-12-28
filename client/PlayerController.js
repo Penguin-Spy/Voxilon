@@ -381,7 +381,7 @@ export default class PlayerController {
   }
 
   // Take input data and apply it to the player's body
-  updateMovement(DT) {
+  update(DT) {
     this.body.quaternion.copy(this.bodyQuaternion)
     if(this.jetpackActive) {
       this._updateJetpackMovement(DT)
@@ -390,7 +390,7 @@ export default class PlayerController {
     }
   }
 
-  updateRotation(deltaTime) {
+  preRender(deltaTime) {
     if(this.jetpackActive) {
       this._updateJetpackRotation(deltaTime)
     } else {

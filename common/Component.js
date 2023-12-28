@@ -134,8 +134,10 @@ export default class Component {
     }
   }
 
-  /*update(world, DT) {
-  }*/
+  /*
+  preRender() { }
+  update(world, DT) { }
+  */
 }
 
 const max = Math.max, min = Math.min

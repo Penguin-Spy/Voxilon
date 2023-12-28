@@ -29,7 +29,7 @@ function animate(now) {
 
   // --- Physics ---
   try {
-    link.playerController.updateRotation(deltaTime)
+    link.playerController.preRender(deltaTime)
     hud.update()
 
     link.step(deltaTime)
@@ -41,6 +41,7 @@ function animate(now) {
   // --- Render ---
   try {
     Debug.update(deltaTime)
+    link.preRender()
     renderer.render()
   } catch(e) {
     GUI.showError("Error occured while rendering", e)
