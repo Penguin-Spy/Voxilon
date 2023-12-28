@@ -1,5 +1,7 @@
 import * as THREE from 'three';
 
+const _v = new THREE.Vector3()
+
 export default class Renderer {
   #previewMesh = false
 
@@ -64,7 +66,8 @@ export default class Renderer {
   }
 
   render() {
-    this.camera.position.copy(this.body.rigidBody.interpolatedPosition)
+    _v.copy(this.body.lookPositionOffset).applyQuaternion(this.body.rigidBody.interpolatedQuaternion)
+    this.camera.position.copy(this.body.rigidBody.interpolatedPosition).add(_v)
     this.camera.quaternion.copy(this.body.lookQuaternion)
 
     this.renderer.render(this.scene, this.camera);

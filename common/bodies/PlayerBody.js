@@ -4,27 +4,38 @@ import Body from "/common/Body.js"
 import { STANDING_PLAYER } from "/common/PhysicsMaterials.js"
 import { check } from "/common/util.js"
 
-const geometry = new THREE.BoxGeometry(2, 2, 2);
+const geometry = new THREE.CapsuleGeometry(0.4, 1, 4, 12)
 const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 })
 const defaultMesh = new THREE.Mesh(geometry, material)
 
-/*const _result = new CANNON.RaycastResult();
-const _raycastOptions = {collisionFilterGroup: 2}; // not the player
-const _v1 = new THREE.Vector3();
-const _v2 = new THREE.Vector3();*/
+/**
+ * create a fake capsule rigidbody
+ * @param {number} radius         Radius of the capsule.
+ * @param {number} length         Length of the middle section.
+ * @param {number} radialSegments Number of segmented faces around the circumference of the capsule.
+ * @returns {CANNON.Body}
+ */
+function capsuleRigidBody(radius, length, radialSegments) {
+  const sphere1 = new CANNON.Sphere(radius)
+  const sphere2 = new CANNON.Sphere(radius)
+  const cylinder = new CANNON.Cylinder(radius, radius, length, radialSegments)
+  const capsule = new CANNON.Body({ mass: 20, type: CANNON.Body.KINEMATIC })
+  capsule.addShape(cylinder)
+  capsule.addShape(sphere1, { x: 0, y: length / 2, z: 0 })
+  capsule.addShape(sphere2, { x: 0, y: -(length / 2), z: 0 })
+  return capsule
+}
 
 export default class PlayerBody extends Body {
   // @param local boolean   is this PlayerBody for this client or another player
   constructor(data, local) {
     const mass = 30; //check(data.mass, "number")
 
-    const rigidBody = new CANNON.Body({
-      mass: mass, // kg
-      shape: new CANNON.Sphere(1),
-      type: CANNON.Body.DYNAMIC,
-      material: STANDING_PLAYER,
-      angularFactor: { x: 0, y: 0, z: 0 },  // prevent the player's body rotating at all by physics (will need to be removed for 0g stuff)
-    })
+    const rigidBody = capsuleRigidBody(0.4, 1, 12)
+    rigidBody.mass = mass
+    rigidBody.type = CANNON.Body.DYNAMIC
+    rigidBody.material = STANDING_PLAYER
+    rigidBody.angularFactor.set(0, 0, 0)  // prevent the player's body rotating at all by physics (will need to be removed for 0g stuff?)
 
     super(data, rigidBody, /*local ?*/ defaultMesh.clone() /*: false*/)
     // read-only properties
@@ -33,7 +44,8 @@ export default class PlayerBody extends Body {
     })
 
     this.onGround = false;
-    this.lookQuaternion = new THREE.Quaternion(); // client-side, independent of body rotation & world stepping
+    this.lookQuaternion = new THREE.Quaternion() // client-side, independent of body rotation & world stepping
+    this.lookPositionOffset = new THREE.Vector3(0, 0.7, 0) // player center is 0.9m off the ground, so eye height is at 1.6m
     this.controller = null;
     this.rigidBody.collisionFilterMask = 1; // dont get raycast intersected by our own update()
     this.noclip = false;
@@ -70,23 +82,5 @@ export default class PlayerBody extends Body {
     if(this.controller) {
       this.controller.updateMovement(DT)
     }
-
-
-
-    //this.onGround = false
-    /*for(const otherBody of world.gravityBodies) {
-      _result.reset()
-      //console.log(this.position, otherBody.position, _raycastOptions)
-      world.physics.raycastClosest(this.position, otherBody.position, _raycastOptions, _result)
-      if(_result.hasHit) {
-        //console.log("Hit!", _result);
-        if(_result.distance < 1.2) {
-          console.log("  distance < 1.2!")
-          // uhh
-          //result.hitPointWorld
-          //this.onGround = true
-        }
-      }
-    }*/
   }
 }

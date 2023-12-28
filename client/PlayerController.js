@@ -25,7 +25,7 @@ const HALF_PI = Math.PI / 2
 // strength of jetpack:
 const LINEAR_DAMPING = 20   // m/s²
 const WALK_SPEED = 20       // m/s², affected by friction
-const JUMP_STRENGTH = 12    // idk the unit lol
+const JUMP_STRENGTH = 16    // idk the unit lol
 const FLY_SPEED = 40        // m/s²
 
 const max = Math.max, min = Math.min
@@ -309,7 +309,7 @@ export default class PlayerController {
 
       } else { // show preview mesh free-floating, relative to player
         // todo: allow relative rotation (home/end: pitch; del/pgdown: yaw; ins/pgup: roll)
-        previewMesh.position.set(0, 0, -5)
+        previewMesh.position.set(0, 0, -5).add(this.body.lookPositionOffset)
         previewMesh.position.applyQuaternion(this.body.lookQuaternion)
         previewMesh.position.add(this.body.position)
         previewMesh.quaternion.copy(this.body.lookQuaternion)
