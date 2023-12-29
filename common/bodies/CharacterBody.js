@@ -26,10 +26,11 @@ function capsuleRigidBody(radius, length, radialSegments) {
   return capsule
 }
 
-export default class PlayerBody extends Body {
-  // @param local boolean   is this PlayerBody for this client or another player
+export default class CharacterBody extends Body {
+  // @param local boolean   is this CharacterBody for this client or another player
   constructor(data, local) {
     const mass = 30; //check(data.mass, "number")
+    const player_uuid = check(data.player_uuid, "string")
 
     const rigidBody = capsuleRigidBody(0.4, 1, 12)
     rigidBody.mass = mass
@@ -40,8 +41,10 @@ export default class PlayerBody extends Body {
     super(data, rigidBody, /*local ?*/ defaultMesh.clone() /*: false*/)
     // read-only properties
     Object.defineProperties(this, {
-      type: { enumerable: true, value: "voxilon:player_body" }
+      type: { enumerable: true, value: "voxilon:character_body" }
     })
+
+    this.player_uuid = player_uuid
 
     this.onGround = false;
     this.lookQuaternion = new THREE.Quaternion() // client-side, independent of body rotation & world stepping
@@ -53,6 +56,7 @@ export default class PlayerBody extends Body {
 
   serialize() {
     const data = super.serialize()
+    data.player_uuid = this.player_uuid
     return data
   }
 

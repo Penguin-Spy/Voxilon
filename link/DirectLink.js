@@ -23,6 +23,7 @@ export default class DirectLink extends Link {
       world = new World({
         VERSION: "alpha_1",
         name: worldOptions.name,
+        spawn_point: [0, 44, 0],
         bodies: [
           {
             type: "voxilon:celestial_body",
@@ -43,9 +44,6 @@ export default class DirectLink extends Link {
             type: "voxilon:test_body",
             position: [-2, 44, -7],
             is_static: true, is_box: false
-          }, {
-            type: "voxilon:player_body",
-            position: [0, 44, 0]
           }
         ]
       })
@@ -55,7 +53,7 @@ export default class DirectLink extends Link {
 
 
     // find player's body
-    const playerBody = world.getBodyByType("voxilon:player_body")
+    const playerBody = world.getPlayersCharacterBody(worldOptions.uuid)
 
     const playerController = new PlayerController();
     playerBody.attach(playerController)

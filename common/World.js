@@ -1,7 +1,7 @@
 import * as CANNON from 'cannon'
 import * as THREE from 'three'
 import CelestialBody from "/common/bodies/CelestialBody.js"
-import PlayerBody from "/common/bodies/PlayerBody.js"
+import CharacterBody from "./bodies/CharacterBody.js"
 import TestBody from "/common/bodies/TestBody.js"
 import ContraptionBody from '/common/bodies/ContraptionBody.js'
 import { contactMaterials } from "/common/PhysicsMaterials.js"
@@ -10,12 +10,15 @@ const WORLD_VERSION = "alpha_1" // just the data version
 
 const constructors = {
   "voxilon:celestial_body": CelestialBody,
-  "voxilon:player_body": PlayerBody,
+  "voxilon:character_body": CharacterBody,
   "voxilon:test_body": TestBody,
   "voxilon:contraption_body": ContraptionBody
 }
 
 export default class World {
+  /** @type {Body[]} */
+  bodies
+
   constructor(data) {
     if(data.VERSION !== WORLD_VERSION) throw new Error(`Unknown world version: ${data.VERSION}`)
 
@@ -34,6 +37,7 @@ export default class World {
     const scene = new THREE.Scene()
 
     // read-only properties
+
     Object.defineProperties(this, {
       bodies: { enumerable: true, value: [] },
       physics: { enumerable: true, value: physics },
@@ -42,11 +46,14 @@ export default class World {
 
     // load bodies
     data.bodies.forEach(b => this.loadBody(b))
+
+    this.spawn_point = new THREE.Vector3(...data.spawn_point)
   }
 
   serialize(noBodies = false) {
     const data = { "VERSION": WORLD_VERSION }
     data.name = this.name
+    data.spawn_point = this.spawn_point.toArray()
     if(!noBodies) {
       data.bodies = this.bodies.map(b => b.serialize())
     }
@@ -72,8 +79,40 @@ export default class World {
   }
 
   /**
+   * Gets the character body of a player by their uuid, or creates a new one if none is found. <br>
+   * If there is only one player in a world, the uuid is ignored (for shared singleplayer worlds)
+   * @param {string} uuid
+   * @returns {CharacterBody}
+   */
+  getPlayersCharacterBody(uuid) {
+    // first try to find a character with matching uuid
+    /** @type {CharacterBody} */
+    let characterBody = this.bodies.find(body => body.player_uuid === uuid)
+    if(characterBody) return characterBody
+
+    // otherwise if there's just one character, change it's uuid and return it
+    let characterBodies = this.bodies.filter(body => body.type === "voxilon:character_body")
+    if(characterBodies.length === 1) {
+      characterBody = characterBodies[0]
+      console.info(`Changing UUID of singleplayer body from ${characterBody.player_uuid} to ${uuid}`)
+      characterBody.player_uuid = uuid
+      return characterBody
+    }
+
+    // otherwise there's multiple players and this player doesn't have one, create a new one
+    console.log(`Spawning in new character for player ${uuid}`)
+    characterBody = this.loadBody({
+      type: "voxilon:character_body",
+      position: this.spawn_point.toArray(),
+      player_uuid: uuid
+    })
+    return characterBody
+  }
+
+  /**
    * Loads a Body's serialized form and adds it to the world
-   * @param data The serialized data
+   * @param data      The serialized data
+   * @returns {Body}  The loaded body
    */
   loadBody(data) {
     const body = new constructors[data.type](data)
@@ -86,10 +125,6 @@ export default class World {
 
   getBody(bodyID) {
     return this.bodies[bodyID]
-  }
-
-  getBodyByType(type) {
-    return this.bodies.find(b => b.type === type)
   }
   getAllBodiesByType(type) {
     return this.bodies.filter(b => b.type === type)

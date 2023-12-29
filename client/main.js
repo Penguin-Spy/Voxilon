@@ -12,6 +12,15 @@ import Debug from '/client/Debug.js'
 
 import main_menu from '/client/screens/main_menu.js'
 
+// generate a UUID for the player if one does not exist
+let uuid = localStorage.getItem("player_uuid")
+if(uuid === null) {
+  uuid = crypto.randomUUID()
+  localStorage.setItem("player_uuid", uuid)
+}
+console.log("player uuid", uuid)
+
+
 let renderRequest, then = 0
 // ticks the physics engine and then the Server (crafting machines, belts, vehicles, etc.)
 function animate(now) {
@@ -93,6 +102,7 @@ async function directLink(button, worldOptions) {
 
   console.info("Starting direct link")
   try {
+    worldOptions.uuid = uuid
     link = new linkModules.direct(worldOptions)
     start()
   } catch(e) {
