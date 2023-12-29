@@ -49,7 +49,7 @@ const controlMap = new TwoWayMap({
   "PageUp": "rotate_roll_right",
 
   "MousePrimary": "build",      // left click
-  "MouseSecondary": "destroy",  // right click
+  "MouseSecondary": "interact", // right click
   "MouseAuxiliary": "pick",     // middle click
   //"MouseX1": "",
   //"MouseX2": "",
@@ -269,6 +269,9 @@ export default {
       throw new Error(`Event handler for control "${control}" already exists!`)
     }
     eventHandlers[control] = callback
+  },
+  off(control) {
+    eventHandlers[control] = undefined
   },
 
   stop() {

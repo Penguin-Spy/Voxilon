@@ -126,6 +126,7 @@ export default class Component {
       if(distance > raycaster.far) return
       intersects.push({
         distance: distance, // for sorting
+        point: _v1.clone(),
         position: _v2.clone(),
         intersectFace: intersectFace,
         object: this,

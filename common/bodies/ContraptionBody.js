@@ -28,12 +28,20 @@ export default class ContraptionBody extends Body {
       // read-only properties
       type: { enumerable: true, value: "voxilon:contraption_body" }
     })
+
+    // TODO: temp, don't commit!
+    this.lookQuaternion = new THREE.Quaternion() // client-side, independent of body rotation & world stepping
+    this.lookPositionOffset = new THREE.Vector3(0, 0.7, 0) // player center is 0.9m off the ground, so eye height is at 1.6m
   }
 
   serialize() {
     const data = super.serialize()
     data.contraption = this.contraption.serialize()
     return data
+  }
+
+  attach(contraptionController) {
+    this.controller = contraptionController
   }
 
   updateMassProperties() {
@@ -88,6 +96,7 @@ export default class ContraptionBody extends Body {
   update(world, DT) {
     super.update(world, DT)
 
+    if(this.controller) { this.controller.update(DT) }
     this.contraption.update(world, DT)
   }
 

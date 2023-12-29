@@ -5,7 +5,7 @@ const _v = new THREE.Vector3()
 export default class Renderer {
   #previewMesh = false
 
-  constructor() {
+  constructor(link) {
     this.camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 1000);
 
     this.renderer = new THREE.WebGLRenderer();
@@ -16,6 +16,24 @@ export default class Renderer {
     window.addEventListener('resize', () => {
       this.resize(window.innerWidth, window.innerHeight);
     })
+
+    this.body = null
+    this.scene = link.world.scene
+
+    // initalize the scene
+    this.scene.background = new THREE.CubeTextureLoader()
+      .setPath('assets/')
+      .load([
+        'nx.png', // +x  1
+        'px.png', // -x  2
+        'py.png', // +y  3
+        'ny.png', // -y  4
+        'pz.png', // +z  5
+        'nz.png'  // -z   6
+      ])
+    this.scene.background.magFilter = THREE.NearestFilter
+
+    this.scene.add(new THREE.AmbientLight(0x404040, 60))
   }
 
   resize(width, height) {
@@ -32,24 +50,9 @@ export default class Renderer {
     return this.renderer.domElement;
   }
 
-  attach(link) {
-    this.body = link.playerBody;
-    this.scene = link.world.scene;
-
-    // initalize the scene
-    this.scene.background = new THREE.CubeTextureLoader()
-      .setPath('assets/')
-      .load([
-        'nx.png', // +x  1
-        'px.png', // -x  2
-        'py.png', // +y  3
-        'ny.png', // -y  4
-        'pz.png', // +z  5
-        'nz.png'  // -z   6
-      ])
-    this.scene.background.magFilter = THREE.NearestFilter
-
-    this.scene.add(new THREE.AmbientLight(0x404040, 60))
+  attach(body, controller) {
+    this.body = body
+    this.controller = controller
   }
 
   /**
@@ -68,9 +71,9 @@ export default class Renderer {
   }
 
   render() {
-    _v.copy(this.body.lookPositionOffset).applyQuaternion(this.body.rigidBody.interpolatedQuaternion)
+    _v.copy(this.controller.lookPositionOffset).applyQuaternion(this.body.rigidBody.interpolatedQuaternion)
     this.camera.position.copy(this.body.rigidBody.interpolatedPosition).add(_v)
-    this.camera.quaternion.copy(this.body.lookQuaternion)
+    this.camera.quaternion.copy(this.controller.lookQuaternion)
 
     this.renderer.render(this.scene, this.camera);
   }

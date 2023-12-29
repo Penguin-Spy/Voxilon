@@ -17,8 +17,8 @@ const JOIN_CODE_REGEX = /^([A-HJ-NP-Z0-9]{5})$/
 const CONNECTING = 0, LOADING = 1, LOADED = 2, ATTACHED = 3
 
 export default class NetworkLink extends Link {
-  constructor(target, username) {
-    super(username) // maybe load from LocalStorage? (prefill input of gui)
+  constructor(hud, renderer, target, username) {
+    super(hud, renderer, username) // maybe load from LocalStorage? (prefill input of gui)
 
     this._readyState = CONNECTING
 
@@ -26,8 +26,6 @@ export default class NetworkLink extends Link {
       this._readyResolve = resolve
       this._readyReject = reject
     })
-
-    this.playerController = new PlayerController()
 
     // open a WebRTC data channel with the host of the specified game
     if(target.match(JOIN_CODE_REGEX)) { // convert join code to full url
@@ -119,10 +117,11 @@ export default class NetworkLink extends Link {
       case ADD_BODY:
         const body = this._world.loadBody(packet.data)
         // check if the loaded body was ours
-        if(packet.data.type === "voxilon:player_body" && packet.is_client_body) {
+        if(packet.data.type === "voxilon:character_body" && packet.is_client_body) {
           console.log("loaded our body:", packet)
-          this._playerBody = body
-          this._playerBody.attach(this.playerController)
+          this.setActiveController("player", { playerBody: body })
+          /*this._playerBody = body
+          this._playerBody.attach(this.playerController)*/
           this._readyState = ATTACHED
           this._readyResolve()
         }

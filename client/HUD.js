@@ -2,7 +2,10 @@ import Input from '/client/Input.js'
 import GUI from '/client/GUI.js'
 
 export default class HUD {
-  constructor() {
+  constructor(link) {
+    this.link = link
+    this.link.on('chat_message', ({ author, msg }) => this.showChatMessage(`<${author}> ${msg}`))
+
     this.frame = GUI.addFrame("gui-hud")
     this.hide()
 
@@ -38,7 +41,7 @@ export default class HUD {
       slot.setAttribute('class', "hotbar-slot")
 
       slot.addEventListener('click', () => {
-        this.link.playerController.setHotbarSlot(i)
+        this.link.activeController.setHotbarSlot(i)
       })
 
       const img = document.createElement('img')
@@ -64,11 +67,6 @@ export default class HUD {
         this.closeChat()
       }
     })
-  }
-
-  attach(link) {
-    this.link = link
-    this.link.on('chat_message', ({ author, msg }) => this.showChatMessage(`<${author}> ${msg}`))
   }
 
   // update elements

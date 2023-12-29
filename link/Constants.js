@@ -1,5 +1,4 @@
-//const SIGNAL_ENDPOINT = "wss://voxilon.penguinspy.dev/signal"
-const SIGNAL_ENDPOINT = "wss://voxilon.penguinspy.repl.co/signal"
+const SIGNAL_ENDPOINT = "wss://voxilon.penguinspy.dev/signal"
 
 const PacketType = Object.freeze({
   CHAT: 0,

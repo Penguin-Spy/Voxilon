@@ -1,4 +1,5 @@
 import Contraption from '/common/Contraption.js'
+import Component from '/common/Component.js'
 
 import { Vector3, Quaternion, Matrix4, BoxGeometry, Mesh, MeshBasicMaterial } from 'three'
 import Input from '/client/Input.js'
@@ -6,6 +7,7 @@ import * as Materials from "/common/PhysicsMaterials.js"
 import Components from '/common/components/index.js'
 import BuildingRaycaster from '/client/BuildingRaycaster.js'
 import { ComponentDirection, rotateBoundingBox } from '/common/components/componentUtil.js'
+import Controller from '/client/Controller.js'
 
 const _v1 = new Vector3()
 const _v2 = new Vector3()
@@ -44,9 +46,10 @@ const _fakePointer = { x: 0, y: 0 } // fake pointer bc it's always in the middle
 
 const defaultPreviewMesh = new Mesh(new BoxGeometry(1, 1, 1), new MeshBasicMaterial({ color: "#ffff00" }))
 
-export default class PlayerController {
+export default class PlayerController extends Controller {
+  constructor(link, hud, renderer) {
+    super(link, hud, renderer)
 
-  constructor() {
     /* movement */
     this.lookSpeed = 0.75
     this.walkSpeed = WALK_SPEED
@@ -62,8 +65,6 @@ export default class PlayerController {
     this.bodyQuaternion = new Quaternion() // for storing edits to this before they're applied during the physics
     this.pitch = 0
 
-    Input.on("toggle_intertia_damping", () => this.toggleIntertiaDamping())
-    Input.on("toggle_jetpack", () => this.toggleJetpack())
 
     /* building */
     this.selectedHotbarSlot = 0
@@ -99,6 +100,20 @@ export default class PlayerController {
       // celestialBody: CelestialBody  // if type == "celestial_body", the body the build preview is intersecting with
     }
 
+  }
+
+  activate(characterBody) {
+    this.body = characterBody
+    this.hud.updateStatus(this)
+    this.hud.updateHotbar(this)
+
+    this.renderer.attach(this.body, this)
+    this.body.attach(this)
+    this.lookPositionOffset.copy(this.body.lookPositionOffset)
+
+    Input.on("toggle_intertia_damping", () => this.toggleIntertiaDamping())
+    Input.on("toggle_jetpack", () => this.toggleJetpack())
+
     Input.on("build", () => this.tryBuild())
     Input.on("hotbar_1", () => this.setHotbarSlot(0)) // hmm. this is a little silly
     Input.on("hotbar_2", () => this.setHotbarSlot(1))
@@ -110,6 +125,7 @@ export default class PlayerController {
     Input.on("hotbar_8", () => this.setHotbarSlot(7))
     Input.on("hotbar_9", () => this.setHotbarSlot(8))
     Input.on("hotbar_0", () => this.setHotbarSlot(9))
+    Input.on("interact", () => this.tryInteract())
 
     Input.on("rotate_pitch_up", () => this.rotateBuildPreview("pitch_up"))
     Input.on("rotate_pitch_down", () => this.rotateBuildPreview("pitch_down"))
@@ -119,16 +135,29 @@ export default class PlayerController {
     Input.on("rotate_roll_right", () => this.rotateBuildPreview("roll_right"))
   }
 
-  /**
-   * Attach this controller to the specified Link
-   */
-  attach(link, hud, renderer) {
-    this.link = link
-    this.body = link.playerBody
-    this.hud = hud
-    this.renderer = renderer // for raycasting for building
-    hud.updateStatus(this)
-    hud.updateHotbar(this)
+  deactivate() {
+    Input.off("toggle_intertia_damping")
+    Input.off("toggle_jetpack")
+
+    Input.off("build")
+    Input.off("hotbar_1")
+    Input.off("hotbar_2")
+    Input.off("hotbar_3")
+    Input.off("hotbar_4")
+    Input.off("hotbar_5")
+    Input.off("hotbar_6")
+    Input.off("hotbar_7")
+    Input.off("hotbar_8")
+    Input.off("hotbar_9")
+    Input.off("hotbar_0")
+    Input.off("interact")
+
+    Input.off("rotate_pitch_up")
+    Input.off("rotate_pitch_down")
+    Input.off("rotate_yaw_left")
+    Input.off("rotate_yaw_right")
+    Input.off("rotate_roll_left")
+    Input.off("rotate_roll_right")
   }
 
   setHotbarSlot(slot) {
@@ -364,6 +393,30 @@ export default class PlayerController {
     buildPreview.slerpPercent = 0
   }
 
+  tryInteract() {
+    _raycaster.setFromCamera(_fakePointer, this.renderer.camera)
+
+    // TODO: will need to change this method if other interactable bodies are added
+    const intersects = _raycaster.intersectBuildableBodies(this.link.world.interactableBodies)
+    const intersect = intersects[0]
+    this._debugIntersects = intersects
+
+    if(intersect) {
+      if(intersect.type === "component") {
+        /** @type {Component} */
+        const component = intersect.object
+
+        if(component.type === "voxilon:control_seat") {
+          console.log("interacted with seat!")
+          Voxilon.Debug.setPointPosition("red", intersect.point)
+
+          const body = component.getParent().getParent()
+          this.link.setActiveController("contraption", body, component)
+        }
+      }
+    }
+  }
+
   toggleIntertiaDamping() {
     this.linearDampingActive = !this.linearDampingActive
     this.hud.updateStatus(this)
@@ -435,6 +488,7 @@ export default class PlayerController {
 
     this.bodyQuaternion.copy(_q1)
     this.body.lookQuaternion.copy(_q1)
+    this.lookQuaternion.copy(_q1)
   }
 
   _updateGravityRotation(deltaTime) {
@@ -479,6 +533,7 @@ export default class PlayerController {
 
     this.bodyQuaternion.copy(_q1)       // gravity-aligned quaternion
     this.body.lookQuaternion.copy(_q2)  // gravity-aligned quaternion + pitch
+    this.lookQuaternion.copy(_q2)
   }
 
   _updateGravityMovement(DT) {
@@ -521,8 +576,8 @@ export default class PlayerController {
     }
 
     _v1.add(this.body.velocity)
-    this.link.playerMove(_v1)
-
+    //this.link.playerMove(_v1)
+    this.body.velocity.copy(_v1)
   }
 
   _updateJetpackMovement(DT) {
@@ -565,7 +620,8 @@ export default class PlayerController {
     _v2.add(_v1)
 
     _v2.applyQuaternion(this.body.quaternion) // rotate back to world space
-    this.link.playerMove(_v2)
+    //this.link.playerMove(_v2)
+    this.body.velocity.copy(_v2)
   }
 }
 

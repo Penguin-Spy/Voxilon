@@ -77,6 +77,15 @@ export default class World {
       return body instanceof CelestialBody || body instanceof ContraptionBody
     })
   }
+  /**
+   * an array of all bodies that can be interacted with. used for interaction raycasting
+   * @returns {(CelestialBody|ContraptionBody)[]}
+   */
+  get interactableBodies() {
+    return this.bodies.filter(body => {
+      return body instanceof CelestialBody || body instanceof ContraptionBody
+    })
+  }
 
   /**
    * Gets the character body of a player by their uuid, or creates a new one if none is found. <br>

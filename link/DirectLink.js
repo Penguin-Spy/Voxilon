@@ -51,23 +51,13 @@ export default class DirectLink extends Link {
       throw new TypeError(`Unknown world type ${worldOptions.type}`)
     }
 
-
-    // find player's body
-    const playerBody = world.getPlayersCharacterBody(worldOptions.uuid)
-
-    const playerController = new PlayerController();
-    playerBody.attach(playerController)
-
     // read-only properties
     Object.defineProperties(this, {
-      world: { enumerable: true, value: world },
-      playerBody: { enumerable: true, value: playerBody },
-      playerController: { enumerable: true, value: playerController },
+      world: { enumerable: true, value: world }
     })
 
     // create Integrated server
   }
-
 
   /* --- Direct Link methods --- */
 
@@ -188,13 +178,13 @@ export default class DirectLink extends Link {
 
   /* --- Link interface methods --- */
 
-  playerMove(velocity) {  // vector of direction to move in
+  /*playerMove(velocity) {  // vector of direction to move in
     this.playerBody.velocity.copy(velocity)
-  }
-  playerRotate(bodyQuaternion, lookQuaternion) {  // sets player's rotation
+  }*/
+  /*playerRotate(bodyQuaternion, lookQuaternion) {  // sets player's rotation
     this.playerBody.quaternion = bodyQuaternion
     this.playerBody.lookQuaternion = lookQuaternion
-  }
+  }*/
 
   // Chat
   sendChat(msg) {

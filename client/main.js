@@ -12,6 +12,12 @@ import Debug from '/client/Debug.js'
 
 import main_menu from '/client/screens/main_menu.js'
 
+// debug interface object
+const Voxilon = { Input, GUI, Debug }
+
+// top-level engine objects
+let link, renderer, hud
+
 // generate a UUID for the player if one does not exist
 let uuid = localStorage.getItem("player_uuid")
 if(uuid === null) {
@@ -38,7 +44,7 @@ function animate(now) {
 
   // --- Physics ---
   try {
-    link.playerController.preRender(deltaTime)
+    link.activeController.preRender(deltaTime)
     hud.update()
 
     link.step(deltaTime)
@@ -62,12 +68,21 @@ function animate(now) {
 }
 
 function start() {
-  window.Voxilon.link = link
+  // initalize engine
+  renderer = new Renderer(link)
+  Input.useCanvas(renderer.getCanvas())
+  hud = new HUD(link)
 
-  link.playerController.attach(link, hud, renderer)
-  renderer.attach(link)
-  hud.attach(link)
+  link.attachControllers(hud, renderer)
+
+  Voxilon.link = link
+  Voxilon.renderer = renderer
+  Voxilon.hud = hud
+
   Debug.attach(link, hud)
+
+  const characterBody = link.world.getPlayersCharacterBody(uuid) // both links will have loaded the world enough to get the player's character
+  link.setActiveController("player", characterBody)
 
   GUI.clearScreen()
   GUI.cursor = "default"
@@ -85,7 +100,6 @@ function stop() {
 /* --- Direct/Network link --- */
 
 const linkModules = {}
-let link  // current link, may be undefined
 
 async function directLink(button, worldOptions) {
   button.disabled = true
@@ -133,15 +147,12 @@ async function networkLink(button, gameCode, username) {
 }
 
 
-// initalize engine
-const renderer = new Renderer();
-Input.useCanvas(renderer.getCanvas());
-const hud = new HUD();
-
 GUI.loadScreen(main_menu, "title", { directLink, networkLink })
 
 // remove loading error handler
 window.onerror = undefined;
 
 // debugging interface
-window.Voxilon = { renderer, Input, GUI, hud, stop, animate, Debug };
+Voxilon.animate = animate
+Voxilon.stop = stop
+window.Voxilon = Voxilon //{  stop, animate, };

@@ -56,6 +56,13 @@ export default class Contraption {
     }
   }
 
+  /** Returns this contraptions's parent Body
+   * @returns {Body}
+   */
+  getParent() {
+    return this.#parent
+  }
+
   /**
    * Transforms a contraption-space position to it's world-space position
    * @param {THREE.Vector3} v  the position; modified in-place

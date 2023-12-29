@@ -74,10 +74,10 @@ class Debug {
        * @param {THREE.Mesh} mesh
        */
       onInit: (body, mesh) => {
-        if(body === link.playerBody.rigidBody) {
+        /*if(body === link.playerBody.rigidBody) {
           mesh.material = false // don't render a wireframe for the player's body (just obscures vision)
           return
-        }
+        }*/
         this.#wireframeMeshes.push(mesh)
         mesh.visible = this.#physicsWireframeEnabled
 
@@ -106,7 +106,7 @@ class Debug {
       }
     })
 
-    Input.on("debug_noclip", () => {
+    /*Input.on("debug_noclip", () => {
       const body = link.playerBody
       if(body) {
         body.setNoclip(!body.noclip)
@@ -115,15 +115,15 @@ class Debug {
           link.playerController.toggleJetpack()
         }
       }
-    })
+    })*/
   }
 
   update(deltaTime) {
-    this.#renderSpan.innerText = `FPS: ${(1 / deltaTime).toFixed(2)}`
+    /*this.#renderSpan.innerText = `FPS: ${(1 / deltaTime).toFixed(2)}`
     const _velocity = this.#link.playerBody.velocity
     const _position = this.#link.playerBody.position
     this.#positionSpan.innerHTML = ` X: ${_position.x.toFixed(3)}  Y: ${_position.y.toFixed(3)}  Z: ${_position.z.toFixed(3)}`
-    this.#velocitySpan.innerHTML = `vX: ${_velocity.x.toFixed(3)} vY: ${_velocity.y.toFixed(3)} vZ: ${_velocity.z.toFixed(3)}`
+    this.#velocitySpan.innerHTML = `vX: ${_velocity.x.toFixed(3)} vY: ${_velocity.y.toFixed(3)} vZ: ${_velocity.z.toFixed(3)}`*/
 
     if(this.#physicsWireframeEnabled) {
       this.debugger.update()
