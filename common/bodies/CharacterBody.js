@@ -63,6 +63,13 @@ export default class CharacterBody extends Body {
   attach(playerController) {
     this.controller = playerController
   }
+  detach(playerController) {
+    if(this.controller === playerController) {
+      this.controller = null
+    } else {
+      throw new TypeError(`cannot detach controller that is not attached!`)
+    }
+  }
 
   setNoclip(state) {
     this.rigidBody.collisionResponse = !state

@@ -8,6 +8,7 @@ import Renderer from '/client/Renderer.js'
 import Input from '/client/Input.js'
 import GUI from '/client/GUI.js'
 import HUD from '/client/HUD.js'
+import ControllerManager from '/client/ControllerManager.js'
 import Debug from '/client/Debug.js'
 
 import main_menu from '/client/screens/main_menu.js'
@@ -44,7 +45,7 @@ function animate(now) {
 
   // --- Physics ---
   try {
-    link.activeController.preRender(deltaTime)
+    ControllerManager.activeController.preRender(deltaTime)
     hud.update()
 
     link.step(deltaTime)
@@ -73,16 +74,18 @@ function start() {
   Input.useCanvas(renderer.getCanvas())
   hud = new HUD(link)
 
-  link.attachControllers(hud, renderer)
+  //link.attachControllers(hud, renderer)
+  ControllerManager.attachControllers(link, hud, renderer)
 
   Voxilon.link = link
   Voxilon.renderer = renderer
   Voxilon.hud = hud
+  Voxilon.manager = ControllerManager
 
   Debug.attach(link, hud)
 
   const characterBody = link.world.getPlayersCharacterBody(uuid) // both links will have loaded the world enough to get the player's character
-  link.setActiveController("player", characterBody)
+  ControllerManager.setActiveController("player", characterBody)
 
   GUI.clearScreen()
   GUI.cursor = "default"

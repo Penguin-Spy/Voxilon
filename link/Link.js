@@ -1,6 +1,3 @@
-import PlayerController from '/client/PlayerController.js'
-import ContraptionController from '/client/ContraptionController.js'
-
 const DT = 1 / 60
 
 export default class Link {
@@ -22,19 +19,6 @@ export default class Link {
     if(typeof callback === "function") {
       callback(data)
     }
-  }
-
-  attachControllers(hud, renderer) {
-    this.controllers = {
-      "player": new PlayerController(this, hud, renderer),
-      "contraption": new ContraptionController(this, hud, renderer)
-    }
-  }
-
-  setActiveController(type, ...options) {
-    if(this.activeController) { this.activeController.deactivate() }
-    this.activeController = this.controllers[type]
-    this.activeController.activate(...options)
   }
 
   preRender() {

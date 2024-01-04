@@ -2,6 +2,7 @@ import { Vec3, Box } from 'cannon'
 import Component from "/common/Component.js"
 import { boundingBoxFromDimensions, generatePreviewMesh } from '/common/components/componentUtil.js'
 import { loadGLTF } from '/common/ModelLoader.js'
+import ThrustManager from '/common/ThrustManager.js'
 
 const mesh = await loadGLTF("/assets/components/control_seat.gltf")
 
@@ -13,6 +14,17 @@ export default class ControlSeat extends Component {
     const boxShape = new Box(new Vec3(0.5, 0.5, 0.5))
 
     super(data, boxShape, mesh.clone())
+
+    this.thrustManager = new ThrustManager(this)
+  }
+
+  setParent(contraption) {
+    super.setParent(contraption)
+    contraption.managers.push(this.thrustManager)
+  }
+
+  getManager() {
+    return this.thrustManager
   }
 
   static type = type

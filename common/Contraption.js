@@ -34,6 +34,9 @@ export default class Contraption {
 
     /** @type {Component[]} */
     this.components = []
+
+    this.managers = []
+
     Object.defineProperties(this, {
       // read-only properties
       positionOffset: { enumerable: true, value: new THREE.Vector3() },
@@ -59,7 +62,7 @@ export default class Contraption {
   /** Returns this contraptions's parent Body
    * @returns {Body}
    */
-  getParent() {
+  getBody() {
     return this.#parent
   }
 
@@ -130,10 +133,14 @@ export default class Contraption {
   }
 
   update(world, DT) {
-    for(const component of this.components) {
+    /*for(const component of this.components) {
       if(component.update) {
         component.update(world, DT)
       }
+    }*/
+
+    for(const manager of this.managers) {
+      manager.update(world, DT)
     }
   }
 }

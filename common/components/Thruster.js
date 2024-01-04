@@ -15,6 +15,8 @@ export default class Thruster extends Component {
     const boxShape = new Box(new Vec3(0.5, 0.5, 0.5))
 
     super(data, boxShape, mesh.clone())
+
+    this.maxThrust = 10 // unit?
   }
 
   static type = type

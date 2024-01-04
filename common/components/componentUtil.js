@@ -180,6 +180,21 @@ const ComponentDirection = Object.freeze({
         quaternion.multiply(FACE_NZ).multiply(ROTATE_LEFT)
         break;
     }
+  },
+
+  /**
+   * Gets the axis a ComponentDirection is facing
+   *
+   * @param {ComponentDirection} direction
+   * @returns {number} 0-5: +X -X +Y -Y +Z -Z
+   */
+  getAxis(direction) {
+    if(direction <= ComponentDirection.PX_LEFT) return 0
+    if(direction <= ComponentDirection.NX_LEFT) return 1
+    if(direction <= ComponentDirection.PY_LEFT) return 2
+    if(direction <= ComponentDirection.NY_LEFT) return 3
+    if(direction <= ComponentDirection.PZ_LEFT) return 4
+    if(direction <= ComponentDirection.NZ_LEFT) return 5
   }
 })
 

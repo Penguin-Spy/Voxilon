@@ -30,27 +30,92 @@ function toZero(value, delta) {
 }
 
 export default class ContraptionController extends Controller {
-  constructor(link, hud, renderer) {
-    super(link, hud, renderer)
+  constructor(manager, link, hud, renderer) {
+    super(manager, link, hud, renderer)
   }
 
-  activate(contraptionBody, component) {
-    this.body = contraptionBody
-    this.contraption = this.body.contraption
+  /** @param {Component} component */
+  activate(component) {
     this.component = component
+    this.contraption = component.getParent()
+    this.body = this.contraption.getBody()
+
+    this.componentManager = component.getManager()
+
     //this.hud.updateStatus(this)
     //this.hud.updateHotbar(this)
 
     this.renderer.attach(this.body, this)
-    this.body.attach(this)
+    //this.body.attach(this)
 
     this.lookPositionOffset.copy(component.position)
+    this.lookQuaternion.identity()
+    this.lookSpeed = 0.75
   }
 
   deactivate() {
   }
 
+  updateCameraRotation(deltaTime) {
+    _q1.copy(this.lookQuaternion)
+
+    // yaw
+    if(Input.get('yaw_left')) {
+      angle = 1;
+    } else if(Input.get('yaw_right')) {
+      angle = -1;
+    } else {
+      angle = -Input.mouseDX()
+    }
+    _q2.setFromAxisAngle(UP, angle * this.lookSpeed * deltaTime)
+    _q1.multiply(_q2)
+
+    // pitch
+    if(Input.get('pitch_up')) {
+      angle = 1;
+    } else if(Input.get('pitch_down')) {
+      angle = -1;
+    } else {
+      angle = -Input.mouseDY()
+    }
+    _q2.setFromAxisAngle(RIGHT, angle * this.lookSpeed * deltaTime)
+    _q1.multiply(_q2)
+
+    // roll
+    if(Input.get('roll_left')) {
+      _q2.setFromAxisAngle(FORWARD, this.lookSpeed * deltaTime)
+      _q1.multiply(_q2)
+    } else if(Input.get('roll_right')) {
+      _q2.setFromAxisAngle(FORWARD, -this.lookSpeed * deltaTime)
+      _q1.multiply(_q2)
+    }
+
+    this.lookQuaternion.copy(_q1)
+  }
+
+  // mouse movement
   preRender(deltaTime) {
+    this.updateCameraRotation(deltaTime)
+
+    let front_back, left_right, up_down
+
+    if(Input.get("forward")) {
+      front_back = 1
+    } else if(Input.get("backward")) {
+      front_back = -1
+    }
+    if(Input.get("left")) {
+      left_right = 1
+    } else if(Input.get("right")) {
+      left_right = -1
+    }
+    if(Input.get("up")) {
+      up_down = 1
+    } else if(Input.get("down")) {
+      up_down = -1
+    }
+
+    this.componentManager.setInputState(false, front_back, left_right, up_down)
   }
 
   // Take input data and apply it to the contraption
