@@ -7,9 +7,10 @@ import { check } from "/common/util.js"
  * NOT related to game/internet networking
  */
 export default class NetworkedComponent extends Component {
-  #network
   /** @type {string} */
   hostname
+  /** @type {Network} */
+  network
 
   constructor(data, shape, mesh) {
     super(data, shape, mesh)
@@ -44,7 +45,7 @@ export default class NetworkedComponent extends Component {
    * @param {Network} network
    */
   connectToNetwork(network) {
-    this.#network = network
+    this.network = network
 
     console.log("connecting", this, "to network", network, ", has hostname: " + this.hostname)
 
@@ -52,5 +53,7 @@ export default class NetworkedComponent extends Component {
       this.hostname = network.nextHostname(this.constructor.hostnamePrefix)
       console.log("generated hostname: " + this.hostname)
     }
+
+    network.addComponent(this.hostname, this)
   }
 }

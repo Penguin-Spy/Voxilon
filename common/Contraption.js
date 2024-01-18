@@ -61,7 +61,7 @@ export default class Contraption {
     // network data must be loaded after all components are loaded (to get references)
     for(const component of this.components) {
       if(component instanceof NetworkedComponent) {
-        const netData = data.networkData[component.hostname]
+        const netData = data.networkData[component.hostname] ?? {}
         component.reviveNetwork(netData)
       }
     }

@@ -1,3 +1,5 @@
+import Component from "/common/Component.js"
+
 import { check } from "/common/util.js"
 
 
@@ -8,9 +10,12 @@ import { check } from "/common/util.js"
 export default class Network {
   /** @type {Object} */
   #hostnameIndexes
+  /** @type {Object} */
+  #components
 
   constructor(data) {
     this.#hostnameIndexes = check(data.hostnameIndexes, "object?") ?? {}
+    this.#components = {}
   }
 
   serialize() {
@@ -25,8 +30,8 @@ export default class Network {
    * @returns {string}
    */
   nextHostname(hostnamePrefix) {
-    if(!hostnamePrefix) {
-      throw new Error(`hostnamePrefix cannot be undefined!`)
+    if(typeof hostnamePrefix !== "string") {
+      throw new TypeError(`hostnamePrefix must be a string, got ${typeof hostnamePrefix}`)
     }
 
     const index = this.#hostnameIndexes[hostnamePrefix]
@@ -37,5 +42,27 @@ export default class Network {
       this.#hostnameIndexes[hostnamePrefix] = 1
       return hostnamePrefix + "_0"
     }
+  }
+
+  /**
+   * Adds a component to the network
+   * @param {string} hostname
+   * @param {Component} component
+   */
+  addComponent(hostname, component) {
+    this.#components[hostname] = component
+  }
+
+  /**
+   * Gets a component by it's hostname
+   * @param {string} hostname
+   * @returns {Component}
+   */
+  getComponent(hostname) {
+    const c = this.#components[hostname]
+    if(!c) {
+      throw new Error(`No component found with hostname ${hostname}`)
+    }
+    return c
   }
 }

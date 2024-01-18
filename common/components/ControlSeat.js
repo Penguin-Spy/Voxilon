@@ -19,15 +19,18 @@ export default class ControlSeat extends NetworkedComponent {
   }
 
   serializeNetwork() {
-    return {}
+    return {
+      thrustManager: this.thrustManager.serializeNetwork()
+    }
   }
   reviveNetwork(netData) {
-    console.log(netData)
+    this.thrustManager.reviveNetwork(netData.thrustManager ?? {})
   }
 
   setParent(contraption) {
     super.setParent(contraption)
     contraption.managers.push(this.thrustManager)
+    this.thrustManager.setBody(contraption.getBody())
   }
 
   getManager() {

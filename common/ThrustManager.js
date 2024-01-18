@@ -1,5 +1,6 @@
 import Body from "/common/Body.js"
 import Thruster from "/common/components/Thruster.js"
+import NetworkedComponent from "/common/NetworkedComponent.js"
 
 import * as THREE from 'three'
 import { ComponentDirection } from "/common/components/componentUtil.js"
@@ -17,10 +18,10 @@ export default class ThrustManager {
   #totalNegativeThrust
 
   /**
-   * @param {Component} body the Body that thrust will be applied to
+   * @param {NetworkedComponent} component the parent component
    */
-  constructor(body) {
-    this.component = body
+  constructor(component) {
+    this.component = component
 
     this.inputState = {
       dampeners: true,
@@ -49,6 +50,24 @@ export default class ThrustManager {
       pzThrusters: this.pzThrusters.map(c => c.hostname),
       nzThrusters: this.nzThrusters.map(c => c.hostname),
     }
+  }
+  reviveNetwork(netData) {
+    const network = this.component.network
+    // get references to thrusters, or initalize to an empty array if no data exists
+    netData.pxThrusters?.map(h => this.addThruster(network.getComponent(h)))
+    netData.nxThrusters?.map(h => this.addThruster(network.getComponent(h)))
+    netData.pyThrusters?.map(h => this.addThruster(network.getComponent(h)))
+    netData.nyThrusters?.map(h => this.addThruster(network.getComponent(h)))
+    netData.pzThrusters?.map(h => this.addThruster(network.getComponent(h)))
+    netData.nzThrusters?.map(h => this.addThruster(network.getComponent(h)))
+  }
+
+  /**
+   * Sets the rigidbody this thrustmanager acts on
+   * @param {Body} body
+   */
+  setBody(body) {
+    this.body = body.rigidBody
   }
 
   setInputState(dampeners, front_back, left_right, up_down) {
@@ -105,7 +124,7 @@ export default class ThrustManager {
     // IF DAMPENERS ENABLED
     //if(inputState.dampeners) {
     if(false) {
-      const gravityVector = this.component.gravityVector
+      const gravityVector = this.body.gravityVector
 
       // calculate thrust necessary to oppose gravity vector of body (TODO: share this with all thrust managers of the body?)
       // if we have all the thrust necessary in a direction, zero out that component of the gravity vector
@@ -123,26 +142,23 @@ export default class ThrustManager {
 
     // calculate thrust to be applied for accelerating
     if(inputState.front_back > 0) {
-      _v.x = this.#totalPositiveThrust.x
+      _v.z = this.#totalPositiveThrust.z
     } else if(inputState.front_back < 0) {
-      _v.x = this.#totalNegativeThrust.x
+      _v.z = -this.#totalNegativeThrust.z
     }
     if(inputState.left_right > 0) {
-      _v.z = this.#totalPositiveThrust.z
+      _v.x = this.#totalPositiveThrust.x
     } else if(inputState.left_right < 0) {
-      _v.z = this.#totalNegativeThrust.z
+      _v.x = -this.#totalNegativeThrust.x
     }
     if(inputState.up_down > 0) {
       _v.y = this.#totalPositiveThrust.y
     } else if(inputState.up_down < 0) {
-      _v.y = this.#totalNegativeThrust.y
+      _v.y = -this.#totalNegativeThrust.y
     }
 
     this.outputThrust = _v
-
-    if(this.component) {
-      this.component.getParent().getBody().rigidBody.applyImpulse(_v)
-    }
+    this.body.applyLocalImpulse(_v)
   }
 
 }
