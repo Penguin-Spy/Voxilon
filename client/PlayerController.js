@@ -88,7 +88,7 @@ export default class PlayerController extends Controller {
 
     this.selectedItem = false
     this.buildPreview = { // keeps track of current build preview data, such as where the component would get placed
-      rotation: 0, // current rotation of build preview component (for Contraption, todo: use quaternion for free-floating/celestial body build preview)
+      rotation: ComponentDirection.PZ_UP, // current rotation of build preview component (for Contraption, todo: use quaternion for free-floating/celestial body build preview)
       rotationQuaternion: new Quaternion(), // current quaternion of the current component rotation
       previousQuaternion: new Quaternion(), // for slerping
       slerpPercent: 0,                      // also for slerping
@@ -99,6 +99,8 @@ export default class PlayerController extends Controller {
       // contraption: Contraption      // parent contraption when placing a component
       // celestialBody: CelestialBody  // if type == "celestial_body", the body the build preview is intersecting with
     }
+    ComponentDirection.rotateQuaternion(this.buildPreview.rotationQuaternion, this.buildPreview.rotation)
+    this.buildPreview.previousQuaternion.copy(this.buildPreview.rotationQuaternion)
 
   }
 
