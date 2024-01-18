@@ -48,19 +48,23 @@ export default class ContraptionController extends Controller {
     this.renderer.attach(this.body, this)
     //this.body.attach(this)
 
-    this.lookPositionOffset.copy(component.position).add(this.contraption.positionOffset).y += 1
+    this.baseLookPositionOffset = this.contraption.positionOffset.clone().add(component.position).add(component.lookPositionOffset)
+    this.lookPositionOffset.copy(this.baseLookPositionOffset)
     this.lookQuaternion.identity()
     this.lookSpeed = 0.75
 
     this.localLookQuaternion = new Quaternion()
     this.pitch = 0
+    this.zoom = 0   // 0 means at the player's head, >0 means zoomed that many meters backwards
+
+    Input.on("zoom_in", () => { if(this.zoom > 0) { this.zoom -= 1 } })
+    Input.on("zoom_out", () => { if(this.zoom < 20) { this.zoom += 1 } })
   }
 
   deactivate() {
   }
 
   updateCameraRotation(deltaTime) {
-    //_q1.copy(this.lookQuaternion)
     _q1.copy(this.localLookQuaternion)
 
     // yaw
@@ -74,16 +78,6 @@ export default class ContraptionController extends Controller {
     _q2.setFromAxisAngle(UP, angle * this.lookSpeed * deltaTime)
     _q1.multiply(_q2)
 
-    /*// pitch
-    if(Input.get('pitch_up')) {
-      angle = 1;
-    } else if(Input.get('pitch_down')) {
-      angle = -1;
-    } else {
-      angle = -Input.mouseDY()
-    }
-    _q2.setFromAxisAngle(RIGHT, angle * this.lookSpeed * deltaTime)
-    _q1.multiply(_q2)*/
     // pitch
     if(Input.get('pitch_up')) {
       angle = 1;
@@ -102,18 +96,13 @@ export default class ContraptionController extends Controller {
     _q2.setFromAxisAngle(RIGHT, this.pitch)
     _q2.multiplyQuaternions(_q1, _q2)
 
-    // roll
-    /*if(Input.get('roll_left')) {
-      _q2.setFromAxisAngle(FORWARD, this.lookSpeed * deltaTime)
-      _q1.multiply(_q2)
-    } else if(Input.get('roll_right')) {
-      _q2.setFromAxisAngle(FORWARD, -this.lookSpeed * deltaTime)
-      _q1.multiply(_q2)
-    }*/
-
-    //this.lookQuaternion.copy(_q1)
     this.localLookQuaternion.copy(_q1)
     this.lookQuaternion.copy(this.body.rigidBody.interpolatedQuaternion).multiply(_q2)
+
+    // update zoom offset
+    this.lookPositionOffset.copy(this.baseLookPositionOffset)
+    _v1.set(0, 0, this.zoom).applyQuaternion(_q2)
+    this.lookPositionOffset.add(_v1)
   }
 
   // mouse movement

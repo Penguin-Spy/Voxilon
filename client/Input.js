@@ -54,6 +54,13 @@ const controlMap = new TwoWayMap({
   //"MouseX1": "",
   //"MouseX2": "",
 
+  "WheelUp": "zoom_in", // deltaY (normal scroll wheels)
+  "WheelDown": "zoom_out",
+  //"WheelLeft": "",    // deltaX (for 2d scroll wheels)
+  //"WheelRight": "",
+  //"WheelForward": "", // deltaZ (for 3d scroll wheels i guess)
+  //"WheelBack": "",
+
   "F3": "debug_physics_wireframe",
   "F4": "debug_noclip",
   "F6": "debug_gravity_mode",
@@ -82,6 +89,7 @@ document.addEventListener('keydown', handleKeyDown)
 document.addEventListener('keyup', handleKeyUp)
 document.addEventListener('mousedown', handleMouseDown)
 document.addEventListener('mouseup', handleMouseUp)
+document.addEventListener('wheel', handleWheel, { passive: false })
 
 
 /* EVENT HANDLERS */
@@ -226,6 +234,30 @@ function handleMouseUp(event) {
   currentKeys[mouseButtonMap[event.button]] = false
 }
 
+/** @param {WheelEvent} event */
+function handleWheel(event) {
+  let callback
+
+  // positive delta values are in the direction of the "right-most edge, bottom-most edge, and farthest depth (away from the user) of the document" (https://w3c.github.io/uievents/#dom-wheeleventinit-deltaz)
+  if(event.deltaY > 0) {
+    callback = eventHandlers[controlMap.keyToValue("WheelDown")]
+  } else if(event.deltaY < 0) {
+    callback = eventHandlers[controlMap.keyToValue("WheelUp")]
+  } else if(event.deltaX > 0) {
+    callback = eventHandlers[controlMap.keyToValue("WheelRight")]
+  } else if(event.deltaX < 0) {
+    callback = eventHandlers[controlMap.keyToValue("WheelLeft")]
+  } else if(event.deltaZ > 0) {
+    callback = eventHandlers[controlMap.keyToValue("WheelForward")]
+  } else if(event.deltaZ < 0) {
+    callback = eventHandlers[controlMap.keyToValue("WheelBack")]
+  }
+
+  if(typeof callback === "function") {
+    callback(event)
+  }
+}
+
 
 export default {
   mouseX, mouseY,
@@ -287,5 +319,6 @@ export default {
     document.removeEventListener('keyup', handleKeyUp)
     document.removeEventListener('mousedown', handleMouseDown)
     document.removeEventListener('mouseup', handleMouseUp)
+    document.removeEventListener('wheel', handleWheel)
   }
 }

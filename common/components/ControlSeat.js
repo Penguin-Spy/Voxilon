@@ -1,3 +1,4 @@
+import { Vector3 } from 'three'
 import { Vec3, Box } from 'cannon'
 import NetworkedComponent from "/common/NetworkedComponent.js"
 import { boundingBoxFromDimensions, generatePreviewMesh } from '/common/components/componentUtil.js'
@@ -14,6 +15,7 @@ export default class ControlSeat extends NetworkedComponent {
     const boxShape = new Box(new Vec3(0.5, 0.5, 0.5))
 
     super(data, boxShape, mesh.clone())
+    this.lookPositionOffset = new Vector3(0, 0.3, 0)
 
     this.thrustManager = new ThrustManager(this)
   }

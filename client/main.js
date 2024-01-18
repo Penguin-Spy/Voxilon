@@ -45,7 +45,6 @@ function animate(now) {
 
   // --- Physics ---
   try {
-    ControllerManager.activeController.preRender(deltaTime)
     hud.update()
 
     link.step(deltaTime)
@@ -58,6 +57,7 @@ function animate(now) {
   try {
     Debug.update(deltaTime)
     link.preRender()
+    ControllerManager.activeController.preRender(deltaTime)
     renderer.render()
   } catch(e) {
     GUI.showError("Error occured while rendering", e)
