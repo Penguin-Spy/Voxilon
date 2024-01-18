@@ -29,15 +29,26 @@ export default class ThrustManager {
       up_down: 0
     }
 
-    this.forwardThrusters = []
-    this.backwardThrusters = []
-    this.leftThrusters = []
-    this.rightThrusters = []
-    this.upThrusters = []
-    this.downThrusters = []
+    this.pxThrusters = []
+    this.nxThrusters = []
+    this.pyThrusters = []
+    this.nyThrusters = []
+    this.pzThrusters = []
+    this.nzThrusters = []
 
     this.#totalPositiveThrust = new THREE.Vector3()
     this.#totalNegativeThrust = new THREE.Vector3()
+  }
+
+  serializeNetwork() {
+    return {
+      pxThrusters: this.pxThrusters.map(c => c.hostname),
+      nxThrusters: this.nxThrusters.map(c => c.hostname),
+      pyThrusters: this.pyThrusters.map(c => c.hostname),
+      nyThrusters: this.nyThrusters.map(c => c.hostname),
+      pzThrusters: this.pzThrusters.map(c => c.hostname),
+      nzThrusters: this.nzThrusters.map(c => c.hostname),
+    }
   }
 
   setInputState(dampeners, front_back, left_right, up_down) {
@@ -58,27 +69,27 @@ export default class ThrustManager {
     // add to list & add max thrust to #total[Positive/Negative]Thrust
     switch(axis) {
       case 0:
-        this.forwardThrusters.push(thruster)
+        this.pxThrusters.push(thruster)
         this.#totalPositiveThrust.x += thruster.maxThrust
         break;
       case 1:
-        this.backwardThrusters.push(thruster)
+        this.nxThrusters.push(thruster)
         this.#totalNegativeThrust.x += thruster.maxThrust
         break;
       case 2:
-        this.upThrusters.push(thruster)
+        this.pyThrusters.push(thruster)
         this.#totalPositiveThrust.y += thruster.maxThrust
         break;
       case 3:
-        this.downThrusters.push(thruster)
+        this.nyThrusters.push(thruster)
         this.#totalNegativeThrust.y += thruster.maxThrust
         break;
       case 4:
-        this.leftThrusters.push(thruster)
+        this.pzThrusters.push(thruster)
         this.#totalPositiveThrust.z += thruster.maxThrust
         break;
       case 5:
-        this.rightThrusters.push(thruster)
+        this.nzThrusters.push(thruster)
         this.#totalNegativeThrust.z += thruster.maxThrust
         break;
     }

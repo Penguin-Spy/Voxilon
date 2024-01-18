@@ -18,7 +18,7 @@ class Debug {
   /** @type {boolean} */
   #physicsWireframeEnabled
 
-  #debugFrame; #renderSpan; #positionSpan; #velocitySpan
+  #debugFrame; #renderSpan; #positionSpan; #velocitySpan; #controllerManager
 
   constructor() {
     this.#wireframeMeshes = []
@@ -55,15 +55,36 @@ class Debug {
       this.#wireframeMeshes.forEach(m => m.visible = this.#physicsWireframeEnabled)
       this.#rigidBodyPosMeshes.forEach(m => m.visible = this.#physicsWireframeEnabled)
     })
+
+    Input.on("debug_save", async () => {
+      let worldString
+      try {
+        const worldData = this.#link.world.serialize()
+        worldString = JSON.stringify(worldData)
+      } catch(e) {
+        this.#hud.showChatMessage("[debug] failed to save world, see console")
+        console.error(`error while saving world - `, e)
+        return
+      }
+      try {
+        await navigator.clipboard.writeText(worldString)
+        this.#hud.showChatMessage("[debug] saved world to clipboard!")
+      } catch(e) {
+        console.error(`error while writing to clipboard -`, e)
+        console.info(worldString)
+        this.#hud.showChatMessage("[debug] saved world to console")
+      }
+    })
   }
 
   /**
    * @param {Link} link
    * @param {HUD} hud
    */
-  attach(link, hud) {
+  attach(link, hud, controllerManager) {
     this.#link = link
     this.#hud = hud
+    this.#controllerManager = controllerManager
 
     const scene = link.world.scene
     const physics = link.world.physics
@@ -74,10 +95,6 @@ class Debug {
        * @param {THREE.Mesh} mesh
        */
       onInit: (body, mesh) => {
-        /*if(body === link.playerBody.rigidBody) {
-          mesh.material = false // don't render a wireframe for the player's body (just obscures vision)
-          return
-        }*/
         this.#wireframeMeshes.push(mesh)
         mesh.visible = this.#physicsWireframeEnabled
 
@@ -119,11 +136,16 @@ class Debug {
   }
 
   update(deltaTime) {
-    /*this.#renderSpan.innerText = `FPS: ${(1 / deltaTime).toFixed(2)}`
-    const _velocity = this.#link.playerBody.velocity
-    const _position = this.#link.playerBody.position
-    this.#positionSpan.innerHTML = ` X: ${_position.x.toFixed(3)}  Y: ${_position.y.toFixed(3)}  Z: ${_position.z.toFixed(3)}`
-    this.#velocitySpan.innerHTML = `vX: ${_velocity.x.toFixed(3)} vY: ${_velocity.y.toFixed(3)} vZ: ${_velocity.z.toFixed(3)}`*/
+    this.#renderSpan.innerText = `FPS: ${(1 / deltaTime).toFixed(2)}`
+
+    const body = this.#controllerManager.activeController?.body
+    if(body) {
+      this.#positionSpan.innerHTML = ` X: ${body.position.x.toFixed(3)}  Y: ${body.position.y.toFixed(3)}  Z: ${body.position.z.toFixed(3)}`
+      this.#velocitySpan.innerHTML = `vX: ${body.velocity.x.toFixed(3)} vY: ${body.velocity.y.toFixed(3)} vZ: ${body.velocity.z.toFixed(3)}`
+    } else {
+      this.#positionSpan.innerHTML = ""
+      this.#velocitySpan.innerHTML = ""
+    }
 
     if(this.#physicsWireframeEnabled) {
       this.debugger.update()

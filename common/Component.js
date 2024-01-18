@@ -73,7 +73,7 @@ export default class Component {
 
   serialize() {
     const data = {}
-    data.type = this.constructor.type
+    data.type = this.type
     data.position = this.position.toArray()
     data.rotation = this.rotation
     return data

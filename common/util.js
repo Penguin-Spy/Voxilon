@@ -19,9 +19,15 @@ class TwoWayMap {
 /**
  * type safety checks during deserialization
  * @param {any} variable The value to check the type of
- * @param {string} type The expected type string. Denote arrays with `type[]`
+ * @param {string} type The expected type string. Denote arrays with `type[]`, and optional values with `?`
  */
 function check(variable, type) {
+  if(type.endsWith("?")) {
+    if(typeof variable === "undefined") { // data.[whatever] wasn't present so undefined was passed
+      return undefined
+    }
+    type = type.substring(0, type.length - 1)
+  }
   if(type.endsWith("[]") && Array.isArray(variable)) {
     // assumes the array is continuous and only contains one type
     if(variable[0] === undefined || typeof variable[0] === type.substring(0, type.length - 2)) {

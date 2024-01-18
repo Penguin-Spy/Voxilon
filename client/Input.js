@@ -56,7 +56,8 @@ const controlMap = new TwoWayMap({
 
   "F3": "debug_physics_wireframe",
   "F4": "debug_noclip",
-  "F6": "debug_gravity_mode"
+  "F6": "debug_gravity_mode",
+  "F2": "debug_save"
 })
 
 // Mapping of "control" -> function()
@@ -275,7 +276,9 @@ export default {
   },
 
   stop() {
-    this.disablePointerLock()
+    if(canvas) {
+      this.disablePointerLock()
+    }
     document.exitPointerLock()
 
     document.removeEventListener('touchstart', handleTouch)

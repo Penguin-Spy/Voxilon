@@ -48,9 +48,38 @@ export default {
 
     {
       $: 'button', content: "Create new Universe",
-      class: "big", proceedAction: true,
+      class: "big",
       action: function () {
         this.forward("new_universe")
+      }
+    }, {
+      $: 'input', class: "big", id: "worldData",
+      type: "text", placeholder: `{"VERSION":"alpha_1","bodies":[...]}`
+    }, {
+      $: 'button', content: "load from string ↑", id: "loadFromStringButton",
+      class: "big", proceedAction: true,
+      action: function () {
+        let worldData
+        try {
+          worldData = JSON.parse(this.notableNodes.worldData.value)
+        } catch(e) {
+          console.error("failed to parse world -", e)
+          alert("failed to parse world - " + e.message)
+          return
+        }
+        this.actions.directLink(this.notableNodes.loadFromStringButton, {
+          type: "load",
+          data: worldData
+        })
+      }
+    }, {
+      $: 'button', content: "load debug world",
+      class: 'big', id: "loadDebugWorldButton", proceedAction: true,
+      action: function (e) {
+        this.actions.directLink(this.notableNodes.loadDebugWorldButton, {
+          type: "new",
+          name: "Debug World"
+        })
       }
     }, {
       $: 'input', class: "big",

@@ -5,6 +5,8 @@ import * as THREE from 'three'
 import { ComponentDirection } from '/common/components/componentUtil.js'
 import { check } from '/common/util.js'
 import constructors from '/common/components/index.js'
+import Network from "/common/Network.js"
+import NetworkedComponent from "/common/NetworkedComponent.js"
 
 const _v = new THREE.Vector3()
 const _q = new THREE.Quaternion()
@@ -18,6 +20,8 @@ export default class Contraption {
   positionOffset;
   /** @type {THREE.Quaternion} */
   quaternion;
+  /** @type {Network} */
+  network   // TODO: support mutliple networks in one contraption
 
   /**
    * @param {object}  data      data for the contraption
@@ -29,6 +33,8 @@ export default class Contraption {
     data = {
       positionOffset: [0, 0, 0],
       quaternion: [0, 0, 0, 1],
+      networkData: {},
+      network: {},
       ...data,
     }
 
@@ -36,6 +42,8 @@ export default class Contraption {
     this.components = []
 
     this.managers = []
+
+    this.network = new Network(data.network)
 
     Object.defineProperties(this, {
       // read-only properties
@@ -49,13 +57,29 @@ export default class Contraption {
 
     // load components
     components_data.forEach(c => this.loadComponent(c, false))
+
+    // network data must be loaded after all components are loaded (to get references)
+    for(const component of this.components) {
+      if(component instanceof NetworkedComponent) {
+        const netData = data.networkData[component.hostname]
+        component.reviveNetwork(netData)
+      }
+    }
   }
 
   serialize() {
+    const networkData = {}
+    for(const component of this.components) {
+      if(component instanceof NetworkedComponent) {
+        networkData[component.hostname] = component.serializeNetwork()
+      }
+    }
     return {
       positionOffset: this.positionOffset.toArray(),
       quaternion: this.quaternion.toArray(),
-      components: this.components.map(c => c.serialize())
+      components: this.components.map(c => c.serialize()),
+      networkData: networkData,
+      network: this.network.serialize()
     }
   }
 
@@ -116,6 +140,9 @@ export default class Contraption {
     // store references
     this.components.push(component)
     component.setParent(this)
+    if(component instanceof NetworkedComponent) {
+      component.connectToNetwork(this.network)
+    }
 
     if(updateMassProperties) {
       this.#parent.updateMassProperties()

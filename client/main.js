@@ -82,7 +82,7 @@ function start() {
   Voxilon.hud = hud
   Voxilon.manager = ControllerManager
 
-  Debug.attach(link, hud)
+  Debug.attach(link, hud, ControllerManager)
 
   const characterBody = link.world.getPlayersCharacterBody(uuid) // both links will have loaded the world enough to get the player's character
   ControllerManager.setActiveController("player", characterBody)
