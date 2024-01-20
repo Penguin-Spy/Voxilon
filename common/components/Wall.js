@@ -18,10 +18,10 @@ const [boundingBox, offset] = boundingBoxFromDimensions(3, 1, 2)
 const type = "voxilon:wall"
 
 export default class Wall extends Component {
-  constructor(data) {
+  constructor(data, world) {
     const boxShape = new Box(new Vec3(1.5, 0.5, 1))
 
-    super(data, boxShape, mesh.clone())
+    super(data, world, boxShape, mesh.clone())
   }
 
   static type = type

@@ -36,7 +36,7 @@ export default class Component {
    * @param {CANNON.Shape} shape
    * @param {THREE.Mesh} mesh
    */
-  constructor(data, shape, mesh) {
+  constructor(data, world, shape, mesh) {
     //const data_position = check(data.position, "number[]")
     //const rotation = check(data.rotation, "number")
 
@@ -45,6 +45,8 @@ export default class Component {
       rotation: 0,
       ...data // then overwrite with existing data values
     }
+
+    this.world = world
 
     Object.defineProperties(this, {
       // read-only properties

@@ -119,7 +119,7 @@ export default class Contraption {
    */
   loadComponent(data, updateMassProperties = true) {
     /** @type {Component} */
-    const component = new constructors[data.type](data)
+    const component = new constructors[data.type](data, this.#parent.world)
 
     // calculate position offset from origin (center) of parent rigidBody
     _v.copy(component.position).add(component.offset)

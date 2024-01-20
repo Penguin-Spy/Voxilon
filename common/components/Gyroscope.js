@@ -9,10 +9,10 @@ const [boundingBox, offset] = boundingBoxFromDimensions(1, 1, 1)
 const type = "voxilon:gyroscope"
 
 export default class Gyroscope extends NetworkedComponent {
-  constructor(data) {
+  constructor(data, world) {
     const boxShape = new Box(new Vec3(0.5, 0.5, 0.5))
 
-    super(data, boxShape, mesh.clone())
+    super(data, world, boxShape, mesh.clone())
 
     this.maxTorque = 5 // unit?
   }

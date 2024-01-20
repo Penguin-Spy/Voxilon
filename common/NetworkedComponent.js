@@ -12,8 +12,8 @@ export default class NetworkedComponent extends Component {
   /** @type {Network} */
   network
 
-  constructor(data, shape, mesh) {
-    super(data, shape, mesh)
+  constructor(data, world, shape, mesh) {
+    super(data, world, shape, mesh)
 
     this.hostname = check(data.hostname, "string?")
   }
