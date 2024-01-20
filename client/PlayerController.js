@@ -438,12 +438,12 @@ export default class PlayerController extends Controller {
   }
 
   // Take input data and apply it to the player's body
-  update(DT) {
+  update() {
     this.body.quaternion.copy(this.bodyQuaternion)
     if(this.jetpackActive) {
-      this._updateJetpackMovement(DT)
+      this._updateJetpackMovement()
     } else {
-      this._updateGravityMovement(DT)
+      this._updateGravityMovement()
     }
   }
 
@@ -540,7 +540,7 @@ export default class PlayerController extends Controller {
     this.lookQuaternion.copy(_q2)
   }
 
-  _updateGravityMovement(DT) {
+  _updateGravityMovement() {
     // reset material to default when in the air (STANDING_PLAYER vs. WALKING_PLAYER)
     if(!this.body.onGround) {
       this.body.rigidBody.material = Materials.STANDING_PLAYER
@@ -584,7 +584,7 @@ export default class PlayerController extends Controller {
     this.body.velocity.copy(_v1)
   }
 
-  _updateJetpackMovement(DT) {
+  _updateJetpackMovement() {
     _v1.set(0, 0, 0)
     // player velocity converted to camera-forward reference frame (camera forward = -Z)
     _v2.copy(this.body.velocity)

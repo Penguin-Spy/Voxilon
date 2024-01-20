@@ -116,7 +116,7 @@ export default class ThrustManager {
   }
 
   // calculate output thrust necessary
-  update(world, DT) {
+  update() {
     const inputState = this.inputState
     // _v is thrust we want to apply
     _v.set(0, 0, 0)

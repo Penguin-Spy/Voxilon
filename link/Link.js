@@ -1,5 +1,3 @@
-const DT = 1 / 60
-
 export default class Link {
   #accumulator = 0
 

@@ -11,7 +11,7 @@ const dynamicMesh = new THREE.Mesh(geometry, DEBUG_GRID)
 
 export default class TestBody extends Body {
 
-  constructor(data) {
+  constructor(data, world) {
     const is_static = check(data.is_static, "boolean")
     const is_box = check(data.is_box, "boolean")
 
@@ -30,7 +30,7 @@ export default class TestBody extends Body {
       type: is_static ? CANNON.Body.KINEMATIC : CANNON.Body.DYNAMIC,
     })
 
-    super(data, rigidBody, is_static ? staticMesh.clone() : dynamicMesh.clone())
+    super(data, world, rigidBody, is_static ? staticMesh.clone() : dynamicMesh.clone())
     // read-only properties
     Object.defineProperties(this, {
       type: { enumerable: true, value: "voxilon:test_body" },

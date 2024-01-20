@@ -171,6 +171,6 @@ export default class ContraptionController extends Controller {
   }
 
   // Take input data and apply it to the contraption
-  update(DT) {
+  update() {
   }
 }

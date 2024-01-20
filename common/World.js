@@ -153,10 +153,10 @@ export default class World {
     }
   }
 
-  step(DT) {
+  step() {
     // calculates gravity & updates bodies' additional behavior (i.e. contraptions' components)
     for(const body of this.bodies) {
-      body.update(this, DT)
+      body.update()
     }
 
     this.physics.fixedStep(DT)

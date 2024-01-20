@@ -28,7 +28,7 @@ function capsuleRigidBody(radius, length, radialSegments) {
 
 export default class CharacterBody extends Body {
   // @param local boolean   is this CharacterBody for this client or another player
-  constructor(data, local) {
+  constructor(data, world, local) {
     const mass = 30; //check(data.mass, "number")
     const player_uuid = check(data.player_uuid, "string")
 
@@ -38,7 +38,7 @@ export default class CharacterBody extends Body {
     rigidBody.material = STANDING_PLAYER
     rigidBody.angularFactor.set(0, 0, 0)  // prevent the player's body rotating at all by physics (will need to be removed for 0g stuff?)
 
-    super(data, rigidBody, /*local ?*/ defaultMesh.clone() /*: false*/)
+    super(data, world, rigidBody, /*local ?*/ defaultMesh.clone() /*: false*/)
     // read-only properties
     Object.defineProperties(this, {
       type: { enumerable: true, value: "voxilon:character_body" }
@@ -76,14 +76,14 @@ export default class CharacterBody extends Body {
     this.noclip = state
   }
 
-  update(world, DT) {
+  update() {
     if(!this.noclip) { // noclip will also skip updating the player mesh's position
-      super.update(world, DT)
+      super.update()
 
       // check if this player body is touching the ground
       // TODO: make this smarter: check if collision vector is pointing towards the down Frame of Reference (the dir of gravity)
       const ourId = this.rigidBody.id;
-      this.onGround = world.physics.contacts.some(e => {
+      this.onGround = this.world.physics.contacts.some(e => {
         return e.bi.id === ourId || e.bj.id === ourId
       })
     } else {
@@ -91,7 +91,7 @@ export default class CharacterBody extends Body {
     }
 
     if(this.controller) {
-      this.controller.update(DT)
+      this.controller.update()
     }
   }
 }

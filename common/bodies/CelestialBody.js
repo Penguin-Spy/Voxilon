@@ -20,7 +20,7 @@ function roundedCubeGeometry(radius, widthSegements, heightSegments) {
 
 export default class CelestialBody extends Body {
 
-  constructor(data) {
+  constructor(data, world) {
     const radius = check(data.radius, "number")
     const surfaceGravity = check(data.surfaceGravity, "number")
     const contraptions_data = check(data.contraptions, "object[]")
@@ -35,7 +35,7 @@ export default class CelestialBody extends Body {
       material: GROUND
     })
 
-    super(data, rigidBody, mesh)
+    super(data, world, rigidBody, mesh)
 
     const contraptions = []
     Object.defineProperties(this, {
@@ -82,11 +82,11 @@ export default class CelestialBody extends Body {
     }
   }
 
-  update(world, DT) {
-    super.update(world, DT)
+  update() {
+    super.update()
 
     for(const contraption of this.contraptions) {
-      contraption.update(world, DT)
+      contraption.update()
     }
   }
 }

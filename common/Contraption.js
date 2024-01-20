@@ -159,15 +159,15 @@ export default class Contraption {
     }
   }
 
-  update(world, DT) {
+  update() {
     /*for(const component of this.components) {
       if(component.update) {
-        component.update(world, DT)
+        component.update()
       }
     }*/
 
     for(const manager of this.managers) {
-      manager.update(world, DT)
+      manager.update()
     }
   }
 }

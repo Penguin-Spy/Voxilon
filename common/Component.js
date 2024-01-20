@@ -137,7 +137,7 @@ export default class Component {
 
   /*
   preRender() { }
-  update(world, DT) { }
+  update() { }
   */
 }
 

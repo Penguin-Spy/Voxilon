@@ -1,5 +1,5 @@
-import * as CANNON from 'cannon';
-import * as THREE from 'three';
+import * as CANNON from 'cannon'
+import * as THREE from 'three'
 
 const _v = new THREE.Vector3();
 
@@ -14,7 +14,13 @@ export default class Body {
   /** @type {THREE.Mesh|undefined} may be undefined if the body has no mesh*/
   mesh
 
-  constructor(data, rigidBody, mesh) {
+  /**
+   * @param {Object} data
+   * @param {World} world
+   * @param {CANNON.Body} rigidBody
+   * @param {THREE.Mesh} mesh
+   */
+  constructor(data, world, rigidBody, mesh) {
     // --- CANNON ---
     rigidBody.linearDamping = 0  // conservation of momentum
     rigidBody.angularDamping = 0  // conservation of angular momentum
@@ -24,6 +30,8 @@ export default class Body {
     if(mesh) {
       Object.defineProperty(this, "mesh", { enumerable: true, value: mesh })
     }
+
+    this.world = world
 
     // read-only properties
     Object.defineProperties(this, {
@@ -76,10 +84,10 @@ export default class Body {
     }
   }
 
-  update(world, DT) {
-    if(this.rigidBody.type === CANNON.Body.DYNAMIC && world.orbitalGravityEnabled) {
+  update() {
+    if(this.rigidBody.type === CANNON.Body.DYNAMIC && this.world.orbitalGravityEnabled) {
       this.gravityVector.set(0, 0, 0)
-      for(const otherBody of world.gravityBodies) {
+      for(const otherBody of this.world.gravityBodies) {
 
         _v.copy(otherBody.position).sub(this.position) // difference in position
         const rSquared = _v.lengthSq() // distance squared

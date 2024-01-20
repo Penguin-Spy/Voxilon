@@ -90,7 +90,7 @@ export default class GyroManager {
   }
 
   // calculate output torque necessary
-  update(world, DT) {
+  update() {
     const dampeners = this.inputState.dampeners
     const pitch = this.inputState.pitch
     const roll = this.inputState.roll

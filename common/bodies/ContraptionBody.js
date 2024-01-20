@@ -10,7 +10,7 @@ const _v2 = new THREE.Vector3()
 
 export default class ContraptionBody extends Body {
 
-  constructor(data) {
+  constructor(data, world) {
     const contraption_data = check(data.contraption, "object")
 
     const rigidBody = new CANNON.Body({
@@ -20,7 +20,7 @@ export default class ContraptionBody extends Body {
     })
     const mesh = new THREE.Group()
 
-    super(data, rigidBody, mesh)
+    super(data, world, rigidBody, mesh)
 
     this.contraption = new Contraption(contraption_data, this)
     this.updateMassProperties()
@@ -93,11 +93,11 @@ export default class ContraptionBody extends Body {
     this.contraption.preRender()
   }
 
-  update(world, DT) {
-    super.update(world, DT)
+  update() {
+    super.update()
 
-    if(this.controller) { this.controller.update(DT) }
-    this.contraption.update(world, DT)
+    if(this.controller) { this.controller.update() }
+    this.contraption.update()
   }
 
 }
