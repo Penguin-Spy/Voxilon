@@ -47,8 +47,8 @@ const _fakePointer = { x: 0, y: 0 } // fake pointer bc it's always in the middle
 const defaultPreviewMesh = new Mesh(new BoxGeometry(1, 1, 1), new MeshBasicMaterial({ color: "#ffff00" }))
 
 export default class PlayerController extends Controller {
-  constructor(manager, link, hud, renderer) {
-    super(manager, link, hud, renderer)
+  constructor(controllerManager, link, hud, renderer) {
+    super(controllerManager, link, hud, renderer)
 
     /* movement */
     this.lookSpeed = 0.75
@@ -77,6 +77,7 @@ export default class PlayerController extends Controller {
       { type: "component", class: Components["voxilon:rectangle"] },
       { type: "component", class: Components["voxilon:wall"] },
       { type: "component", class: Components["voxilon:thruster"] },
+      { type: "component", class: Components["voxilon:gyroscope"] },
       { type: "component", class: Components["voxilon:control_seat"] },
 
       /*{ type: "entity", name: "assembler" },
@@ -113,7 +114,7 @@ export default class PlayerController extends Controller {
     this.body.attach(this)
     this.lookPositionOffset.copy(this.body.lookPositionOffset)
 
-    Input.on("toggle_intertia_damping", () => this.toggleIntertiaDamping())
+    Input.on("toggle_inertia_damping", () => this.toggleInertiaDamping())
     Input.on("toggle_jetpack", () => this.toggleJetpack())
 
     Input.on("build", () => this.tryBuild())
@@ -140,7 +141,7 @@ export default class PlayerController extends Controller {
   deactivate() {
     this.body.detach(this)
 
-    Input.off("toggle_intertia_damping")
+    Input.off("toggle_inertia_damping")
     Input.off("toggle_jetpack")
 
     Input.off("build")
@@ -414,13 +415,13 @@ export default class PlayerController extends Controller {
           console.log("interacted with seat!")
           Voxilon.Debug.setPointPosition("red", intersect.point)
 
-          this.componentManager.setActiveController("contraption", component)
+          this.controllerManager.setActiveController("contraption", component)
         }
       }
     }
   }
 
-  toggleIntertiaDamping() {
+  toggleInertiaDamping() {
     this.linearDampingActive = !this.linearDampingActive
     this.hud.updateStatus(this)
   }

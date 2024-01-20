@@ -8,13 +8,13 @@ import * as THREE from 'three'
 
 export default class Controller {
   /**
-   * @param {ControllerManager} manager
+   * @param {ControllerManager} controllerManager
    * @param {Link} link
    * @param {HUD} hud
    * @param {Renderer} renderer
   */
-  constructor(manager, link, hud, renderer) {
-    this.componentManager = manager
+  constructor(controllerManager, link, hud, renderer) {
+    this.controllerManager = controllerManager
     this.link = link
     this.hud = hud
     this.renderer = renderer

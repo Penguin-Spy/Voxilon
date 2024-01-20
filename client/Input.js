@@ -27,9 +27,11 @@ const controlMap = new TwoWayMap({
   "KeyQ": "roll_left",
   "KeyE": "roll_right",
 
-  "KeyZ": "toggle_intertia_damping",
+  "KeyZ": "toggle_inertia_damping",
   "KeyX": "toggle_jetpack",
+  "KeyC": "toggle_cruise_control",
   "Tab": "toggle_chat",
+  "AltLeft": "camera_look", // hold to move the camera around when controlling a contraption
 
   "Digit1": "hotbar_1",
   "Digit2": "hotbar_2",
@@ -211,6 +213,9 @@ function handleKeyDown(event) {
 }
 
 function handleKeyUp(event) {
+  if(document.pointerLockElement === canvas) {
+    event.preventDefault() // prevent Alt activating the browser menu navigation while in-game
+  }
   currentKeys[event.code] = false
 }
 
@@ -255,6 +260,7 @@ function handleWheel(event) {
 
   if(typeof callback === "function") {
     callback(event)
+    event.preventDefault()
   }
 }
 

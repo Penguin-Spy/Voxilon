@@ -4,6 +4,7 @@ import NetworkedComponent from "/common/NetworkedComponent.js"
 import { boundingBoxFromDimensions, generatePreviewMesh } from '/common/components/componentUtil.js'
 import { loadGLTF } from '/common/ModelLoader.js'
 import ThrustManager from '/common/ThrustManager.js'
+import GyroManager from '/common/GyroManager.js'
 
 const mesh = await loadGLTF("/assets/components/control_seat.gltf")
 
@@ -18,25 +19,34 @@ export default class ControlSeat extends NetworkedComponent {
     this.lookPositionOffset = new Vector3(0, 0.3, 0)
 
     this.thrustManager = new ThrustManager(this)
+    this.gyroManager = new GyroManager(this)
   }
 
   serializeNetwork() {
     return {
-      thrustManager: this.thrustManager.serializeNetwork()
+      thrustManager: this.thrustManager.serializeNetwork(),
+      gyroManager: this.gyroManager.serializeNetwork()
     }
   }
   reviveNetwork(netData) {
     this.thrustManager.reviveNetwork(netData.thrustManager ?? {})
+    this.gyroManager.reviveNetwork(netData.gyroManager ?? {})
   }
 
   setParent(contraption) {
     super.setParent(contraption)
+    const body = contraption.getBody()
+    this.thrustManager.setBody(body)
+    this.gyroManager.setBody(body)
     contraption.managers.push(this.thrustManager)
-    this.thrustManager.setBody(contraption.getBody())
+    contraption.managers.push(this.gyroManager)
   }
 
-  getManager() {
+  getThrustManager() {
     return this.thrustManager
+  }
+  getGyroManager() {
+    return this.gyroManager
   }
 
   static type = type

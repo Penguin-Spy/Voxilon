@@ -1,116 +1,152 @@
-import Contraption from '/common/Contraption.js'
-import Component from '/common/Component.js'
+import ControlSeat from '/common/components/ControlSeat.js'
 
-import { Vector3, Quaternion, Matrix4, BoxGeometry, Mesh, MeshBasicMaterial } from 'three'
+import { Vector3, Quaternion } from 'three'
 import Input from '/client/Input.js'
 import Controller from '/client/Controller.js'
 
 const _v1 = new Vector3()
-const _v2 = new Vector3()
-const _v3 = new Vector3()
 const _q1 = new Quaternion()
 const _q2 = new Quaternion()
-const _matrix4 = new Matrix4()
 let angle = 0
 
 const RIGHT = new Vector3(1, 0, 0)
 const UP = new Vector3(0, 1, 0)
-const FORWARD = new Vector3(0, 0, 1)
-const ZERO = new Vector3(0, 0, 0)
 
-const HALF_PI = Math.PI / 2
-
-const max = Math.max, min = Math.min
-function toZero(value, delta) {
-  if(value > 0) {
-    return max(value - delta, 0)
-  } else {
-    return min(value + delta, 0)
-  }
-}
+const PI = Math.PI, HALF_PI = Math.PI / 2
 
 export default class ContraptionController extends Controller {
-  constructor(manager, link, hud, renderer) {
-    super(manager, link, hud, renderer)
+  constructor(controllerManager, link, hud, renderer) {
+    super(controllerManager, link, hud, renderer)
+
+    this.lookPitch = 0
+    this.lookYaw = 0
+    this.zoom = 0
   }
 
-  /** @param {Component} component */
+  /** @param {ControlSeat} component */
   activate(component) {
     this.component = component
     this.contraption = component.getParent()
     this.body = this.contraption.getBody()
 
-    this.componentManager = component.getManager()
-
-    //this.hud.updateStatus(this)
-    //this.hud.updateHotbar(this)
+    this.thrustManager = component.getThrustManager()
+    this.gyroManager = component.getGyroManager()
 
     this.renderer.attach(this.body, this)
-    //this.body.attach(this)
 
     this.baseLookPositionOffset = this.contraption.positionOffset.clone().add(component.position).add(component.lookPositionOffset)
     this.lookPositionOffset.copy(this.baseLookPositionOffset)
     this.lookQuaternion.identity()
     this.lookSpeed = 0.75
 
-    this.localLookQuaternion = new Quaternion()
-    this.pitch = 0
+    this.lookPitch = 0
+    this.lookYaw = 0
     this.zoom = 0   // 0 means at the player's head, >0 means zoomed that many meters backwards
 
     Input.on("zoom_in", () => { if(this.zoom > 0) { this.zoom -= 1 } })
     Input.on("zoom_out", () => { if(this.zoom < 20) { this.zoom += 1 } })
+
+    this.dampeners = true
+    Input.on("toggle_inertia_damping", () => {
+      this.dampeners = !this.dampeners
+      this.hud.updateStatus({
+        jetpackActive: false, // irrelevant. todo: change HUD interface methods to make more sense for different controllers
+        linearDampingActive: this.dampeners
+      })
+    })
+
+    this.hud.updateStatus({
+      jetpackActive: false,
+      linearDampingActive: this.dampeners
+    })
   }
 
   deactivate() {
+    Input.off("zoom_in")
+    Input.off("zoom_out")
+    Input.off("toggle_inertia_damping")
   }
 
-  updateCameraRotation(deltaTime) {
-    _q1.copy(this.localLookQuaternion)
-
+  handleCameraRotate(deltaTime) {
     // yaw
     if(Input.get('yaw_left')) {
-      angle = 1;
+      angle = 1
     } else if(Input.get('yaw_right')) {
-      angle = -1;
+      angle = -1
     } else {
       angle = -Input.mouseDX()
     }
-    _q2.setFromAxisAngle(UP, angle * this.lookSpeed * deltaTime)
-    _q1.multiply(_q2)
+    this.lookYaw += angle * this.lookSpeed * deltaTime;
+    // keep yaw within π & -π (-180 to 180 degrees)
+    if(this.lookYaw > PI) {
+      this.lookYaw = -PI
+    } else if(this.lookYaw < -PI) {
+      this.lookYaw = PI
+    }
 
     // pitch
     if(Input.get('pitch_up')) {
-      angle = 1;
+      angle = 1
     } else if(Input.get('pitch_down')) {
-      angle = -1;
+      angle = -1
     } else {
       angle = -Input.mouseDY()
     }
-    this.pitch += angle * this.lookSpeed * deltaTime;
+    this.lookPitch += angle * this.lookSpeed * deltaTime;
     // keep pitch within .5π & 1.5π (Straight down & straight up)
-    if(this.pitch > HALF_PI) {
-      this.pitch = HALF_PI
-    } else if(this.pitch < -HALF_PI) {
-      this.pitch = -HALF_PI
+    if(this.lookPitch > HALF_PI) {
+      this.lookPitch = HALF_PI
+    } else if(this.lookPitch < -HALF_PI) {
+      this.lookPitch = -HALF_PI
     }
-    _q2.setFromAxisAngle(RIGHT, this.pitch)
-    _q2.multiplyQuaternions(_q1, _q2)
+  }
 
-    this.localLookQuaternion.copy(_q1)
-    this.lookQuaternion.copy(this.body.rigidBody.interpolatedQuaternion).multiply(_q2)
+  // Updates the lookPositionOffset & lookQuaternion for the camera
+  updateCamera() {
+    // calculate look quaternion
+    _q1.setFromAxisAngle(UP, this.lookYaw)
+    _q2.setFromAxisAngle(RIGHT, this.lookPitch)
+    _q1.multiply(_q2)
+    this.lookQuaternion.copy(this.body.rigidBody.interpolatedQuaternion).multiply(_q1)
 
     // update zoom offset
     this.lookPositionOffset.copy(this.baseLookPositionOffset)
-    _v1.set(0, 0, this.zoom).applyQuaternion(_q2)
+    _v1.set(0, 0, this.zoom).applyQuaternion(_q1)
     this.lookPositionOffset.add(_v1)
   }
 
   // mouse movement
   preRender(deltaTime) {
-    this.updateCameraRotation(deltaTime)
+    let front_back, left_right, up_down, pitch = 0, yaw = 0, roll = 0
 
-    let front_back, left_right, up_down
+    if(Input.get("camera_look")) {
+      this.handleCameraRotate(deltaTime)
+    } else {
+      // handle contraption rotation
+      if(Input.get('yaw_left')) {
+        yaw = 1
+      } else if(Input.get('yaw_right')) {
+        yaw = -1
+      } else {
+        yaw = -Input.mouseDX()
+      }
 
+      if(Input.get('pitch_up')) {
+        pitch = 1
+      } else if(Input.get('pitch_down')) {
+        pitch = -1
+      } else {
+        pitch = Input.mouseDY()
+      }
+
+      if(Input.get('roll_left')) {
+        roll = 1
+      } else if(Input.get('roll_right')) {
+        roll = -1
+      }
+    }
+
+    // handle contraption movement
     if(Input.get("forward")) {
       front_back = 1
     } else if(Input.get("backward")) {
@@ -127,7 +163,11 @@ export default class ContraptionController extends Controller {
       up_down = -1
     }
 
-    this.componentManager.setInputState(false, front_back, left_right, up_down)
+    // TODO: these are input actions, need to go through Link
+    this.thrustManager.setInputState(this.dampeners, front_back, left_right, up_down)
+    this.gyroManager.setInputState(this.dampeners, pitch, yaw, roll)
+
+    this.updateCamera()
   }
 
   // Take input data and apply it to the contraption

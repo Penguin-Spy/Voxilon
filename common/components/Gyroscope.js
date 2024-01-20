@@ -3,18 +3,18 @@ import NetworkedComponent from "/common/NetworkedComponent.js"
 import { boundingBoxFromDimensions, generatePreviewMesh } from '/common/components/componentUtil.js'
 import { loadGLTF } from '/common/ModelLoader.js'
 
-const mesh = await loadGLTF("/assets/components/thruster.gltf")
+const mesh = await loadGLTF("/assets/components/gyroscope.gltf")
 
 const [boundingBox, offset] = boundingBoxFromDimensions(1, 1, 1)
-const type = "voxilon:thruster"
+const type = "voxilon:gyroscope"
 
-export default class Thruster extends NetworkedComponent {
+export default class Gyroscope extends NetworkedComponent {
   constructor(data) {
     const boxShape = new Box(new Vec3(0.5, 0.5, 0.5))
 
     super(data, boxShape, mesh.clone())
 
-    this.maxThrust = 10 // unit?
+    this.maxTorque = 5 // unit?
   }
 
   serializeNetwork() { }
@@ -26,5 +26,5 @@ export default class Thruster extends NetworkedComponent {
   static offset = offset
   static previewMesh = generatePreviewMesh(mesh)
 
-  static hostnamePrefix = "thruster"
+  static hostnamePrefix = "gyroscope"
 }

@@ -157,7 +157,8 @@ export default class ThrustManager {
       _v.y = -this.#totalNegativeThrust.y
     }
 
-    this.outputThrust = _v
+    // TODO: probably way easier (and better performance) to just multiply _v by the rigidBody's invMass and add to velocity directly
+    // applyLocalImpulse does a lot of stuff that we don't need (it does handle sleeping bodies which we'll need later, but not rn)
     this.body.applyLocalImpulse(_v)
   }
 

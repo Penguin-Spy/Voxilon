@@ -6,6 +6,28 @@ import CannonDebugger from 'cannon-es-debugger'
 import Input from "/client/Input.js"
 import GUI from "/client/GUI.js"
 
+function generateDebugRow(name, table) {
+  const row = document.createElement("tr")
+  const header = document.createElement("th")
+  header.scope = "row"
+  header.innerHTML = name
+  const elements = [
+    document.createElement("td"),
+    document.createElement("td"),
+    document.createElement("td")
+  ]
+  row.appendChild(header)
+  for(const e of elements) {
+    row.appendChild(e)
+  }
+  table.appendChild(row)
+  return elements
+}
+
+function formatNumber(prefix, num) {
+  return `${prefix}:${num >= 0 ? " " : ""}${num.toFixed(3)}`
+}
+
 class Debug {
   /** @type {Link} */
   #link
@@ -18,7 +40,7 @@ class Debug {
   /** @type {boolean} */
   #physicsWireframeEnabled
 
-  #debugFrame; #renderSpan; #positionSpan; #velocitySpan; #controllerManager
+  #debugFrame; #renderSpan; #positionDebug; #velocityDebug; #angularVelocityDebug; #controllerManager
 
   constructor() {
     this.#wireframeMeshes = []
@@ -29,15 +51,13 @@ class Debug {
     this.#debugFrame = GUI.addFrame("gui-debug bg bg-bottom bg-right")
     this.#renderSpan = document.createElement("span")
 
-    const physicsDebugDiv = document.createElement("div")
-    this.#positionSpan = document.createElement("span")
-    this.#velocitySpan = document.createElement("span")
-    physicsDebugDiv.appendChild(this.#positionSpan)
-    physicsDebugDiv.appendChild(document.createElement("br"))
-    physicsDebugDiv.appendChild(this.#velocitySpan)
+    const physicsDebugTable = document.createElement("table")
+    this.#positionDebug = generateDebugRow("pos", physicsDebugTable)
+    this.#velocityDebug = generateDebugRow("vel", physicsDebugTable)
+    this.#angularVelocityDebug = generateDebugRow("ang", physicsDebugTable)
 
     this.#debugFrame.appendChild(this.#renderSpan)
-    this.#debugFrame.appendChild(physicsDebugDiv)
+    this.#debugFrame.appendChild(physicsDebugTable)
 
     // debug point visualization
     this.points = {
@@ -140,11 +160,17 @@ class Debug {
 
     const body = this.#controllerManager.activeController?.body
     if(body) {
-      this.#positionSpan.innerHTML = ` X: ${body.position.x.toFixed(3)}  Y: ${body.position.y.toFixed(3)}  Z: ${body.position.z.toFixed(3)}`
-      this.#velocitySpan.innerHTML = `vX: ${body.velocity.x.toFixed(3)} vY: ${body.velocity.y.toFixed(3)} vZ: ${body.velocity.z.toFixed(3)}`
-    } else {
-      this.#positionSpan.innerHTML = ""
-      this.#velocitySpan.innerHTML = ""
+      this.#positionDebug[0].innerText = formatNumber("x", body.position.x)
+      this.#positionDebug[1].innerText = formatNumber("y", body.position.y)
+      this.#positionDebug[2].innerText = formatNumber("z", body.position.z)
+
+      this.#velocityDebug[0].innerText = formatNumber("X", body.velocity.x)
+      this.#velocityDebug[1].innerText = formatNumber("Y", body.velocity.y)
+      this.#velocityDebug[2].innerText = formatNumber("Z", body.velocity.z)
+
+      this.#angularVelocityDebug[0].innerText = formatNumber("p", body.angularVelocity.x)
+      this.#angularVelocityDebug[1].innerText = formatNumber("y", body.angularVelocity.y)
+      this.#angularVelocityDebug[2].innerText = formatNumber("r", body.angularVelocity.z)
     }
 
     if(this.#physicsWireframeEnabled) {
