@@ -5,6 +5,7 @@
   "homepage": "https://github.com/Penguin-Spy/Voxilon",
   "main": "index.js",
   "scripts": {
+    "build": "node build.js",
     "host": "node index.js"
   },
   "keywords": [],
