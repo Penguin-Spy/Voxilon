@@ -7,14 +7,28 @@ import { DT } from "/common/util.js"
 import { ComponentDirection } from "/common/components/componentUtil.js"
 
 
-const _v1 = new THREE.Vector3()
-const _availablePositiveThrust = new THREE.Vector3()
-const _availableNegativeThrust = new THREE.Vector3()
-const _gravityVector = new THREE.Vector3()
+/** the player's desired change in velocity for the conptration (directional input & thrust sensitivity) */
+const _desiredAcceleration = new THREE.Vector3()
+/** the player's desired velocity for the contraption */
+const _desiredVelocity = new THREE.Vector3()
+/** the change in velocity that gravity will be causing */
+const _gravityAcceleration = new THREE.Vector3()
+
+/** the actual change in velocity that will be applied to the rigidbody */
+const _effectiveAcceleration = new THREE.Vector3()
+/** the amount of change in velocity that is being consumed from the thrusters */
+const _logicalAcceleration = new THREE.Vector3()
 
 const _q1 = new THREE.Quaternion()
 
-const min = Math.min, max = Math.max
+/*
+const _v1 = new THREE.Vector3()
+const _availablePositiveThrust = new THREE.Vector3()
+const _availableNegativeThrust = new THREE.Vector3()
+
+*/
+
+const min = Math.min, max = Math.max, sign = Math.sign
 
 export default class ThrustManager {
   /** @type {NetworkedComponent} */
@@ -28,18 +42,20 @@ export default class ThrustManager {
   /** @type {THREE.Vector3} the total available thrust in the -XYZ directions. note that all components are positive numbers */
   #totalNegativeThrust
 
+  #dampeners; #thrustSensitivity; #front_back; #left_right; #up_down
+
   /**
    * @param {NetworkedComponent} component the parent component
    */
   constructor(component) {
     this.#component = component
 
-    this.inputState = {
-      dampeners: true,
-      front_back: 0,
-      left_right: 0,
-      up_down: 0
-    }
+    this.#dampeners = false
+    this.#thrustSensitivity = 1
+
+    this.#front_back = 0
+    this.#left_right = 0
+    this.#up_down = 0
 
     this.pxThrusters = []
     this.nxThrusters = []
@@ -82,11 +98,30 @@ export default class ThrustManager {
     this.#rigidBody = body.rigidBody
   }
 
-  setInputState(dampeners, front_back, left_right, up_down) {
-    this.inputState.dampeners = dampeners
-    this.inputState.front_back = front_back
-    this.inputState.left_right = left_right
-    this.inputState.up_down = up_down
+  /**
+   * Sets the state of the linear dampers.
+   * @param {boolean} dampeners true if linear damping is enabled.
+   */
+  setDampeners(dampeners) {
+    this.#dampeners = dampeners
+  }
+  /**
+   * Sets the value of the thrust sensitivity.
+   * @param {number} thrustSensitivity  percentage (0-1) of available thrust to use for directional controls.
+   */
+  setThrustSensitivity(thrustSensitivity) {
+    this.#thrustSensitivity = thrustSensitivity
+  }
+  /**
+   * Sets the input state of this thrust manager.
+   * @param {-1|0|1} front_back
+   * @param {-1|0|1} left_right
+   * @param {-1|0|1} up_down
+   */
+  setInputState(front_back, left_right, up_down) {
+    this.#front_back = front_back
+    this.#left_right = left_right
+    this.#up_down = up_down
   }
 
   /**
@@ -129,6 +164,99 @@ export default class ThrustManager {
 
   // calculate output thrust necessary
   update() {
+    _desiredAcceleration.set(0, 0, 0)
+    _desiredVelocity.set(0, 0, 0)
+
+    // determine desired acceleration based on directional input & thrust sensitivity
+    if(this.#front_back > 0) {
+      _desiredAcceleration.z = this.#totalPositiveThrust.z
+    } else if(this.#front_back < 0) {
+      _desiredAcceleration.z = -this.#totalNegativeThrust.z
+    }
+    if(this.#left_right > 0) {
+      _desiredAcceleration.x = this.#totalPositiveThrust.x
+    } else if(this.#left_right < 0) {
+      _desiredAcceleration.x = -this.#totalNegativeThrust.x
+    }
+    if(this.#up_down > 0) {
+      _desiredAcceleration.y = this.#totalPositiveThrust.y
+    } else if(this.#up_down < 0) {
+      _desiredAcceleration.y = -this.#totalNegativeThrust.y
+    }
+    // convert from full thrust (Newtons, kg*m/s²) to desired change in velocity (m/s)
+    _desiredAcceleration.multiplyScalar(this.#thrustSensitivity * DT * this.#rigidBody.invMass)
+
+
+    // temp, don't need once dampeners code is done & always sets all 3 fields
+    _effectiveAcceleration.set(0, 0, 0)
+
+
+    // IF DAMPENERS
+    if(this.#dampeners) {
+      // determine actual (local) acceleration due to gravity from totalGravityVector. already in "change in velocity" form (m/s)
+      _gravityAcceleration.copy(this.#body.totalGravityVector)
+        .applyQuaternion(_q1.copy(this.#rigidBody.quaternion).conjugate())
+
+      // do **math** to cancel out components of totalGravityVector that need to be canceled out
+      {
+        let result = _desiredAcceleration.x - _gravityAcceleration.x
+        // if result is the same sign as the input, clamp it with the same direction's max thrust
+        if(sign(result) === sign(_desiredAcceleration.x)) {
+          // same A
+          if(sign(result) === 1) {
+            result = min(result, this.#totalPositiveThrust.x)
+          } else {
+            result = max(result, -this.#totalNegativeThrust.x)
+          }
+        } else { // if result is the opposite sign of the input (or input == zero), clamp it with the opposite direction's max thrust
+          // same A
+          if(sign(result) === 1) {
+            result = min(result, this.#totalPositiveThrust.x)
+          } else {
+            result = max(result, -this.#totalNegativeThrust.x)
+          }
+        }
+        // is clamped for the correct direction
+        _logicalAcceleration.x = result
+
+        let thing = _gravityAcceleration.x - result
+        // if opposite sign of gravity, = effective thrust, zero gravity (was all canceled out)
+        if(sign(thing) !== sign(_gravityAcceleration.x)) {
+          _effectiveAcceleration.x = thing
+          _gravityAcceleration.x = 0
+        } else { // if same sign as gravity, = remaining gravity, zero effective thrust (was all used canceling gravity)
+          _effectiveAcceleration.x = 0
+          _gravityAcceleration.x = thing
+        }
+      }
+
+      // determine additional acceleration to apply to change actual velocity to desired velocity
+
+    } else { // ELSE NOT DAMPENERS
+      _logicalAcceleration.copy(_desiredAcceleration)
+      _effectiveAcceleration.copy(_desiredAcceleration)
+    }
+    // else set logical & effective acceleration to desired acceleration
+    // END IF DAMPENERS
+
+    // apply changes to gravity vector
+    _gravityAcceleration.applyQuaternion(this.#rigidBody.quaternion)
+    this.#body.totalGravityVector.copy(_gravityAcceleration)
+
+    // apply effective acceleration
+    //this.#rigidBody.velocity.vadd(_effectiveAcceleration, this.#rigidBody.velocity)
+    this.#rigidBody.applyLocalImpulse(_effectiveAcceleration)
+
+
+
+    // TODO: probably way easier (and better performance) to just multiply _v by the rigidBody's invMass and add to velocity directly
+    // applyLocalImpulse does a lot of stuff that we don't need (it does handle sleeping bodies which we'll need later, but not rn)
+    //this.#rigidBody.applyLocalImpulse(_v1)
+
+
+    return
+
+
     const inputState = this.inputState
 
     // _v1 is thrust we want to apply
@@ -142,41 +270,41 @@ export default class ThrustManager {
 
     // IF DAMPENERS ENABLED
     if(inputState.dampeners) {
-      _gravityVector.copy(this.#body.totalGravityVector)
+      _gravityAcceleration.copy(this.#body.totalGravityVector)
         .applyQuaternion(_q1.copy(this.#rigidBody.quaternion).conjugate())
 
       // calculate thrust necessary to oppose gravity vector of body (TODO: share this with all thrust managers of the body?)
       // if we have all the thrust necessary in a direction, zero out that component of the gravity vector
-      if(_gravityVector.x > 0) {
-        const thrust = min(_gravityVector.x, _availableNegativeThrust.x)
-        _gravityVector.x = max(_gravityVector.x - _availableNegativeThrust.x, 0)
+      if(_gravityAcceleration.x > 0) {
+        const thrust = min(_gravityAcceleration.x, _availableNegativeThrust.x)
+        _gravityAcceleration.x = max(_gravityAcceleration.x - _availableNegativeThrust.x, 0)
         _availableNegativeThrust.x -= thrust
-      } else if(_gravityVector.x < 0) {
-        const thrust = max(_gravityVector.x, -_availablePositiveThrust.x)
-        _gravityVector.x = min(_gravityVector.x + _availablePositiveThrust.x, 0)
+      } else if(_gravityAcceleration.x < 0) {
+        const thrust = max(_gravityAcceleration.x, -_availablePositiveThrust.x)
+        _gravityAcceleration.x = min(_gravityAcceleration.x + _availablePositiveThrust.x, 0)
         _availablePositiveThrust.x += thrust
       }
-      if(_gravityVector.x > 0) {
-        const thrust = min(_gravityVector.y, _availableNegativeThrust.y)
-        _gravityVector.y = max(_gravityVector.y - _availableNegativeThrust.y, 0)
+      if(_gravityAcceleration.x > 0) {
+        const thrust = min(_gravityAcceleration.y, _availableNegativeThrust.y)
+        _gravityAcceleration.y = max(_gravityAcceleration.y - _availableNegativeThrust.y, 0)
         _availableNegativeThrust.y -= thrust
-      } else if(_gravityVector.y < 0) {
-        const thrust = max(_gravityVector.y, -_availablePositiveThrust.y)
-        _gravityVector.y = min(_gravityVector.y + _availablePositiveThrust.y, 0)
+      } else if(_gravityAcceleration.y < 0) {
+        const thrust = max(_gravityAcceleration.y, -_availablePositiveThrust.y)
+        _gravityAcceleration.y = min(_gravityAcceleration.y + _availablePositiveThrust.y, 0)
         _availablePositiveThrust.y += thrust
       }
-      if(_gravityVector.z > 0) {
-        const thrust = min(_gravityVector.z, _availableNegativeThrust.z)
-        _gravityVector.z = max(_gravityVector.z - _availableNegativeThrust.z, 0)
+      if(_gravityAcceleration.z > 0) {
+        const thrust = min(_gravityAcceleration.z, _availableNegativeThrust.z)
+        _gravityAcceleration.z = max(_gravityAcceleration.z - _availableNegativeThrust.z, 0)
         _availableNegativeThrust.z -= thrust
-      } else if(_gravityVector.z < 0) {
-        const thrust = max(_gravityVector.z, -_availablePositiveThrust.z)
-        _gravityVector.z = min(_gravityVector.z + _availablePositiveThrust.z, 0)
+      } else if(_gravityAcceleration.z < 0) {
+        const thrust = max(_gravityAcceleration.z, -_availablePositiveThrust.z)
+        _gravityAcceleration.z = min(_gravityAcceleration.z + _availablePositiveThrust.z, 0)
         _availablePositiveThrust.z += thrust
       }
 
-      _gravityVector.applyQuaternion(_q1.copy(this.#rigidBody.quaternion))
-      this.#body.totalGravityVector.copy(_gravityVector)
+      _gravityAcceleration.applyQuaternion(_q1.copy(this.#rigidBody.quaternion))
+      this.#body.totalGravityVector.copy(_gravityAcceleration)
 
       // calculate thrust necessary to oppose current undesired movement
     }
@@ -198,10 +326,6 @@ export default class ThrustManager {
     } else if(inputState.up_down < 0) {
       _v1.y = -_availableNegativeThrust.y
     }
-
-    // TODO: probably way easier (and better performance) to just multiply _v by the rigidBody's invMass and add to velocity directly
-    // applyLocalImpulse does a lot of stuff that we don't need (it does handle sleeping bodies which we'll need later, but not rn)
-    this.#rigidBody.applyLocalImpulse(_v1)
   }
 
 }

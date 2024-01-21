@@ -52,25 +52,25 @@ export default class ContraptionController extends Controller {
     Input.on("zoom_in", () => { if(this.zoom > 0) { this.zoom -= 1 } })
     Input.on("zoom_out", () => { if(this.zoom < 20) { this.zoom += 1 } })
 
-    this.dampeners = true
-    Input.on("toggle_inertia_damping", () => {
-      this.dampeners = !this.dampeners
-      this.hud.updateStatus({
-        jetpackActive: false, // irrelevant. todo: change HUD interface methods to make more sense for different controllers
-        linearDampingActive: this.dampeners
-      })
-    })
-
-    this.hud.updateStatus({
-      jetpackActive: false,
-      linearDampingActive: this.dampeners
-    })
+    Input.on("toggle_inertia_damping", () => { this.setDampeners(!this.dampeners) })
+    this.setDampeners(true)
   }
 
   deactivate() {
     Input.off("zoom_in")
     Input.off("zoom_out")
     Input.off("toggle_inertia_damping")
+  }
+
+  setDampeners(dampeners) {
+    this.dampeners = dampeners
+    this.thrustManager.setDampeners(dampeners)
+    //this.gyroManager.setDampeners(dampeners)
+
+    this.hud.updateStatus({
+      jetpackActive: false, // irrelevant. todo: change HUD interface methods to make more sense for different controllers
+      linearDampingActive: dampeners
+    })
   }
 
   handleCameraRotate(deltaTime) {
@@ -129,7 +129,8 @@ export default class ContraptionController extends Controller {
       this.controllerManager.setActiveController("player", body)
     }
 
-    let front_back, left_right, up_down, pitch = 0, yaw = 0, roll = 0
+    let front_back = 0, left_right = 0, up_down = 0,
+      pitch = 0, yaw = 0, roll = 0
 
     if(Input.get("camera_look")) {
       this.handleCameraRotate(deltaTime)
@@ -176,7 +177,7 @@ export default class ContraptionController extends Controller {
     }
 
     // TODO: these are input actions, need to go through Link
-    this.thrustManager.setInputState(this.dampeners, front_back, left_right, up_down)
+    this.thrustManager.setInputState(front_back, left_right, up_down)
     this.gyroManager.setInputState(this.dampeners, pitch, yaw, roll)
 
     this.updateCamera()
