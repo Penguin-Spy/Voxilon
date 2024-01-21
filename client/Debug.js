@@ -40,7 +40,7 @@ class Debug {
   /** @type {boolean} */
   #physicsWireframeEnabled
 
-  #debugFrame; #renderSpan; #positionDebug; #velocityDebug; #angularVelocityDebug; #controllerManager
+  #debugFrame; #renderSpan; #positionDebug; #velocityDebug; #angularVelocityDebug; #thrustOutputDebug; #controllerManager
 
   constructor() {
     this.#wireframeMeshes = []
@@ -55,6 +55,7 @@ class Debug {
     this.#positionDebug = generateDebugRow("pos", physicsDebugTable)
     this.#velocityDebug = generateDebugRow("vel", physicsDebugTable)
     this.#angularVelocityDebug = generateDebugRow("ang", physicsDebugTable)
+    this.#thrustOutputDebug = generateDebugRow("thr", physicsDebugTable)
 
     this.#debugFrame.appendChild(this.#renderSpan)
     this.#debugFrame.appendChild(physicsDebugTable)
@@ -171,6 +172,13 @@ class Debug {
       this.#angularVelocityDebug[0].innerText = formatNumber("p", body.angularVelocity.x)
       this.#angularVelocityDebug[1].innerText = formatNumber("y", body.angularVelocity.y)
       this.#angularVelocityDebug[2].innerText = formatNumber("r", body.angularVelocity.z)
+
+      const tm = this.#controllerManager.activeController?.thrustManager
+      if(tm) {
+        this.#thrustOutputDebug[0].innerText = formatNumber("x", tm._logicalAcceleration.x)
+        this.#thrustOutputDebug[1].innerText = formatNumber("y", tm._logicalAcceleration.y)
+        this.#thrustOutputDebug[2].innerText = formatNumber("z", tm._logicalAcceleration.z)
+      }
     }
 
     if(this.#physicsWireframeEnabled) {

@@ -21,10 +21,11 @@ const _logicalAcceleration = new THREE.Vector3()
 
 const _q1 = new THREE.Quaternion()
 
-/*
-const _v1 = new THREE.Vector3()
 const _availablePositiveThrust = new THREE.Vector3()
 const _availableNegativeThrust = new THREE.Vector3()
+
+/*
+const _v1 = new THREE.Vector3()
 
 */
 
@@ -186,6 +187,8 @@ export default class ThrustManager {
     // convert from full thrust (Newtons, kg*m/s²) to desired change in velocity (m/s)
     _desiredAcceleration.multiplyScalar(this.#thrustSensitivity * DT * this.#rigidBody.invMass)
 
+    _availablePositiveThrust.copy(this.#totalPositiveThrust).multiplyScalar(DT * this.#rigidBody.invMass)
+    _availableNegativeThrust.copy(this.#totalNegativeThrust).multiplyScalar(DT * this.#rigidBody.invMass)
 
     // temp, don't need once dampeners code is done & always sets all 3 fields
     _effectiveAcceleration.set(0, 0, 0)
@@ -199,27 +202,18 @@ export default class ThrustManager {
 
       // do **math** to cancel out components of totalGravityVector that need to be canceled out
       {
+        // calculate the necessary ideal acceleration to cancel gravity & achieve the desired acceleration
         let result = _desiredAcceleration.x - _gravityAcceleration.x
-        // if result is the same sign as the input, clamp it with the same direction's max thrust
-        if(sign(result) === sign(_desiredAcceleration.x)) {
-          // same A
-          if(sign(result) === 1) {
-            result = min(result, this.#totalPositiveThrust.x)
-          } else {
-            result = max(result, -this.#totalNegativeThrust.x)
-          }
-        } else { // if result is the opposite sign of the input (or input == zero), clamp it with the opposite direction's max thrust
-          // same A
-          if(sign(result) === 1) {
-            result = min(result, this.#totalPositiveThrust.x)
-          } else {
-            result = max(result, -this.#totalNegativeThrust.x)
-          }
+        // clamp result for whichever direction it's in
+        if(sign(result) === 1) {
+          result = min(result, _availablePositiveThrust.x)
+        } else {
+          result = max(result, -_availableNegativeThrust.x)
         }
-        // is clamped for the correct direction
+        // the result is how much acceleration we're technically doing with the thrusters
         _logicalAcceleration.x = result
 
-        let thing = _gravityAcceleration.x - result
+        let thing = _gravityAcceleration.x + result
         // if opposite sign of gravity, = effective thrust, zero gravity (was all canceled out)
         if(sign(thing) !== sign(_gravityAcceleration.x)) {
           _effectiveAcceleration.x = thing
@@ -229,6 +223,54 @@ export default class ThrustManager {
           _gravityAcceleration.x = thing
         }
       }
+      {
+        // calculate the necessary ideal acceleration to cancel gravity & achieve the desired acceleration
+        let result = _desiredAcceleration.y - _gravityAcceleration.y
+        // clamp result for whichever direction it's in
+        if(sign(result) === 1) {
+          result = min(result, _availablePositiveThrust.y)
+        } else {
+          result = max(result, -_availableNegativeThrust.y)
+        }
+        // the result is how much acceleration we're technically doing with the thrusters
+        _logicalAcceleration.y = result
+
+        let thing = _gravityAcceleration.y + result
+        // if opposite sign of gravity, = effective thrust, zero gravity (was all canceled out)
+        if(sign(thing) !== sign(_gravityAcceleration.y)) {
+          _effectiveAcceleration.y = thing
+          _gravityAcceleration.y = 0
+        } else { // if same sign as gravity, = remaining gravity, zero effective thrust (was all used canceling gravity)
+          _effectiveAcceleration.y = 0
+          _gravityAcceleration.y = thing
+        }
+      }
+      {
+        // calculate the necessary ideal acceleration to cancel gravity & achieve the desired acceleration
+        let result = _desiredAcceleration.z - _gravityAcceleration.z
+        // clamp result for whichever direction it's in
+        if(sign(result) === 1) {
+          result = min(result, _availablePositiveThrust.z)
+        } else {
+          result = max(result, -_availableNegativeThrust.z)
+        }
+        // the result is how much acceleration we're technically doing with the thrusters
+        _logicalAcceleration.z = result
+
+        let thing = _gravityAcceleration.z + result
+        // if opposite sign of gravity, = effective thrust, zero gravity (was all canceled out)
+        if(sign(thing) !== sign(_gravityAcceleration.z)) {
+          _effectiveAcceleration.z = thing
+          _gravityAcceleration.z = 0
+        } else { // if same sign as gravity, = remaining gravity, zero effective thrust (was all used canceling gravity)
+          _effectiveAcceleration.z = 0
+          _gravityAcceleration.z = thing
+        }
+      }
+
+      // apply changes to gravity vector
+      _gravityAcceleration.applyQuaternion(this.#rigidBody.quaternion)
+      this.#body.totalGravityVector.copy(_gravityAcceleration)
 
       // determine additional acceleration to apply to change actual velocity to desired velocity
 
@@ -239,14 +281,11 @@ export default class ThrustManager {
     // else set logical & effective acceleration to desired acceleration
     // END IF DAMPENERS
 
-    // apply changes to gravity vector
-    _gravityAcceleration.applyQuaternion(this.#rigidBody.quaternion)
-    this.#body.totalGravityVector.copy(_gravityAcceleration)
-
     // apply effective acceleration
     //this.#rigidBody.velocity.vadd(_effectiveAcceleration, this.#rigidBody.velocity)
     this.#rigidBody.applyLocalImpulse(_effectiveAcceleration)
 
+    this._logicalAcceleration = _logicalAcceleration
 
 
     // TODO: probably way easier (and better performance) to just multiply _v by the rigidBody's invMass and add to velocity directly
