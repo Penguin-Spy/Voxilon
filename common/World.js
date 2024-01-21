@@ -1,5 +1,8 @@
+import Body from "/common/Body.js"
+
 import * as CANNON from 'cannon'
 import * as THREE from 'three'
+import { DT } from "/common/util.js"
 import CelestialBody from "/common/bodies/CelestialBody.js"
 import CharacterBody from "./bodies/CharacterBody.js"
 import TestBody from "/common/bodies/TestBody.js"
@@ -98,6 +101,14 @@ export default class World {
     /** @type {CharacterBody} */
     let characterBody = this.bodies.find(body => body.player_uuid === uuid)
     if(characterBody) return characterBody
+    // check character bodies in control seats too
+    for(const contraptionBody of this.getAllBodiesByType("voxilon:contraption_body")) {
+      for(const component of contraptionBody.contraption.components) {
+        if(component.type === "voxilon:control_seat" && component.storedCharacterBody.player_uuid === uuid) {
+          return component.storedCharacterBody
+        }
+      }
+    }
 
     // otherwise if there's just one character, change it's uuid and return it
     let characterBodies = this.bodies.filter(body => body.type === "voxilon:character_body")
@@ -120,30 +131,46 @@ export default class World {
 
   /**
    * Loads a Body's serialized form and adds it to the world
-   * @param data      The serialized data
-   * @returns {Body}  The loaded body
+   * @param {Object} data           The serialized data
+   * @param {boolean} [addToWorld]  Should the body be added to the world, default true. If false, just deserializes the body and returns it
+   * @returns {Body}                The loaded body
    */
-  loadBody(data) {
-    const body = new constructors[data.type](data)
+  loadBody(data, addToWorld = true) {
+    const body = new constructors[data.type](data, this)
 
-    this.physics.addBody(body.rigidBody)
-    if(body.mesh) this.scene.add(body.mesh)
-    this.bodies.push(body)
+    if(addToWorld) {
+      this.addBody(body)
+    }
+
     return body
   }
 
-  getBody(bodyID) {
-    return this.bodies[bodyID]
-  }
   getAllBodiesByType(type) {
     return this.bodies.filter(b => b.type === type)
   }
 
-  removeBody(bodyID) {
-    const body = this.bodies[bodyID];
+  /**
+   * Removes a body from the world, such that is is no longer visible, interactable, or is updated. Does not destroy the object itself.
+   * @param {Body} body
+   */
+  removeBody(body) {
+    const index = this.bodies.indexOf(body)
+    if(index === -1) {
+      console.error(`given body is not in world:`, body)
+      throw new Error(`given body is not in world!`)
+    }
     this.physics.removeBody(body.rigidBody)
     if(body.mesh) this.scene.remove(body.mesh)
-    delete this.bodies[bodyID];
+    this.bodies.splice(index, 1)
+  }
+  /**
+   * Adds a body to the world that has already been loaded by {@link World#loadBody}.
+   * @param {Body} body
+   */
+  addBody(body) {
+    this.physics.addBody(body.rigidBody)
+    if(body.mesh) this.scene.add(body.mesh)
+    this.bodies.push(body)
   }
 
   preRender() {
@@ -157,6 +184,7 @@ export default class World {
     // calculates gravity & updates bodies' additional behavior (i.e. contraptions' components)
     for(const body of this.bodies) {
       body.update()
+      body.postUpdate()
     }
 
     this.physics.fixedStep(DT)

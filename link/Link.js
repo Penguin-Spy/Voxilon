@@ -1,3 +1,5 @@
+import { DT } from "/common/util.js"
+
 export default class Link {
   #accumulator = 0
 

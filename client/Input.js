@@ -32,6 +32,7 @@ const controlMap = new TwoWayMap({
   "KeyC": "toggle_cruise_control",
   "Tab": "toggle_chat",
   "AltLeft": "camera_look", // hold to move the camera around when controlling a contraption
+  "KeyF": "dismount",
 
   "Digit1": "hotbar_1",
   "Digit2": "hotbar_2",

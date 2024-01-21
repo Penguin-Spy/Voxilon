@@ -1,5 +1,8 @@
+import World from '/common/World.js'
+
 import { Vector3 } from 'three'
 import { Vec3, Box } from 'cannon'
+import { check } from "/common/util.js"
 import NetworkedComponent from "/common/NetworkedComponent.js"
 import { boundingBoxFromDimensions, generatePreviewMesh } from '/common/components/componentUtil.js'
 import { loadGLTF } from '/common/ModelLoader.js'
@@ -12,6 +15,11 @@ const [boundingBox, offset] = boundingBoxFromDimensions(1, 1, 1)
 const type = "voxilon:control_seat"
 
 export default class ControlSeat extends NetworkedComponent {
+
+  /**
+   * @param {Object} data
+   * @param {World} world
+   */
   constructor(data, world) {
     const boxShape = new Box(new Vec3(0.5, 0.5, 0.5))
 
@@ -20,6 +28,21 @@ export default class ControlSeat extends NetworkedComponent {
 
     this.thrustManager = new ThrustManager(this)
     this.gyroManager = new GyroManager(this)
+
+    const characterBodyData = check(data.storedCharacterBody, "object?")
+    if(characterBodyData) {
+      this.storedCharacterBody = world.loadBody(characterBodyData, false)
+    } else {
+      this.storedCharacterBody = null
+    }
+  }
+
+  serialize() {
+    const data = super.serialize()
+    if(this.storedCharacterBody) {
+      data.storedCharacterBody = this.storedCharacterBody.serialize()
+    }
+    return data
   }
 
   serializeNetwork() {
@@ -47,6 +70,21 @@ export default class ControlSeat extends NetworkedComponent {
   }
   getGyroManager() {
     return this.gyroManager
+  }
+
+  // stores the body of the character that is in this seat for serializing
+  storeBody(characterBody) {
+    this.storedCharacterBody = characterBody
+    this.world.removeBody(characterBody)
+  }
+
+  // gets the body of the character in this seat and removes it from being stored
+  retrieveBody() {
+    const body = this.storedCharacterBody
+    this.storedCharacterBody = null
+    this.world.addBody(body)
+    // TODO: set the body's position, velocity, rotation, and angular velocity to match this component's values (offset position up 1 meter)
+    return body
   }
 
   static type = type

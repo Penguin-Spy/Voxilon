@@ -1,7 +1,9 @@
 import Contraption from '/common/Contraption.js'
 import Component from '/common/Component.js'
+import CharacterBody from "/common/bodies/CharacterBody.js"
 
 import { Vector3, Quaternion, Matrix4, BoxGeometry, Mesh, MeshBasicMaterial } from 'three'
+import { DT } from "/common/util.js"
 import Input from '/client/Input.js'
 import * as Materials from "/common/PhysicsMaterials.js"
 import Components from '/common/components/index.js'
@@ -105,6 +107,7 @@ export default class PlayerController extends Controller {
 
   }
 
+  /** @param {CharacterBody} characterBody  */
   activate(characterBody) {
     this.body = characterBody
     this.hud.updateStatus(this)
@@ -415,7 +418,7 @@ export default class PlayerController extends Controller {
           console.log("interacted with seat!")
           Voxilon.Debug.setPointPosition("red", intersect.point)
 
-          this.controllerManager.setActiveController("contraption", component)
+          this.controllerManager.setActiveController("contraption", component, this.body)
         }
       }
     }
@@ -510,7 +513,7 @@ export default class PlayerController extends Controller {
     _q1.multiply(_q2)
 
     // align player body to gravity
-    _v1.copy(this.body.gravityVector).negate() // gravityUP
+    _v1.copy(this.body.gravityDirection).negate() // gravityUP
     _v2.copy(UP).applyQuaternion(_q1) // bodyUP
     _q2.setFromUnitVectors(_v2, _v1)  // angle to rotate bodyUP to gravityUP
     _q2.multiply(_q1)  // include current body rotation

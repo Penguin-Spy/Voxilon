@@ -13,8 +13,6 @@ import Debug from '/client/Debug.js'
 
 import main_menu from '/client/screens/main_menu.js'
 
-window.DT = 1 / 60
-
 // debug interface object
 const Voxilon = { Input, GUI, Debug }
 

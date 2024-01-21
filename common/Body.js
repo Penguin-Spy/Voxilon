@@ -1,5 +1,6 @@
 import * as CANNON from 'cannon'
 import * as THREE from 'three'
+import { DT } from "/common/util.js"
 
 const _v = new THREE.Vector3();
 
@@ -55,7 +56,8 @@ export default class Body {
     this.quaternion.set(...data.quaternion)
     this.angularVelocity.set(...data.angularVelocity)
 
-    this.gravityVector = new THREE.Vector3()
+    this.gravityDirection = new THREE.Vector3()
+    this.totalGravityVector = new THREE.Vector3()
   }
 
   serialize() {
@@ -84,29 +86,35 @@ export default class Body {
     }
   }
 
+  // updates this body's gravityDirection & totalGravity vectors
   update() {
     if(this.rigidBody.type === CANNON.Body.DYNAMIC && this.world.orbitalGravityEnabled) {
-      this.gravityVector.set(0, 0, 0)
+      this.gravityDirection.set(0, 0, 0)
+      this.totalGravityVector.set(0, 0, 0)
       for(const otherBody of this.world.gravityBodies) {
 
         _v.copy(otherBody.position).sub(this.position) // difference in position
         const rSquared = _v.lengthSq() // distance squared
-        _v.normalize()                 // direction of force
+        _v.normalize()                 // normalize for just the direction of force
 
         // force
         _v.multiplyScalar(G * this.rigidBody.mass * otherBody.rigidBody.mass / rSquared)
 
         // acceleration
-        _v/*.divideScalar(this.mass)*/.multiplyScalar(DT)
+        _v.multiplyScalar(DT)
 
         // save the gravity vector with the highest magnitude
-        if(_v.lengthSq() >= this.gravityVector.lengthSq()) {
-          this.gravityVector.copy(_v)
+        if(_v.lengthSq() >= this.gravityDirection.lengthSq()) {
+          this.gravityDirection.copy(_v)
         }
 
-        // apply gravity
-        this.rigidBody.applyImpulse(_v)
+        // add to total gravity
+        this.totalGravityVector.add(_v)
       }
     }
+  }
+
+  postUpdate() {
+    this.rigidBody.applyImpulse(this.totalGravityVector)
   }
 }

@@ -44,3 +44,9 @@ function check(variable, type) {
 }
 
 export { TwoWayMap, check }
+
+/**
+ * The fraction of a second that 1 update takes. \
+ * When converting units such as acceleration to velocity, multiply by this value to account for dividing out a "seconds" unit.
+ */
+export const DT = 1 / 60

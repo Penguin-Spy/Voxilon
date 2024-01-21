@@ -1,4 +1,5 @@
 import ControlSeat from '/common/components/ControlSeat.js'
+import CharacterBody from '/common/bodies/CharacterBody.js'
 
 import { Vector3, Quaternion } from 'three'
 import Input from '/client/Input.js'
@@ -23,11 +24,16 @@ export default class ContraptionController extends Controller {
     this.zoom = 0
   }
 
-  /** @param {ControlSeat} component */
-  activate(component) {
+  /**
+   * @param {ControlSeat} component       the ControlSeat to control with
+   * @param {CharacterBody} characterBody the player's previous character body
+   */
+  activate(component, characterBody) {
     this.component = component
     this.contraption = component.getParent()
     this.body = this.contraption.getBody()
+
+    component.storeBody(characterBody)
 
     this.thrustManager = component.getThrustManager()
     this.gyroManager = component.getGyroManager()
@@ -117,6 +123,12 @@ export default class ContraptionController extends Controller {
 
   // mouse movement
   preRender(deltaTime) {
+
+    if(Input.get("dismount")) {
+      const body = this.component.retrieveBody()
+      this.controllerManager.setActiveController("player", body)
+    }
+
     let front_back, left_right, up_down, pitch = 0, yaw = 0, roll = 0
 
     if(Input.get("camera_look")) {

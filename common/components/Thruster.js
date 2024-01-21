@@ -14,7 +14,7 @@ export default class Thruster extends NetworkedComponent {
 
     super(data, world, boxShape, mesh.clone())
 
-    this.maxThrust = 10 // unit?
+    this.maxThrust = 2000 // unit?
   }
 
   serializeNetwork() { }
