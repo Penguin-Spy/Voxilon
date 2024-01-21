@@ -1,9 +1,9 @@
 {
-  "lib": [
-    "ES6",
-    "DOM"
-  ],
   "compilerOptions": {
+    "lib": [
+      "ES6",
+      "DOM"
+    ],
     "baseUrl": ".",
     "paths": {
       "/*": [
