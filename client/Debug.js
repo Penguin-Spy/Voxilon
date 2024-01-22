@@ -40,7 +40,7 @@ class Debug {
   /** @type {boolean} */
   #physicsWireframeEnabled
 
-  #debugFrame; #renderSpan; #positionDebug; #velocityDebug; #angularVelocityDebug; #thrustOutputDebug; #controllerManager
+  #debugFrame; #renderSpan; #positionDebug; #velocityDebug; #angularVelocityDebug; #thrustOutputDebug; #torqueOutputDebug; #controllerManager
 
   constructor() {
     this.#wireframeMeshes = []
@@ -56,6 +56,7 @@ class Debug {
     this.#velocityDebug = generateDebugRow("vel", physicsDebugTable)
     this.#angularVelocityDebug = generateDebugRow("ang", physicsDebugTable)
     this.#thrustOutputDebug = generateDebugRow("thr", physicsDebugTable)
+    this.#torqueOutputDebug = generateDebugRow("tor", physicsDebugTable)
 
     this.#debugFrame.appendChild(this.#renderSpan)
     this.#debugFrame.appendChild(physicsDebugTable)
@@ -178,6 +179,12 @@ class Debug {
         this.#thrustOutputDebug[0].innerText = formatNumber("x", tm.outputThrust.x)
         this.#thrustOutputDebug[1].innerText = formatNumber("y", tm.outputThrust.y)
         this.#thrustOutputDebug[2].innerText = formatNumber("z", tm.outputThrust.z)
+      }
+      const gm = this.#controllerManager.activeController?.gyroManager
+      if(gm) {
+        this.#torqueOutputDebug[0].innerText = formatNumber("p", gm.outputTorque.x)
+        this.#torqueOutputDebug[1].innerText = formatNumber("r", gm.outputTorque.y)
+        this.#torqueOutputDebug[2].innerText = formatNumber("y", gm.outputTorque.z)
       }
     }
 

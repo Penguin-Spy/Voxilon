@@ -14,7 +14,7 @@ export default class Gyroscope extends NetworkedComponent {
 
     super(data, world, boxShape, mesh.clone())
 
-    this.maxTorque = 5 // unit?
+    this.maxTorque = 4000 // in Newton-meters
   }
 
   serializeNetwork() { }

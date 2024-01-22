@@ -65,7 +65,7 @@ export default class ContraptionController extends Controller {
   setDampeners(dampeners) {
     this.dampeners = dampeners
     this.thrustManager.setDampeners(dampeners)
-    //this.gyroManager.setDampeners(dampeners)
+    this.gyroManager.setDampeners(dampeners)
 
     this.hud.updateStatus({
       jetpackActive: false, // irrelevant. todo: change HUD interface methods to make more sense for different controllers
@@ -178,7 +178,7 @@ export default class ContraptionController extends Controller {
 
     // TODO: these are input actions, need to go through Link
     this.thrustManager.setInputState(front_back, left_right, up_down)
-    this.gyroManager.setInputState(this.dampeners, pitch, yaw, roll)
+    this.gyroManager.setInputState(pitch, yaw, roll)
 
     this.updateCamera()
   }

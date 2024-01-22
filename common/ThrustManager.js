@@ -3,7 +3,7 @@ import Thruster from "/common/components/Thruster.js"
 import NetworkedComponent from "/common/NetworkedComponent.js"
 
 import * as THREE from 'three'
-import { DT } from "/common/util.js"
+import { check, DT } from "/common/util.js"
 import { ComponentDirection } from "/common/components/componentUtil.js"
 
 
@@ -29,7 +29,7 @@ const _idealAcceleration = new THREE.Vector3()
 /** acceleration that is able to be applied to canceling gravity & achiving the desired acceleration */
 const _actualAcceleration = new THREE.Vector3()
 
-const _q1 = new THREE.Quaternion()
+const _worldToLocalQuaternion = new THREE.Quaternion()
 
 
 const min = Math.min, max = Math.max, sign = Math.sign
@@ -86,6 +86,8 @@ export default class ThrustManager {
       nyThrusters: this.#nyThrusters.map(c => c.hostname),
       pzThrusters: this.#pzThrusters.map(c => c.hostname),
       nzThrusters: this.#nzThrusters.map(c => c.hostname),
+
+      thrustSensitivity: this.#thrustSensitivity
     }
   }
   reviveNetwork(netData) {
@@ -97,6 +99,11 @@ export default class ThrustManager {
     netData.nyThrusters?.map(h => this.addThruster(network.getComponent(h)))
     netData.pzThrusters?.map(h => this.addThruster(network.getComponent(h)))
     netData.nzThrusters?.map(h => this.addThruster(network.getComponent(h)))
+
+    const thrustSensitivity = check(netData.thrustSensitivity, "number?")
+    if(thrustSensitivity) {
+      this.#thrustSensitivity = thrustSensitivity
+    }
   }
 
   /**
@@ -143,6 +150,7 @@ export default class ThrustManager {
     const axis = ComponentDirection.getAxis(thruster.rotation)
 
     // add to list & add/subtract max thrust to #total[Positive/Negative]Thrust
+    // note that this is the direction the contraption would move with that thrust (opposite the direction the thruster is facing)
     switch(axis) {
       case 0:
         this.#pxThrusters.push(thruster)
@@ -174,46 +182,56 @@ export default class ThrustManager {
 
   // calculate output thrust necessary
   update() {
-    _desiredAcceleration.set(0, 0, 0)
-    _desiredVelocity.set(0, 0, 0)
+    _desiredVelocity.set(0, 0, 0) // TODO: get from cruse control setting
 
-    // determine desired acceleration based on directional input & thrust sensitivity
-    if(this.#front_back > 0) {
-      _desiredAcceleration.z = this.#totalPositiveThrust.z
-    } else if(this.#front_back < 0) {
-      _desiredAcceleration.z = this.#totalNegativeThrust.z
-    }
-    if(this.#left_right > 0) {
-      _desiredAcceleration.x = this.#totalPositiveThrust.x
-    } else if(this.#left_right < 0) {
-      _desiredAcceleration.x = this.#totalNegativeThrust.x
-    }
-    if(this.#up_down > 0) {
-      _desiredAcceleration.y = this.#totalPositiveThrust.y
-    } else if(this.#up_down < 0) {
-      _desiredAcceleration.y = this.#totalNegativeThrust.y
-    }
-    // convert from full thrust (Newtons, kg*m/s²) to desired change in velocity (m/s)
-    _desiredAcceleration.multiplyScalar(this.#thrustSensitivity * DT * this.#rigidBody.invMass)
-
-    // convert available thrust from thrust (Newtons) to change in velocity
+    // convert available thrust from Newtons (kg*m/s²) to change in velocity (m/s)
     _availablePositiveAcceleration.copy(this.#totalPositiveThrust).multiplyScalar(DT * this.#rigidBody.invMass)
     _availableNegativeAcceleration.copy(this.#totalNegativeThrust).multiplyScalar(DT * this.#rigidBody.invMass)
 
+    // determine desired acceleration based on directional input & thrust sensitivity
+    _desiredAcceleration.set(0, 0, 0)
+    if(this.#front_back > 0) {
+      _desiredAcceleration.z = _availablePositiveAcceleration.z * this.#thrustSensitivity
+    } else if(this.#front_back < 0) {
+      _desiredAcceleration.z = _availableNegativeAcceleration.z * this.#thrustSensitivity
+    }
+    if(this.#left_right > 0) {
+      _desiredAcceleration.x = _availablePositiveAcceleration.x * this.#thrustSensitivity
+    } else if(this.#left_right < 0) {
+      _desiredAcceleration.x = _availableNegativeAcceleration.x * this.#thrustSensitivity
+    }
+    if(this.#up_down > 0) {
+      _desiredAcceleration.y = _availablePositiveAcceleration.y * this.#thrustSensitivity
+    } else if(this.#up_down < 0) {
+      _desiredAcceleration.y = _availableNegativeAcceleration.y * this.#thrustSensitivity
+    }
+
     // IF DAMPENERS
     if(this.#dampeners) {
-      // determine actual (local) acceleration due to gravity from totalGravityVector. already in "change in velocity" form (m/s)
-      _gravityAcceleration.copy(this.#body.totalGravityVector)
-        .applyQuaternion(_q1.copy(this.#rigidBody.quaternion).conjugate())
+      _worldToLocalQuaternion.copy(this.#rigidBody.quaternion).conjugate()
 
-      // do **math** to cancel out components of totalGravityVector that need to be canceled out
+      // determine change in velocity necessary to counteract current velocity
+      _desiredVelocity.sub(this.#rigidBody.velocity).applyQuaternion(_worldToLocalQuaternion)
+      // add it to desired acceleration only where dampeners aren't used
+      if(this.#front_back === 0) {
+        _desiredAcceleration.z = _desiredVelocity.z
+      }
+      if(this.#left_right === 0) {
+        _desiredAcceleration.x = _desiredVelocity.x
+      }
+      if(this.#up_down === 0) {
+        _desiredAcceleration.y = _desiredVelocity.y
+      }
+
+      // determine actual (local) acceleration due to gravity from totalGravityVector. already in "change in velocity" form (m/s)
+      _gravityAcceleration.copy(this.#body.totalGravityVector).applyQuaternion(_worldToLocalQuaternion)
+
+      // --- do **math** to cancel out components of totalGravityVector that need to be canceled out ---
 
       // calculate the necessary ideal acceleration to cancel gravity & achieve the desired acceleration
       _idealAcceleration.subVectors(_desiredAcceleration, _gravityAcceleration)
-
       // clamp result for whichever direction it's in
       _idealAcceleration.clamp(_availableNegativeAcceleration, _availablePositiveAcceleration)
-
       // the result is how much acceleration we're technically doing with the thrusters
       _logicalAcceleration.copy(_idealAcceleration)
 
@@ -247,9 +265,6 @@ export default class ThrustManager {
       _gravityAcceleration.applyQuaternion(this.#rigidBody.quaternion)
       this.#body.totalGravityVector.copy(_gravityAcceleration)
 
-      // TODO: determine additional acceleration to apply to change actual velocity to desired velocity
-      // will need to save how much acceleration we use up (logical acceleration) from the available acceleration
-
     } else { // ELSE NOT DAMPENERS
       // set logical & effective acceleration to desired acceleration
       _logicalAcceleration.copy(_desiredAcceleration)
@@ -257,11 +272,10 @@ export default class ThrustManager {
     }
     // END IF DAMPENERS
 
-    // apply effective acceleration
-    //this.#rigidBody.velocity.vadd(_effectiveAcceleration, this.#rigidBody.velocity)
-    this.#rigidBody.applyLocalImpulse(_effectiveAcceleration)
-    // TODO: probably way easier (and better performance) to just multiply _v by the rigidBody's invMass and add to velocity directly
-    // applyLocalImpulse does a lot of stuff that we don't need (it does handle sleeping bodies which we'll need later, but not rn)
+    // apply effective acceleration (CANNON.Body#applyLocalImpulse does a lot of stuff that we don't need (it does handle sleeping bodies which we'll need later, but not rn))
+    _effectiveAcceleration.multiplyScalar(this.#rigidBody.invMass)
+    _effectiveAcceleration.applyQuaternion(this.#rigidBody.quaternion)
+    this.#rigidBody.velocity.vadd(_effectiveAcceleration, this.#rigidBody.velocity)
 
     // thrust this manager is requesting (and applying), in Newtons (kg*m/s²)
     this.outputThrust.copy(_logicalAcceleration).multiplyScalar(60 * this.#rigidBody.mass)
