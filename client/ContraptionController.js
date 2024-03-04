@@ -144,10 +144,10 @@ export default class ContraptionController extends Controller {
         yaw = -Input.mouseDX()
       }
 
-      if(Input.get('pitch_up')) {
-        pitch = 1
-      } else if(Input.get('pitch_down')) {
+      if(Input.get('pitch_up')) { // pitch is technically inverted in a contraption (TODO: make this 2 settings, one for player & one for contraption)
         pitch = -1
+      } else if(Input.get('pitch_down')) {
+        pitch = 1
       } else {
         pitch = Input.mouseDY()
       }

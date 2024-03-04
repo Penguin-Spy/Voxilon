@@ -4,37 +4,14 @@ import NetworkedComponent from "/common/NetworkedComponent.js"
 import * as THREE from 'three'
 import { check, DT } from "/common/util.js"
 
-const _avaliableTorque = new THREE.Vector3()
 const _twist = new THREE.Vector3()
 const _angularVelocity = new THREE.Vector3()
 const _worldToLocalQuaternion = new THREE.Quaternion()
 
-const _v1 = new THREE.Vector3()
-
-const abs = Math.abs, min = Math.min, max = Math.max
+const min = Math.min, max = Math.max, abs = Math.abs, sign = Math.sign
 
 /**
- * Steps a value towards zero by `step`, does not overshoot. Returns the distance to zero
- * @param {number} value  the value to move towards zero
- * @param {number} step   how much to move it by
- * @returns {number}      the clamped distance to zero
- */
-function toZeroStep(value, step) {
-  if(abs(value) < step) {
-    return -value
-  } else if(value > 0) {
-    return -step
-  } else {
-    return step
-  }
-}
-
-function clamp(value, min, max) {
-  return max(min(value, max), min)
-}
-
-/**
- * Manages recieving input and applying torque on a contraption via it's gyroscopes
+ * Manages recieving input and applying torque on a contraption via its gyroscopes
  */
 export default class GyroManager {
   /** @type {NetworkedComponent} */
@@ -131,8 +108,6 @@ export default class GyroManager {
 
   // calculate output torque necessary
   update() {
-    _avaliableTorque.copy(this.#totalTorque).multiply(this.#rigidBody.invInertia).multiplyScalar(DT)
-
     _worldToLocalQuaternion.copy(this.#rigidBody.quaternion).conjugate()
 
     // twist (angular impulse)
@@ -140,36 +115,54 @@ export default class GyroManager {
     _twist.set(0, 0, 0)
 
     // current angular velocity to local refence frame
-    _angularVelocity.copy(this.#rigidBody.angularVelocity).applyQuaternion(_worldToLocalQuaternion)
+    _angularVelocity.copy(this.#rigidBody.angularVelocity).applyQuaternion(_worldToLocalQuaternion).multiply(this.#rigidBody.inertia).multiplyScalar(60)
 
     if(this.#pitch > 0) {
-      _twist.x = _avaliableTorque.x * this.#torqueSensitivity
+      _twist.x = this.#totalTorque.x * this.#torqueSensitivity
     } else if(this.#pitch < 0) {
-      _twist.x = -_avaliableTorque.x * this.#torqueSensitivity
-    } else if(this.#dampeners) {
-      _twist.x = -_angularVelocity.x
+      _twist.x = -this.#totalTorque.x * this.#torqueSensitivity
     }
     if(this.#yaw > 0) {
-      _twist.y = _avaliableTorque.y * this.#torqueSensitivity
+      _twist.y = this.#totalTorque.y * this.#torqueSensitivity
     } else if(this.#yaw < 0) {
-      _twist.y = -_avaliableTorque.y * this.#torqueSensitivity
-    } else if(this.#dampeners) {
-      _twist.y = -_angularVelocity.y
+      _twist.y = -this.#totalTorque.y * this.#torqueSensitivity
     }
     if(this.#roll > 0) {
-      _twist.z = -_avaliableTorque.z * this.#torqueSensitivity
+      _twist.z = -this.#totalTorque.z * this.#torqueSensitivity
     } else if(this.#roll < 0) {
-      _twist.z = _avaliableTorque.z * this.#torqueSensitivity
-    } else if(this.#dampeners) {
-      _twist.z = -_angularVelocity.z
+      _twist.z = this.#totalTorque.z * this.#torqueSensitivity
     }
-    _twist.clamp(_v1.copy(_avaliableTorque).negate(), _avaliableTorque)
+
+    if(this.#dampeners) {
+      const dampPitch = min(this.#totalTorque.x, abs(_angularVelocity.x)) * -sign(_angularVelocity.x)
+      if(_twist.x > 0) { // set to the max of input & damp if in same dir, or just the input if not
+        _twist.x = max(_twist.x, dampPitch)
+      } else if(_twist.x < 0) {
+        _twist.x = min(_twist.x, dampPitch)
+      }
+      const dampYaw = min(this.#totalTorque.y, abs(_angularVelocity.y)) * -sign(_angularVelocity.y)
+      if(_twist.y > 0) {
+        _twist.y = max(_twist.y, dampYaw)
+      } else if(_twist.y < 0) {
+        _twist.y = min(_twist.y, dampYaw)
+      } else {
+        _twist.y = dampYaw
+      }
+      const dampRoll = min(this.#totalTorque.z, abs(_angularVelocity.z)) * -sign(_angularVelocity.z)
+      if(_twist.z > 0) {
+        _twist.z = max(_twist.z, dampRoll)
+      } else if(_twist.z < 0) {
+        _twist.z = min(_twist.z, dampRoll)
+      } else {
+        _twist.z = dampRoll
+      }
+    }
 
     // save output torque first before we modify twist for applying to the rigid body
-    this.outputTorque.copy(_twist).multiplyScalar(60).multiply(this.#rigidBody.inertia)
+    this.outputTorque.copy(_twist)
 
     // convert twist to world frame and apply as torque
-    _twist.multiply(this.#rigidBody.invInertia)
+    _twist.multiply(this.#rigidBody.invInertia).multiplyScalar(DT)
     _twist.applyQuaternion(this.#rigidBody.quaternion)
     this.#rigidBody.angularVelocity.vadd(_twist, this.#rigidBody.angularVelocity)
   }
