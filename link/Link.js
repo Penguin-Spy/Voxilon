@@ -3,10 +3,9 @@ import { DT } from "/common/util.js"
 export default class Link {
   #accumulator = 0
 
-  constructor(username) {
+  constructor() {
     Object.defineProperties(this, {
-      callbacks: { enumerable: true, value: {} },
-      username: { enumerable: true, value: username }
+      callbacks: { enumerable: true, value: {} }
     })
   }
 

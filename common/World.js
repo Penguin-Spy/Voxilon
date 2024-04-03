@@ -104,7 +104,7 @@ export default class World {
     // check character bodies in control seats too
     for(const contraptionBody of this.getAllBodiesByType("voxilon:contraption_body")) {
       for(const component of contraptionBody.contraption.components) {
-        if(component.type === "voxilon:control_seat" && component.storedCharacterBody.player_uuid === uuid) {
+        if(component.type === "voxilon:control_seat" && component.storedCharacterBody && component.storedCharacterBody.player_uuid === uuid) {
           return component.storedCharacterBody
         }
       }

@@ -4,11 +4,9 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import Renderer from '/client/Renderer.js'
+import Client from '/client/Client.js'
 import Input from '/client/Input.js'
 import GUI from '/client/GUI.js'
-import HUD from '/client/HUD.js'
-import ControllerManager from '/client/ControllerManager.js'
 import Debug from '/client/Debug.js'
 
 import main_menu from '/client/screens/main_menu.js'
@@ -17,16 +15,8 @@ import main_menu from '/client/screens/main_menu.js'
 const Voxilon = { Input, GUI, Debug }
 
 // top-level engine objects
+let client = Voxilon.client = new Client()
 let link, renderer, hud
-
-// generate a UUID for the player if one does not exist
-let uuid = localStorage.getItem("player_uuid")
-if(uuid === null) {
-  uuid = crypto.randomUUID()
-  localStorage.setItem("player_uuid", uuid)
-}
-console.log("player uuid", uuid)
-
 
 let renderRequest, then = 0
 // ticks the physics engine and then the Server (crafting machines, belts, vehicles, etc.)
@@ -57,7 +47,7 @@ function animate(now) {
   try {
     Debug.update(deltaTime)
     link.preRender()
-    ControllerManager.activeController.preRender(deltaTime)
+    client.activeController.preRender(deltaTime)
     renderer.render()
   } catch(e) {
     GUI.showError("Error occured while rendering", e)
@@ -69,23 +59,10 @@ function animate(now) {
 }
 
 function start() {
-  // initalize engine
-  renderer = new Renderer(link)
-  Input.useCanvas(renderer.getCanvas())
-  hud = new HUD(link)
-
-  //link.attachControllers(hud, renderer)
-  ControllerManager.attachControllers(link, hud, renderer)
-
   Voxilon.link = link
-  Voxilon.renderer = renderer
-  Voxilon.hud = hud
-  Voxilon.manager = ControllerManager
-
-  Debug.attach(link, hud, ControllerManager)
-
-  const characterBody = link.world.getPlayersCharacterBody(uuid) // both links will have loaded the world enough to get the player's character
-  ControllerManager.setActiveController("player", characterBody)
+  // these are populated after the link's constructor attaches the client to itself
+  renderer = client.renderer
+  hud = client.hud
 
   GUI.clearScreen()
   GUI.cursor = "default"
@@ -119,8 +96,7 @@ async function directLink(button, worldOptions) {
 
   console.info("Starting direct link")
   try {
-    worldOptions.uuid = uuid
-    link = new linkModules.direct(worldOptions)
+    link = new linkModules.direct(client, worldOptions)
     start()
   } catch(e) {
     GUI.showError("Error when starting direct link", e)

@@ -49,8 +49,8 @@ const _fakePointer = { x: 0, y: 0 } // fake pointer bc it's always in the middle
 const defaultPreviewMesh = new Mesh(new BoxGeometry(1, 1, 1), new MeshBasicMaterial({ color: "#ffff00" }))
 
 export default class PlayerController extends Controller {
-  constructor(controllerManager, link, hud, renderer) {
-    super(controllerManager, link, hud, renderer)
+  constructor(link, hud, renderer) {
+    super(link, hud, renderer)
 
     /* movement */
     this.lookSpeed = 0.75
@@ -418,7 +418,8 @@ export default class PlayerController extends Controller {
           console.log("interacted with seat!")
           Voxilon.Debug.setPointPosition("red", intersect.point)
 
-          this.controllerManager.setActiveController("contraption", component, this.body)
+          // TODO: replace with Action
+          //this.controllerManager.setActiveController("contraption", component, this.body)
         }
       }
     }

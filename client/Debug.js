@@ -5,6 +5,7 @@ import * as THREE from 'three'
 import CannonDebugger from 'cannon-es-debugger'
 import Input from "/client/Input.js"
 import GUI from "/client/GUI.js"
+import Client from "/client/Client.js"
 
 function generateDebugRow(name, table) {
   const row = document.createElement("tr")
@@ -39,8 +40,8 @@ class Debug {
   #rigidBodyPosMeshes
   /** @type {boolean} */
   #physicsWireframeEnabled
-
-  #debugFrame; #renderSpan; #positionDebug; #velocityDebug; #angularVelocityDebug; #thrustOutputDebug; #torqueOutputDebug; #controllerManager
+  #client;
+  #debugFrame; #renderSpan; #positionDebug; #velocityDebug; #angularVelocityDebug; #thrustOutputDebug; #torqueOutputDebug;
 
   constructor() {
     this.#wireframeMeshes = []
@@ -100,13 +101,14 @@ class Debug {
   }
 
   /**
+   * @param {Client} client
    * @param {Link} link
    * @param {HUD} hud
    */
-  attach(link, hud, controllerManager) {
+  attach(client, link, hud) {
+    this.#client = client
     this.#link = link
     this.#hud = hud
-    this.#controllerManager = controllerManager
 
     const scene = link.world.scene
     const physics = link.world.physics
@@ -160,7 +162,7 @@ class Debug {
   update(deltaTime) {
     this.#renderSpan.innerText = `FPS: ${(1 / deltaTime).toFixed(2)}`
 
-    const body = this.#controllerManager.activeController?.body
+    const body = this.#client.activeController?.body
     if(body) {
       this.#positionDebug[0].innerText = formatNumber("x", body.position.x)
       this.#positionDebug[1].innerText = formatNumber("y", body.position.y)
@@ -174,13 +176,13 @@ class Debug {
       this.#angularVelocityDebug[1].innerText = formatNumber("y", body.angularVelocity.y)
       this.#angularVelocityDebug[2].innerText = formatNumber("r", body.angularVelocity.z)
 
-      const tm = this.#controllerManager.activeController?.thrustManager
+      const tm = this.#client.activeController?.thrustManager
       if(tm) {
         this.#thrustOutputDebug[0].innerText = formatNumber("x", tm.outputThrust.x)
         this.#thrustOutputDebug[1].innerText = formatNumber("y", tm.outputThrust.y)
         this.#thrustOutputDebug[2].innerText = formatNumber("z", tm.outputThrust.z)
       }
-      const gm = this.#controllerManager.activeController?.gyroManager
+      const gm = this.#client.activeController?.gyroManager
       if(gm) {
         this.#torqueOutputDebug[0].innerText = formatNumber("p", gm.outputTorque.x)
         this.#torqueOutputDebug[1].innerText = formatNumber("r", gm.outputTorque.y)

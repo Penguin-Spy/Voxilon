@@ -16,8 +16,8 @@ const UP = new Vector3(0, 1, 0)
 const PI = Math.PI, HALF_PI = Math.PI / 2
 
 export default class ContraptionController extends Controller {
-  constructor(controllerManager, link, hud, renderer) {
-    super(controllerManager, link, hud, renderer)
+  constructor(link, hud, renderer) {
+    super(link, hud, renderer)
 
     this.lookPitch = 0
     this.lookYaw = 0
@@ -126,7 +126,9 @@ export default class ContraptionController extends Controller {
 
     if(Input.get("dismount")) {
       const body = this.component.retrieveBody()
-      this.controllerManager.setActiveController("player", body)
+      console.log("dismount")
+      // TODO: replace with Action
+      //this.controllerManager.setActiveController("player", body)
     }
 
     let front_back = 0, left_right = 0, up_down = 0,

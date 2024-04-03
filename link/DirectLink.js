@@ -4,18 +4,23 @@ import PeerConnection from '/link/PeerConnection.js'
 import PacketEncoder from '/link/PacketEncoder.js'
 import PacketDecoder from '/link/PacketDecoder.js'
 import Link from '/link/Link.js'
-import PlayerController from '/client/PlayerController.js'
 import { SIGNAL_ENDPOINT, PacketType } from '/link/Constants.js'
+import Client from '/client/Client.js'
 const { CHAT, ADD_BODY } = PacketType
 
 export default class DirectLink extends Link {
-  constructor(worldOptions) {
-    super("host") // maybe load from LocalStorage?
+  /**
+   * @param {Client} client
+   */
+  constructor(client, worldOptions) {
+    super()
+    this.username = "host" // maybe load from LocalStorage?
 
     // networking stuff
-    this._clients = []
+    //this._clients = []
 
     // create/load world
+    /** @type {World} */
     let world
     if(worldOptions.type === "load") {
       world = new World(worldOptions.data)
@@ -55,6 +60,12 @@ export default class DirectLink extends Link {
     Object.defineProperties(this, {
       world: { enumerable: true, value: world }
     })
+
+    // initalize client
+    this.client = client
+    client.attach(this)
+
+    client.setController("player", world.getPlayersCharacterBody(client.uuid))
 
     // create Integrated server
   }
