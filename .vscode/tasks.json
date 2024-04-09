@@ -3,10 +3,10 @@
 	"tasks": [
 		{
 			"type": "npm",
-			"script": "host",
+			"script": "dev",
 			"problemMatcher": [],
-			"label": "npm: host",
-			"detail": "node index.js",
+			"label": "npm: dev host",
+			"detail": "node dev_host.js",
 			"group": {
 				"kind": "build",
 				"isDefault": true

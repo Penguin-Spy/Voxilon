@@ -78,9 +78,7 @@ export default class NetworkLink extends Link {
       }
     }
 
-    // initalize client
     this.client = client
-    client.attach(this)
 
     // finally, request to join
     this.ws.onopen = () => {
@@ -121,14 +119,16 @@ export default class NetworkLink extends Link {
         break;
 
       case SET_CONTROLLER_STATE:
-        const body = this.world.getBodyByNetID(packet.netID)
-        this.client.setController(packet.type, body)
-
-        // start the client if this was the first set controller state packet of the session
+        // initalize the client if this was the first set controller state packet of the session
         if(this._readyState === LOADED) {
           this._readyState = ATTACHED
           this._readyResolve()
+          this.client.attach(this)
         }
+
+        const body = this.world.getBodyByNetID(packet.netID)
+        this.client.setController(packet.type, body)
+
         break;
       default:
         throw new TypeError(`Unknown packet type ${packet.$}`)

@@ -45,7 +45,7 @@ function animate(now) {
 
   // --- Render ---
   try {
-    //Debug.update(deltaTime)
+    Debug.update(deltaTime)
     link.preRender()
     client.activeController.preRender(deltaTime)
     renderer.render()
