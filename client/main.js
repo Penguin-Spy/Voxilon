@@ -75,6 +75,7 @@ function start() {
 
 function stop() {
   cancelAnimationFrame(renderRequest)
+  link.stop()
 }
 
 /* --- Direct/Network link --- */

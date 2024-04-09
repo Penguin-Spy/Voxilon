@@ -75,7 +75,7 @@ const wsServer = new WebSocket.Server({ noServer: true });
 // Initalize websocket & add to session
 wsServer.on('connection', (ws, code) => {
   if(code === null) { // host
-    code = makeCode()
+    code = "AAAAA" //makeCode()
     ws.session = sessions[code] = { host: ws, clients: [] }
 
     ws.on('message', msg => {

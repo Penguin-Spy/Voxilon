@@ -177,6 +177,7 @@ export default class World {
     this.bodies.push(body)
     body.netID = this.nextNetID
     this.nextNetID++
+    body.netPriority = 0
   }
 
   getBodyByNetID(netID) {

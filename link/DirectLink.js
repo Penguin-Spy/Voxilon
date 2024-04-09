@@ -6,7 +6,7 @@ import PacketDecoder from '/link/PacketDecoder.js'
 import Link from '/link/Link.js'
 import { SIGNAL_ENDPOINT, PacketType } from '/link/Constants.js'
 import Client from '/client/Client.js'
-const { CHAT, ADD_BODY } = PacketType
+const { CHAT, SYNC_BODY } = PacketType
 
 export default class DirectLink extends Link {
   /**
@@ -88,6 +88,9 @@ export default class DirectLink extends Link {
             console.info(`Join code: ${data.join_code}`)
             break;
           case "join": // request to join
+            if(typeof data.username !== "string" || typeof data.uuid !== "string") {
+              throw new TypeError("invalid join message")
+            }
             console.info(`Approving ${data.username}'s request to join (${data.uuid})`)
             this.ws.send(JSON.stringify({
               to: data.from,
@@ -147,7 +150,6 @@ export default class DirectLink extends Link {
   }
 
   _handlePacket(client, data) {
-    console.log(`[dataChannel:${client.id}] ${data}`)
     const packet = PacketDecoder.decode(data)
 
     // handle receiving packets
@@ -156,15 +158,20 @@ export default class DirectLink extends Link {
         this.emit('chat_message', packet)
         this.broadcast(PacketEncoder.CHAT(packet.author, packet.msg))
         break;
-      // ADD_BODY wouldn't be valid to send to the server
-      // clients will use a different packet to request placing stuff
-      /*case ADD_BODY:
-        const body = this._world.loadBody(packet)
-          // check if the loaded body was ours
-        if(packet.type === "voxilon:player_body" && packet.is_client_body) {
-          this._playerBody.attach(this.playerController)
-        }
-        break;*/
+        case SYNC_BODY:
+          // validate it is the clients own body      
+          if(packet.i !== client.body.netID) {
+            console.error(`client #${client.id} sent sync packet for incorrect body:`, packet)
+            client.dataChannel.close()
+            break
+          }
+          
+          client.body.position.set(...packet.p)
+          client.body.velocity.set(...packet.v)
+          client.body.quaternion.set(...packet.q)
+          client.body.angularVelocity.set(...packet.a)
+        
+        break;
       default:
         throw new TypeError(`Unknown packet type ${packet.$}`)
     }
@@ -176,7 +183,34 @@ export default class DirectLink extends Link {
 
   broadcast(packet) {
     for(const client of this._clients) {
-      client.dataChannel.send(packet)
+      if(client.dataChannel.readyState === "open") {
+        client.dataChannel.send(packet)
+      }
+    }
+  }
+
+  step(deltaTime) {
+    // update the world (physics & gameplay)
+    super.step(deltaTime)
+
+    // then calculate the priority of objects
+    // (TODO)
+    this.client.activeController.body.netPriority++;
+    
+    // send sync packets
+    const ourBody = this.client.activeController.body
+    if(ourBody.netPriority > 60) {
+      ourBody.netPriority = 0
+      const ourBodySync = PacketEncoder.SYNC_BODY(this.client.activeController.body)
+    
+      this.broadcast(ourBodySync)
+    }
+  }
+  
+  stop() {
+    this.ws.close(1000, "stopping client")
+    for(const client of this._clients) {
+      client.dataChannel.close()
     }
   }
 

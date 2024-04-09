@@ -6,7 +6,7 @@ import PacketDecoder from '/link/PacketDecoder.js'
 import Link from '/link/Link.js'
 import PlayerController from '/client/PlayerController.js'
 import { SIGNAL_ENDPOINT, PacketType } from '/link/Constants.js'
-const { CHAT, LOAD_WORLD, SET_CONTROLLER_STATE } = PacketType
+const { CHAT, LOAD_WORLD, SET_CONTROLLER_STATE, SYNC_BODY } = PacketType
 
 const JOIN_CODE_REGEX = /^([A-HJ-NP-Z0-9]{5})$/
 
@@ -20,6 +20,7 @@ export default class NetworkLink extends Link {
   constructor(client, target, username) {
     super()
     this.username = username
+    this.bodyNetPriority = 0
 
     this._readyState = CONNECTING
 
@@ -34,8 +35,8 @@ export default class NetworkLink extends Link {
       target = `${SIGNAL_ENDPOINT}/${target}`
     }
     // normalize url (URL constructor is allowed to throw an error)
-    const targetURL = new URL(target)
-    //targetURL.protocol = "wss:"
+    const targetURL = new URL(target, document.location)
+    targetURL.protocol = targetURL.hostname === "localhost" ? "ws" : "wss"
     targetURL.hash = ""
     console.log(targetURL)
 
@@ -54,7 +55,11 @@ export default class NetworkLink extends Link {
               ordered: false,
               negotiated: true, id: 0
             })
-            this.dataChannel.onclose = e => { console.info("[dataChannel] close") }
+            this.dataChannel.onclose = e => {
+              console.info("[dataChannel] close:", e)
+              // need to stop the client and display a message when the connection is closed by the host, but not overwrite the shown error if we close our own data channel
+              //GUI.showError("connection to host closed", {})
+            }
             this.dataChannel.onmessage = ({ data }) => {
               try {
                 this._handlePacket(data)
@@ -103,7 +108,6 @@ export default class NetworkLink extends Link {
 
   /* --- Network Link methods --- */
   _handlePacket(data) {
-    console.log(`[dataChannel] ${data}`)
     const packet = PacketDecoder.decode(data)
 
     // handle receiving packets
@@ -130,6 +134,17 @@ export default class NetworkLink extends Link {
         this.client.setController(packet.type, body)
 
         break;
+      
+      case SYNC_BODY:
+        const syncedBody = this.world.getBodyByNetID(packet.i)
+        
+        syncedBody.position.set(...packet.p)
+        syncedBody.velocity.set(...packet.v)
+        syncedBody.quaternion.set(...packet.q)
+        syncedBody.angularVelocity.set(...packet.a)
+        
+        break;
+      
       default:
         throw new TypeError(`Unknown packet type ${packet.$}`)
     }
@@ -137,6 +152,31 @@ export default class NetworkLink extends Link {
 
   send(packet) {
     this.dataChannel.send(packet)
+  }
+  
+  step(deltaTime) {
+    // update the world (physics & gameplay)
+    super.step(deltaTime)
+    
+    // then calculate the priority of syncing our own body
+    this.bodyNetPriority++
+    if(this.bodyNetPriority > 30) {
+      this.bodyNetPriority = 0
+      this.dataChannel.send(PacketEncoder.SYNC_BODY(this.client.activeController.body))
+    }
+  }
+  
+  stop() {
+    try {
+      this.ws.close(1000, "stopping client")
+    } catch(e) {
+      console.error("error occured while stopping & closing websocket:", e)
+    }
+    try {
+      this.dataChannel.close()
+    } catch(e) {
+      console.error("error occured while stopping & closing data channel:", e)
+    }
   }
 
   /* --- Link interface methods --- */
@@ -154,6 +194,6 @@ export default class NetworkLink extends Link {
   // Chat
   sendChat(msg) {
     console.info(`[NetworkLink] Sending chat message: "${msg}"`)
-    this.send(PacketEncoder.CHAT(this._username, msg))
+    this.send(PacketEncoder.CHAT(this.username, msg))
   }
 }
