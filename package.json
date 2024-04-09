@@ -3,11 +3,11 @@
   "version": "alpha-10_1",
   "description": "mm yesn javascrimpt videojuego",
   "homepage": "https://github.com/Penguin-Spy/Voxilon",
-  "main": "index.js",
   "scripts": {
     "build": "node build.js",
-    "host": "node index.js"
+    "dev": "node dev_host.js"
   },
+  "type": "module",
   "keywords": [],
   "author": "Penguin_Spy",
   "license": "MPL-2.0",

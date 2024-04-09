@@ -17,7 +17,7 @@ export default class DirectLink extends Link {
     this.username = "host" // maybe load from LocalStorage?
 
     // networking stuff
-    //this._clients = []
+    this._clients = []
 
     // create/load world
     /** @type {World} */
@@ -72,21 +72,23 @@ export default class DirectLink extends Link {
 
   /* --- Direct Link methods --- */
 
-  async publish() {
+  async publish(uri) {
     try {
       console.info("Publishing session to signaling server")
 
+      if(!uri) { uri = SIGNAL_ENDPOINT + "/new_session" }
+
       // create session & start listening for WebRTC connections
-      this.ws = new WebSocket(SIGNAL_ENDPOINT + "/new_session")
+      this.ws = new WebSocket(uri)
       this.ws.onmessage = e => {
         const data = JSON.parse(e.data)
         console.log("[link Receive]", data)
         switch(data.type) {
-          case "hello":
+          case "hello": // from the signaling server
             console.info(`Join code: ${data.join_code}`)
             break;
           case "join": // request to join
-            console.info(`Approving ${data.username}'s request to join`)
+            console.info(`Approving ${data.username}'s request to join (${data.uuid})`)
             this.ws.send(JSON.stringify({
               to: data.from,
               type: "join",
@@ -95,7 +97,9 @@ export default class DirectLink extends Link {
 
             const client = this._clients[data.from] = {}
             client.id = data.from
+            client.uuid = data.uuid
 
+            // replaces the websocket onmessage handler with the peer connection one for establishing WebRTC
             client.pc = new PeerConnection(this.ws, client.id)
 
             client.dataChannel = client.pc.createDataChannel("link", {
@@ -115,26 +119,16 @@ export default class DirectLink extends Link {
             client.dataChannel.onopen = e => {
               console.info(`[dataChannel:${client.id}] open`)
 
+              // get or create client's player body (do this first so it gets serialized)
+              client.body = this.world.getPlayersCharacterBody(client.uuid)
+
               // send world data
               const world_data = this.world.serialize()
               client.dataChannel.send(PacketEncoder.LOAD_WORLD(world_data))
 
-              // create client's player body
-              client.body = this.world.loadBody({
-                type: "voxilon:player_body",
-                position: [0, 44, 0]
-              })
-              const packet = PacketEncoder.ADD_BODY(client.body.serialize(), false)
-              const clientPacket = PacketEncoder.ADD_BODY(client.body.serialize(), true)
-              for(const broadcastClient of this._clients) {
-                if(broadcastClient === client) {
-                  console.log(`sending clientPacket to ${client.id}`, clientPacket)
-                  broadcastClient.dataChannel.send(clientPacket)
-                } else {
-                  console.log(`sending packet to ${client.id}`, packet)
-                  broadcastClient.dataChannel.send(packet)
-                }
-              }
+              // tell the client to load in as their player
+              console.log("setting client", client, "controller to player with netid", client.body.netID)
+              client.dataChannel.send(PacketEncoder.SET_CONTROLLER_STATE("player", client.body.netID))
             }
 
             break;

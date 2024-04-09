@@ -47,6 +47,8 @@ export default class World {
       scene: { enumerable: true, value: scene }
     })
 
+    this.nextNetID = 0 // unique across everything (even bodies & components won't share one)
+
     // load bodies
     data.bodies.forEach(b => this.loadBody(b))
 
@@ -110,6 +112,7 @@ export default class World {
       }
     }
 
+    /* TODO: this needs to not happen when loading the 2nd ever player in multiplayer
     // otherwise if there's just one character, change it's uuid and return it
     let characterBodies = this.bodies.filter(body => body.type === "voxilon:character_body")
     if(characterBodies.length === 1) {
@@ -117,7 +120,7 @@ export default class World {
       console.info(`Changing UUID of singleplayer body from ${characterBody.player_uuid} to ${uuid}`)
       characterBody.player_uuid = uuid
       return characterBody
-    }
+    }*/
 
     // otherwise there's multiple players and this player doesn't have one, create a new one
     console.log(`Spawning in new character for player ${uuid}`)
@@ -162,6 +165,7 @@ export default class World {
     this.physics.removeBody(body.rigidBody)
     if(body.mesh) this.scene.remove(body.mesh)
     this.bodies.splice(index, 1)
+    body.netID = false // indicate that it had one and it was removed
   }
   /**
    * Adds a body to the world that has already been loaded by {@link World#loadBody}.
@@ -171,6 +175,16 @@ export default class World {
     this.physics.addBody(body.rigidBody)
     if(body.mesh) this.scene.add(body.mesh)
     this.bodies.push(body)
+    body.netID = this.nextNetID
+    this.nextNetID++
+  }
+
+  getBodyByNetID(netID) {
+    const body = this.bodies.find(body => body.netID === netID)
+    if(!body) {
+      throw new Error(`body with a netID of '${netID}' not found!`)
+    }
+    return body
   }
 
   preRender() {

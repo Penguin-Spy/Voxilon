@@ -18,7 +18,7 @@ export default class Renderer {
     })
 
     this.body = null
-    this.scene = link.world.scene
+    this.scene = new THREE.Scene()//link.world.scene
 
     // initalize the scene
     this.scene.background = new THREE.CubeTextureLoader()

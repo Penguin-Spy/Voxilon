@@ -27,7 +27,7 @@ export default class Client {
     Input.useCanvas(this.renderer.getCanvas())
     this.hud = new HUD(link)
 
-    Debug.attach(this, link, this.hud)
+    //Debug.attach(this, link, this.hud)
 
     this.controllers = {
       "player": new PlayerController(link, this.hud, this.renderer),

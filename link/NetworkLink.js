@@ -6,7 +6,7 @@ import PacketDecoder from '/link/PacketDecoder.js'
 import Link from '/link/Link.js'
 import PlayerController from '/client/PlayerController.js'
 import { SIGNAL_ENDPOINT, PacketType } from '/link/Constants.js'
-const { CHAT, LOAD_WORLD, ADD_BODY } = PacketType
+const { CHAT, LOAD_WORLD, SET_CONTROLLER_STATE } = PacketType
 
 const JOIN_CODE_REGEX = /^([A-HJ-NP-Z0-9]{5})$/
 
@@ -17,8 +17,9 @@ const JOIN_CODE_REGEX = /^([A-HJ-NP-Z0-9]{5})$/
 const CONNECTING = 0, LOADING = 1, LOADED = 2, ATTACHED = 3
 
 export default class NetworkLink extends Link {
-  constructor(hud, renderer, target, username) {
-    super(hud, renderer, username) // maybe load from LocalStorage? (prefill input of gui)
+  constructor(client, target, username) {
+    super()
+    this.username = username
 
     this._readyState = CONNECTING
 
@@ -34,7 +35,7 @@ export default class NetworkLink extends Link {
     }
     // normalize url (URL constructor is allowed to throw an error)
     const targetURL = new URL(target)
-    targetURL.protocol = "wss:"
+    //targetURL.protocol = "wss:"
     targetURL.hash = ""
     console.log(targetURL)
 
@@ -77,11 +78,16 @@ export default class NetworkLink extends Link {
       }
     }
 
+    // initalize client
+    this.client = client
+    client.attach(this)
+
     // finally, request to join
     this.ws.onopen = () => {
       this.ws.send(JSON.stringify({
         type: "join",
-        username: this.username
+        username: this.username,
+        uuid: this.client.uuid
       }))
     }
     this.ws.onclose = ({ code, reason }) => {
@@ -114,14 +120,12 @@ export default class NetworkLink extends Link {
         console.log("loaded world")
         break;
 
-      case ADD_BODY:
-        const body = this._world.loadBody(packet.data)
-        // check if the loaded body was ours
-        if(packet.data.type === "voxilon:character_body" && packet.is_client_body) {
-          console.log("loaded our body:", packet)
-          this.setActiveController("player", { playerBody: body })
-          /*this._playerBody = body
-          this._playerBody.attach(this.playerController)*/
+      case SET_CONTROLLER_STATE:
+        const body = this.world.getBodyByNetID(packet.netID)
+        this.client.setController(packet.type, body)
+
+        // start the client if this was the first set controller state packet of the session
+        if(this._readyState === LOADED) {
           this._readyState = ATTACHED
           this._readyResolve()
         }

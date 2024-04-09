@@ -1,4 +1,4 @@
-/* main.js © Penguin_Spy 2023
+/* main.js © Penguin_Spy 2023-2024
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
@@ -45,7 +45,7 @@ function animate(now) {
 
   // --- Render ---
   try {
-    Debug.update(deltaTime)
+    //Debug.update(deltaTime)
     link.preRender()
     client.activeController.preRender(deltaTime)
     renderer.render()
@@ -102,7 +102,7 @@ async function directLink(button, worldOptions) {
     GUI.showError("Error when starting direct link", e)
   }
 }
-async function networkLink(button, gameCode, username) {
+async function networkLink(button, target, username) {
   button.disabled = true
   GUI.cursor = "loading"
   if(!linkModules.network) {
@@ -115,9 +115,9 @@ async function networkLink(button, gameCode, username) {
     }
   }
 
-  console.info(`Starting network link w/ code: ${gameCode} & username: ${username}`)
+  console.info(`Starting network link with target: '${target}' & username: '${username}'`)
   try {
-    link = new linkModules.network(gameCode, username)
+    link = new linkModules.network(client, target, username)
     await link.ready
     start()
   } catch(e) {

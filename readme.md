@@ -10,10 +10,10 @@ eventually, it'll be a space-exploration-sandbox-automation game with single/mut
 This project uses:
 - [cannon-es](https://pmndrs.github.io/cannon-es/) for physics
 - [Three.js](https://threejs.org/) for rendering
-- [Replit](https://replit.com/@PenguinSpy/Voxilon) for server hosting (temporary)
+- [Vercel](https://vercel.com) for hosting the website
 
 # License
-Copyright © Penguin_Spy 2023  
+Copyright © Penguin_Spy 2023-2024  
 
 This Source Code Form is subject to the terms of the Mozilla Public
 License, v. 2.0. If a copy of the MPL was not distributed with this

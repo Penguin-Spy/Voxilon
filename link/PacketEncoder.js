@@ -1,5 +1,5 @@
 import { PacketType } from '/link/Constants.js'
-const { CHAT, LOAD_WORLD, ADD_BODY } = PacketType
+const { CHAT, LOAD_WORLD, SET_CONTROLLER_STATE } = PacketType
 
 export default {
   CHAT(author, msg) {
@@ -14,10 +14,10 @@ export default {
       world_data
     })
   },
-  ADD_BODY(data, is_client_body) {
+  SET_CONTROLLER_STATE(type, netID) {
     return JSON.stringify({
-      $: ADD_BODY,
-      data, is_client_body
+      $: SET_CONTROLLER_STATE,
+      type, netID
     })
   }
 }
