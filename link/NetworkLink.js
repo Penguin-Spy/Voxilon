@@ -5,10 +5,10 @@ import PacketEncoder from '/link/PacketEncoder.js'
 import PacketDecoder from '/link/PacketDecoder.js'
 import Link from '/link/Link.js'
 import PlayerController from '/client/PlayerController.js'
-import { SIGNAL_ENDPOINT, PacketType } from '/link/Constants.js'
+import { PacketType } from '/link/Constants.js'
+import { parseSignalTarget } from '/link/util.js'
 const { CHAT, LOAD_WORLD, SET_CONTROLLER_STATE, SYNC_BODY } = PacketType
 
-const JOIN_CODE_REGEX = /^([A-HJ-NP-Z0-9]{5})$/
 
 // CONNECTING: waiting for WebSocket connect, join request, and WebRTC connect
 // LOADING: WebRTC connected, waiting for world to load
@@ -29,23 +29,14 @@ export default class NetworkLink extends Link {
       this._readyReject = reject
     })
 
-    // open a WebRTC data channel with the host of the specified game
-    if(target.match(JOIN_CODE_REGEX)) { // convert join code to full url
-      console.log(`prefixing ${target}`)
-      target = `${SIGNAL_ENDPOINT}/${target}`
-    }
-    // normalize url (URL constructor is allowed to throw an error)
-    const targetURL = new URL(target, document.location)
-    targetURL.protocol = targetURL.hostname === "localhost" ? "ws" : "wss"
-    targetURL.hash = ""
-    console.log(targetURL)
-
     // create websocket & add msg handler
+    const targetURL = parseSignalTarget(target)
+    console.info("Connecting to ", targetURL.href)
     this.ws = new WebSocket(targetURL)
 
-    this.ws.onmessage = (e) => {
+    this.ws.addEventListener("message", e => {
       const data = JSON.parse(e.data)
-      console.log("[link Receive]", data)
+      console.log("[link signal receive]", data)
       switch(data.type) {
         case "join":
           if(data.approved) { // request to join was approved, continue with WebRTC
@@ -81,24 +72,24 @@ export default class NetworkLink extends Link {
         default:
           break;
       }
-    }
+    })
 
     this.client = client
 
     // finally, request to join
-    this.ws.onopen = () => {
+    this.ws.addEventListener("open", () => {
       this.ws.send(JSON.stringify({
         type: "join",
         username: this.username,
         uuid: this.client.uuid
       }))
-    }
-    this.ws.onclose = ({ code, reason }) => {
+    })
+    this.ws.addEventListener("close", ({ code, reason }) => {
       console.warn(`Websocket closed | ${code}: ${reason}`)
       if(this._readyState === CONNECTING) {
         this._readyReject(new Error("Websocket closed while connecting"))
       }
-    }
+    })
   }
 
   get ready() { return this._readyPromise }
@@ -134,17 +125,17 @@ export default class NetworkLink extends Link {
         this.client.setController(packet.type, body)
 
         break;
-      
+
       case SYNC_BODY:
         const syncedBody = this.world.getBodyByNetID(packet.i)
-        
+
         syncedBody.position.set(...packet.p)
         syncedBody.velocity.set(...packet.v)
         syncedBody.quaternion.set(...packet.q)
         syncedBody.angularVelocity.set(...packet.a)
-        
+
         break;
-      
+
       default:
         throw new TypeError(`Unknown packet type ${packet.$}`)
     }
@@ -153,11 +144,11 @@ export default class NetworkLink extends Link {
   send(packet) {
     this.dataChannel.send(packet)
   }
-  
+
   step(deltaTime) {
     // update the world (physics & gameplay)
     super.step(deltaTime)
-    
+
     // then calculate the priority of syncing our own body
     this.bodyNetPriority++
     if(this.bodyNetPriority > 30) {
@@ -165,7 +156,7 @@ export default class NetworkLink extends Link {
       this.dataChannel.send(PacketEncoder.SYNC_BODY(this.client.activeController.body))
     }
   }
-  
+
   stop() {
     try {
       this.ws.close(1000, "stopping client")

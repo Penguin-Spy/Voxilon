@@ -4,11 +4,15 @@ import PeerConnection from '/link/PeerConnection.js'
 import PacketEncoder from '/link/PacketEncoder.js'
 import PacketDecoder from '/link/PacketDecoder.js'
 import Link from '/link/Link.js'
-import { SIGNAL_ENDPOINT, PacketType } from '/link/Constants.js'
+import { PacketType } from '/link/Constants.js'
 import Client from '/client/Client.js'
+import { sessionPublishURL } from '/link/util.js'
 const { CHAT, SYNC_BODY } = PacketType
 
 export default class DirectLink extends Link {
+  /** @type {World} */
+  world
+
   /**
    * @param {Client} client
    */
@@ -72,17 +76,15 @@ export default class DirectLink extends Link {
 
   /* --- Direct Link methods --- */
 
-  async publish(uri) {
+  async publish() {
     try {
       console.info("Publishing session to signaling server")
 
-      if(!uri) { uri = SIGNAL_ENDPOINT + "/new_session" }
-
       // create session & start listening for WebRTC connections
-      this.ws = new WebSocket(uri)
-      this.ws.onmessage = e => {
+      this.ws = new WebSocket(sessionPublishURL)
+      this.ws.addEventListener("message", e => {
         const data = JSON.parse(e.data)
-        console.log("[link Receive]", data)
+        console.log("[link signal receive]", data)
         switch(data.type) {
           case "hello": // from the signaling server
             console.info(`Join code: ${data.join_code}`)
@@ -102,14 +104,13 @@ export default class DirectLink extends Link {
             client.id = data.from
             client.uuid = data.uuid
 
-            // replaces the websocket onmessage handler with the peer connection one for establishing WebRTC
             client.pc = new PeerConnection(this.ws, client.id)
 
             client.dataChannel = client.pc.createDataChannel("link", {
               ordered: false,
               negotiated: true, id: 0
             })
-            client.dataChannel.onclose = e => { console.info(`[dataChannel:${client.id}] close`) }
+            client.dataChannel.onclose = e => { console.info(`[dataChannel:${client.id}] close`, e) }
             client.dataChannel.onmessage = ({ data }) => {
               try {
                 this._handlePacket(client, data)
@@ -138,11 +139,11 @@ export default class DirectLink extends Link {
           default:
             break;
         }
-      }
+      })
 
-      this.ws.onclose = ({ code, reason }) => {
+      this.ws.addEventListener("close", ({ code, reason }) => {
         console.warn(`Websocket closed | ${code}: ${reason}`)
-      }
+      })
 
     } catch(err) {
       console.error("An error occured while publishing the universe:", err)
@@ -158,19 +159,19 @@ export default class DirectLink extends Link {
         this.emit('chat_message', packet)
         this.broadcast(PacketEncoder.CHAT(packet.author, packet.msg))
         break;
-        case SYNC_BODY:
-          // validate it is the clients own body      
-          if(packet.i !== client.body.netID) {
-            console.error(`client #${client.id} sent sync packet for incorrect body:`, packet)
-            client.dataChannel.close()
-            break
-          }
-          
-          client.body.position.set(...packet.p)
-          client.body.velocity.set(...packet.v)
-          client.body.quaternion.set(...packet.q)
-          client.body.angularVelocity.set(...packet.a)
-        
+      case SYNC_BODY:
+        // validate it is the clients own body
+        if(packet.i !== client.body.netID) {
+          console.error(`client #${client.id} sent sync packet for incorrect body:`, packet)
+          client.dataChannel.close()
+          break
+        }
+
+        client.body.position.set(...packet.p)
+        client.body.velocity.set(...packet.v)
+        client.body.quaternion.set(...packet.q)
+        client.body.angularVelocity.set(...packet.a)
+
         break;
       default:
         throw new TypeError(`Unknown packet type ${packet.$}`)
@@ -189,24 +190,20 @@ export default class DirectLink extends Link {
     }
   }
 
-  step(deltaTime) {
-    // update the world (physics & gameplay)
-    super.step(deltaTime)
+  // ran after each DT world step
+  postUpdate() {
+    const body = this.world.netSyncQueue.next()
+    if(!body) return
+    const bodySync = PacketEncoder.SYNC_BODY(body)
 
-    // then calculate the priority of objects
-    // (TODO)
-    this.client.activeController.body.netPriority++;
-    
-    // send sync packets
-    const ourBody = this.client.activeController.body
-    if(ourBody.netPriority > 60) {
-      ourBody.netPriority = 0
-      const ourBodySync = PacketEncoder.SYNC_BODY(this.client.activeController.body)
-    
-      this.broadcast(ourBodySync)
+    for(const client of this._clients) {
+      if(client.dataChannel.readyState === "open" &&
+        client.body !== body) { // do not send a client a sync packet for their own body, they have the authoritative state of it
+        client.dataChannel.send(bodySync)
+      }
     }
   }
-  
+
   stop() {
     this.ws.close(1000, "stopping client")
     for(const client of this._clients) {

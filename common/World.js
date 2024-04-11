@@ -2,7 +2,7 @@ import Body from "/common/Body.js"
 
 import * as CANNON from 'cannon'
 import * as THREE from 'three'
-import { DT } from "/common/util.js"
+import { CircularQueue, DT } from "/common/util.js"
 import CelestialBody from "/common/bodies/CelestialBody.js"
 import CharacterBody from "./bodies/CharacterBody.js"
 import TestBody from "/common/bodies/TestBody.js"
@@ -48,6 +48,7 @@ export default class World {
     })
 
     this.nextNetID = 0 // unique across everything (even bodies & components won't share one)
+    this.netSyncQueue = new CircularQueue()
 
     // load bodies
     data.bodies.forEach(b => this.loadBody(b))
@@ -175,9 +176,11 @@ export default class World {
     this.physics.addBody(body.rigidBody)
     if(body.mesh) this.scene.add(body.mesh)
     this.bodies.push(body)
+
     body.netID = this.nextNetID
     this.nextNetID++
     body.netPriority = 0
+    this.netSyncQueue.push(body)
   }
 
   getBodyByNetID(netID) {

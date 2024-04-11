@@ -14,7 +14,10 @@ export default class Client {
     // generate a UUID for the player if one does not exist
     this.uuid = localStorage.getItem("player_uuid")
     if(this.uuid === null) {
-      this.uuid = crypto.randomUUID()
+      // generates a UUID by asking for a blob url (which are always uuids). doesn't use crypto.randomUUID() because it doesn't work in non-secure contexts
+      const url = URL.createObjectURL(new Blob())
+      this.uuid = url.substr(-36)
+      URL.revokeObjectURL(url)
       localStorage.setItem("player_uuid", this.uuid)
     }
     console.log("[client] player uuid", this.uuid)

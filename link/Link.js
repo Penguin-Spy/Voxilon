@@ -29,7 +29,8 @@ export default class Link {
     let maxSteps = 10;
 
     while(this.#accumulator > DT && maxSteps > 0) {
-      this.world.step(DT)
+      this.world.step()
+      this.postUpdate()
       this.#accumulator -= DT
       maxSteps--
     }
@@ -39,5 +40,8 @@ export default class Link {
       this.#accumulator = this.#accumulator % DT
     }
 
+  }
+
+  postUpdate() {
   }
 }
