@@ -1,4 +1,5 @@
-const fs = require('node:fs')
+//const fs = require('node:fs')
+import fs from 'node:fs'
 
 const OUTPUT = "./.vercel/output"
 const STATIC = `${OUTPUT}/static`

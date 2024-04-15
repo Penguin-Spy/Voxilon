@@ -3,7 +3,7 @@ export default {
   id: "main_menu",
   title: [
     { $: 'h1', content: "Voxilon" },
-    { $: 'h2', content: "with THREE.js now!!" },
+    { $: 'h2', content: "with networking now!! (again)" },
 
     {
       $: 'button', content: "Singleplayer",
@@ -37,7 +37,7 @@ export default {
       }
     },
 
-    { $: 'span', content: "alpha-10_1", class: 'version' },
+    { $: 'span', content: "alpha-11_1", class: 'version' },
     {
       $: 'a', content: "view source", class: 'source',
       href: "https://github.com/Penguin-Spy/Voxilon", target: '_blank'
