@@ -16,7 +16,7 @@ app.use("/signal", (req, res, next) => {
 
 // Host static client & common files
 app.use("/client", express.static("client"));
-app.use("/common", express.static("common"));
+app.use("/engine", express.static("engine"));
 app.use("/assets", express.static("assets"));
 app.use("/link", express.static("link"));
 app.use(express.static("www"));

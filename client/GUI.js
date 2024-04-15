@@ -1,4 +1,4 @@
-import Input from "/client/Input.js"
+import Input from 'client/Input.js'
 
 const body = document.querySelector("body")
 

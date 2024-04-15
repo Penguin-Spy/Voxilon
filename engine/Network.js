@@ -1,6 +1,6 @@
-import Component from "/common/Component.js"
+import Component from 'engine/Component.js'
 
-import { check } from "/common/util.js"
+import { check } from 'engine/util.js'
 
 
 /**

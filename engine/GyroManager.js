@@ -1,8 +1,8 @@
-import Body from "/common/Body.js"
-import NetworkedComponent from "/common/NetworkedComponent.js"
+import Body from 'engine/Body.js'
+import NetworkedComponent from 'engine/NetworkedComponent.js'
 
 import * as THREE from 'three'
-import { check, DT } from "/common/util.js"
+import { check, DT } from 'engine/util.js'
 
 const _twist = new THREE.Vector3()
 const _angularVelocity = new THREE.Vector3()

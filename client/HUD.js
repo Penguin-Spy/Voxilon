@@ -1,5 +1,5 @@
-import Input from '/client/Input.js'
-import GUI from '/client/GUI.js'
+import Input from 'client/Input.js'
+import GUI from 'client/GUI.js'
 
 export default class HUD {
   constructor(link) {

@@ -1,9 +1,9 @@
 import * as CANNON from 'cannon'
 import * as THREE from 'three'
-import Contraption from '/common/Contraption.js'
-import Body from "/common/Body.js"
-import { GROUND } from "/common/PhysicsMaterials.js"
-import { check } from '/common/util.js'
+import Contraption from 'engine/Contraption.js'
+import Body from 'engine/Body.js'
+import { GROUND } from 'engine/PhysicsMaterials.js'
+import { check } from 'engine/util.js'
 
 const _v1 = new THREE.Vector3()
 const _v2 = new THREE.Vector3()

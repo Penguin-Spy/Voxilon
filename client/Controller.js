@@ -1,6 +1,6 @@
-import HUD from '/client/HUD.js'
-import Renderer from '/client/Renderer.js'
-import Link from '/link/Link.js'
+import HUD from 'client/HUD.js'
+import Renderer from 'client/Renderer.js'
+import Link from 'link/Link.js'
 
 import * as THREE from 'three'
 

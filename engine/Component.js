@@ -1,8 +1,8 @@
-import Contraption from "/common/Contraption.js"
+import Contraption from 'engine/Contraption.js'
 
 import * as THREE from 'three'
-import { check } from '/common/util.js'
-import { ComponentDirection, rotateBoundingBox } from '/common/components/componentUtil.js'
+import { check } from 'engine/util.js'
+import { ComponentDirection, rotateBoundingBox } from 'engine/components/componentUtil.js'
 
 const _ray = new THREE.Ray()
 const _matrix4 = new THREE.Matrix4()

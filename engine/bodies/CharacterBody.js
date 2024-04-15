@@ -1,8 +1,8 @@
 import * as CANNON from 'cannon'
 import * as THREE from 'three'
-import Body from "/common/Body.js"
-import { STANDING_PLAYER } from "/common/PhysicsMaterials.js"
-import { check } from "/common/util.js"
+import Body from 'engine/Body.js'
+import { STANDING_PLAYER } from 'engine/PhysicsMaterials.js'
+import { check } from 'engine/util.js'
 
 const geometry = new THREE.CapsuleGeometry(0.4, 1, 4, 12)
 const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 })

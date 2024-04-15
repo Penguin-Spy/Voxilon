@@ -1,10 +1,10 @@
 import * as CANNON from 'cannon'
 import * as THREE from 'three'
-import Contraption from '/common/Contraption.js'
-import { default as Body, G } from '/common/Body.js'
-import { GROUND } from "/common/PhysicsMaterials.js"
-import { GRASS } from "/common/RenderMaterials.js"
-import { check } from '/common/util.js'
+import Contraption from 'engine/Contraption.js'
+import { default as Body, G } from 'engine/Body.js'
+import { GROUND } from 'engine/PhysicsMaterials.js'
+import { GRASS } from 'engine/RenderMaterials.js'
+import { check } from 'engine/util.js'
 
 const _v = new THREE.Vector3()
 function roundedCubeGeometry(radius, widthSegements, heightSegments) {

@@ -1,6 +1,6 @@
 import * as CANNON from 'cannon'
 import * as THREE from 'three'
-import { DT } from "/common/util.js"
+import { DT } from 'engine/util.js'
 
 const _v = new THREE.Vector3();
 

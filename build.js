@@ -1,4 +1,3 @@
-//const fs = require('node:fs')
 import fs from 'node:fs'
 
 const OUTPUT = "./.vercel/output"
@@ -20,3 +19,4 @@ fs.cpSync("./assets", `${STATIC}/assets`, RECURSIVE)
 fs.cpSync("./link", `${STATIC}/link`, RECURSIVE)
 
 fs.cpSync("./vercel_config.json", `${OUTPUT}/config.json`)
+

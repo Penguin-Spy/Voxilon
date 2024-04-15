@@ -1,11 +1,11 @@
-import Link from "/link/Link.js"
-import HUD from "/client/HUD.js"
+import Link from 'link/Link.js'
+import HUD from 'client/HUD.js'
 
 import * as THREE from 'three'
 import CannonDebugger from 'cannon-es-debugger'
-import Input from "/client/Input.js"
-import GUI from "/client/GUI.js"
-import Client from "/client/Client.js"
+import Input from 'client/Input.js'
+import GUI from 'client/GUI.js'
+import Client from 'client/Client.js'
 
 function generateDebugRow(name, table) {
   const row = document.createElement("tr")

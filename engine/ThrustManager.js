@@ -1,10 +1,10 @@
-import Body from "/common/Body.js"
-import Thruster from "/common/components/Thruster.js"
-import NetworkedComponent from "/common/NetworkedComponent.js"
+import Body from 'engine/Body.js'
+import Thruster from 'engine/components/Thruster.js'
+import NetworkedComponent from 'engine/NetworkedComponent.js'
 
 import * as THREE from 'three'
-import { check, DT } from "/common/util.js"
-import { ComponentDirection } from "/common/components/componentUtil.js"
+import { check, DT } from 'engine/util.js'
+import { ComponentDirection } from 'engine/components/componentUtil.js'
 
 
 /** the player's desired change in velocity for the conptration (directional input & thrust sensitivity) */

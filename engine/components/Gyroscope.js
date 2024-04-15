@@ -1,7 +1,7 @@
 import { Vec3, Box } from 'cannon'
-import NetworkedComponent from "/common/NetworkedComponent.js"
-import { boundingBoxFromDimensions, generatePreviewMesh } from '/common/components/componentUtil.js'
-import { loadGLTF } from '/common/ModelLoader.js'
+import NetworkedComponent from 'engine/NetworkedComponent.js'
+import { boundingBoxFromDimensions, generatePreviewMesh } from 'engine/components/componentUtil.js'
+import { loadGLTF } from 'engine/ModelLoader.js'
 
 const mesh = await loadGLTF("/assets/components/gyroscope.gltf")
 

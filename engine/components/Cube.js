@@ -1,8 +1,8 @@
 import { Vec3, Box } from 'cannon'
 import { BoxGeometry, Mesh } from 'three'
-import Component from "/common/Component.js"
-import { DEBUG_COMPASS } from "/common/RenderMaterials.js"
-import { boundingBoxFromDimensions, generatePreviewMesh } from '/common/components/componentUtil.js'
+import Component from 'engine/Component.js'
+import { DEBUG_COMPASS } from 'engine/RenderMaterials.js'
+import { boundingBoxFromDimensions, generatePreviewMesh } from 'engine/components/componentUtil.js'
 
 const geometry = new BoxGeometry(1, 1, 1)
 const mesh = new Mesh(geometry, DEBUG_COMPASS)

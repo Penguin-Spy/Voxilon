@@ -1,6 +1,6 @@
-import Network from "./Network.js"
-import Component from "/common/Component.js"
-import { check } from "/common/util.js"
+import Network from 'engine/Network.js'
+import Component from 'engine/Component.js'
+import { check } from 'engine/util.js'
 
 /**
  * Subclass for components that connect to a contraption's network  \

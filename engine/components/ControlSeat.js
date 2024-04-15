@@ -1,13 +1,13 @@
-import World from '/common/World.js'
+import World from 'engine/World.js'
 
 import { Vector3 } from 'three'
 import { Vec3, Box } from 'cannon'
-import { check } from "/common/util.js"
-import NetworkedComponent from "/common/NetworkedComponent.js"
-import { boundingBoxFromDimensions, generatePreviewMesh } from '/common/components/componentUtil.js'
-import { loadGLTF } from '/common/ModelLoader.js'
-import ThrustManager from '/common/ThrustManager.js'
-import GyroManager from '/common/GyroManager.js'
+import { check } from 'engine/util.js'
+import NetworkedComponent from 'engine/NetworkedComponent.js'
+import { boundingBoxFromDimensions, generatePreviewMesh } from 'engine/components/componentUtil.js'
+import { loadGLTF } from 'engine/ModelLoader.js'
+import ThrustManager from 'engine/ThrustManager.js'
+import GyroManager from 'engine/GyroManager.js'
 
 const mesh = await loadGLTF("/assets/components/control_seat.gltf")
 

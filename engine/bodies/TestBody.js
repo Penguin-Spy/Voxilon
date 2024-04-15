@@ -1,9 +1,9 @@
 import * as CANNON from 'cannon'
 import * as THREE from 'three'
-import Body from "/common/Body.js"
-import { GROUND } from "/common/PhysicsMaterials.js"
-import { check } from '/common/util.js'
-import { DEBUG_GRID, DEBUG_COMPASS } from "/common/RenderMaterials.js"
+import Body from 'engine/Body.js'
+import { GROUND } from 'engine/PhysicsMaterials.js'
+import { check } from 'engine/util.js'
+import { DEBUG_GRID, DEBUG_COMPASS } from 'engine/RenderMaterials.js'
 
 const geometry = new THREE.BoxGeometry(1, 1, 1);
 const staticMesh = new THREE.Mesh(geometry, DEBUG_COMPASS)

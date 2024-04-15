@@ -1,12 +1,12 @@
-import GUI from '/client/GUI.js'
-import World from '/common/World.js'
-import PeerConnection from '/link/PeerConnection.js'
-import PacketEncoder from '/link/PacketEncoder.js'
-import PacketDecoder from '/link/PacketDecoder.js'
-import Link from '/link/Link.js'
-import PlayerController from '/client/PlayerController.js'
-import { PacketType } from '/link/Constants.js'
-import { parseSignalTarget } from '/link/util.js'
+import GUI from 'client/GUI.js'
+import World from 'engine/World.js'
+import PeerConnection from 'link/PeerConnection.js'
+import PacketEncoder from 'link/PacketEncoder.js'
+import PacketDecoder from 'link/PacketDecoder.js'
+import Link from 'link/Link.js'
+import PlayerController from 'client/PlayerController.js'
+import { PacketType } from 'link/Constants.js'
+import { parseSignalTarget } from 'link/util.js'
 const { CHAT, LOAD_WORLD, SET_CONTROLLER_STATE, SYNC_BODY } = PacketType
 
 

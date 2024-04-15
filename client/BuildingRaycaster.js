@@ -1,6 +1,6 @@
 import { Raycaster } from 'three'
-import ContraptionBody from '/common/bodies/ContraptionBody.js'
-import CelestialBody from '/common/bodies/CelestialBody.js'
+import ContraptionBody from 'engine/bodies/ContraptionBody.js'
+import CelestialBody from 'engine/bodies/CelestialBody.js'
 
 
 /**

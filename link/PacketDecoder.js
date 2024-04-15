@@ -1,4 +1,4 @@
-//import { PacketType } from '/link/Constants.js'
+//import { PacketType } from 'link/Constants.js'
 //const { CHAT, ADD_BODY } = PacketType
 
 export default {

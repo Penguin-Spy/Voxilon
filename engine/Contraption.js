@@ -1,12 +1,12 @@
-import Component from "/common/Component.js"
-import Body from "/common/Body.js"
+import Component from 'engine/Component.js'
+import Body from 'engine/Body.js'
 
 import * as THREE from 'three'
-import { ComponentDirection } from '/common/components/componentUtil.js'
-import { check } from '/common/util.js'
-import constructors from '/common/components/index.js'
-import Network from "/common/Network.js"
-import NetworkedComponent from "/common/NetworkedComponent.js"
+import { ComponentDirection } from 'engine/components/componentUtil.js'
+import { check } from 'engine/util.js'
+import constructors from 'engine/components/index.js'
+import Network from 'engine/Network.js'
+import NetworkedComponent from 'engine/NetworkedComponent.js'
 
 const _v = new THREE.Vector3()
 const _q = new THREE.Quaternion()

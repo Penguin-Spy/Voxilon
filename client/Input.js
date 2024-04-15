@@ -3,8 +3,8 @@ Handles all input for all input methods (keyboard, touch, controller?),
 as well as controls rebinding.
 */
 
-import { TwoWayMap } from '/common/util.js'
-import GUI from '/client/GUI.js'
+import { TwoWayMap } from 'engine/util.js'
+import GUI from 'client/GUI.js'
 
 // State of all currently pressed keys
 const currentKeys = {}

@@ -1,4 +1,4 @@
-import { DT } from "/common/util.js"
+import { DT } from 'engine/util.js'
 
 export default class Link {
   #accumulator = 0

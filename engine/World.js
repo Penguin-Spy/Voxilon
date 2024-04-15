@@ -1,13 +1,13 @@
-import Body from "/common/Body.js"
+import Body from 'engine/Body.js'
 
 import * as CANNON from 'cannon'
 import * as THREE from 'three'
-import { CircularQueue, DT } from "/common/util.js"
-import CelestialBody from "/common/bodies/CelestialBody.js"
-import CharacterBody from "./bodies/CharacterBody.js"
-import TestBody from "/common/bodies/TestBody.js"
-import ContraptionBody from '/common/bodies/ContraptionBody.js'
-import { contactMaterials } from "/common/PhysicsMaterials.js"
+import { CircularQueue, DT } from 'engine/util.js'
+import CelestialBody from 'engine/bodies/CelestialBody.js'
+import CharacterBody from 'engine/bodies/CharacterBody.js'
+import TestBody from 'engine/bodies/TestBody.js'
+import ContraptionBody from 'engine/bodies/ContraptionBody.js'
+import { contactMaterials } from 'engine/PhysicsMaterials.js'
 
 const WORLD_VERSION = "alpha_1" // just the data version
 

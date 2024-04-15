@@ -1,10 +1,10 @@
-import Renderer from '/client/Renderer.js'
-import HUD from '/client/HUD.js'
-import Input from '/client/Input.js'
-import Debug from '/client/Debug.js'
+import Renderer from 'client/Renderer.js'
+import HUD from 'client/HUD.js'
+import Input from 'client/Input.js'
+import Debug from 'client/Debug.js'
 
-import PlayerController from '/client/PlayerController.js'
-import ContraptionController from '/client/ContraptionController.js'
+import PlayerController from 'client/PlayerController.js'
+import ContraptionController from 'client/ContraptionController.js'
 
 export default class Client {
   /** @type {PlayerController|ContraptionController|undefined} */

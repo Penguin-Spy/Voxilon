@@ -1,9 +1,9 @@
-import ControlSeat from '/common/components/ControlSeat.js'
-import CharacterBody from '/common/bodies/CharacterBody.js'
+import ControlSeat from 'engine/components/ControlSeat.js'
+import CharacterBody from 'engine/bodies/CharacterBody.js'
 
 import { Vector3, Quaternion } from 'three'
-import Input from '/client/Input.js'
-import Controller from '/client/Controller.js'
+import Input from 'client/Input.js'
+import Controller from 'client/Controller.js'
 
 const _v1 = new Vector3()
 const _q1 = new Quaternion()

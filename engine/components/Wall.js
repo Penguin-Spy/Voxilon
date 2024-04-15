@@ -1,8 +1,8 @@
 import { Vec3, Box } from 'cannon'
 import { BoxGeometry, Mesh } from 'three'
-import Component from "/common/Component.js"
-import { wall_top, wall_bottom, wall_front, wall_back, wall_left, wall_right } from "/common/RenderMaterials.js"
-import { boundingBoxFromDimensions, generatePreviewMesh } from '/common/components/componentUtil.js'
+import Component from 'engine/Component.js'
+import { wall_top, wall_bottom, wall_front, wall_back, wall_left, wall_right } from 'engine/RenderMaterials.js'
+import { boundingBoxFromDimensions, generatePreviewMesh } from 'engine/components/componentUtil.js'
 
 const geometry = new BoxGeometry(3, 1, 2)
 const mesh = new Mesh(geometry, [

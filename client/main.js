@@ -4,12 +4,12 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import Client from '/client/Client.js'
-import Input from '/client/Input.js'
-import GUI from '/client/GUI.js'
-import Debug from '/client/Debug.js'
+import Client from 'client/Client.js'
+import Input from 'client/Input.js'
+import GUI from 'client/GUI.js'
+import Debug from 'client/Debug.js'
 
-import main_menu from '/client/screens/main_menu.js'
+import main_menu from 'client/screens/main_menu.js'
 
 // debug interface object
 const Voxilon = { Input, GUI, Debug }

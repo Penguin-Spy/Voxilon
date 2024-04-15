@@ -1,15 +1,15 @@
-import Contraption from '/common/Contraption.js'
-import Component from '/common/Component.js'
-import CharacterBody from "/common/bodies/CharacterBody.js"
+import Contraption from 'engine/Contraption.js'
+import Component from 'engine/Component.js'
+import CharacterBody from 'engine/bodies/CharacterBody.js'
 
 import { Vector3, Quaternion, Matrix4, BoxGeometry, Mesh, MeshBasicMaterial } from 'three'
-import { DT } from "/common/util.js"
-import Input from '/client/Input.js'
-import * as Materials from "/common/PhysicsMaterials.js"
-import Components from '/common/components/index.js'
-import BuildingRaycaster from '/client/BuildingRaycaster.js'
-import { ComponentDirection, rotateBoundingBox } from '/common/components/componentUtil.js'
-import Controller from '/client/Controller.js'
+import { DT } from 'engine/util.js'
+import Input from 'client/Input.js'
+import * as Materials from 'engine/PhysicsMaterials.js'
+import Components from 'engine/components/index.js'
+import BuildingRaycaster from 'client/BuildingRaycaster.js'
+import { ComponentDirection, rotateBoundingBox } from 'engine/components/componentUtil.js'
+import Controller from 'client/Controller.js'
 
 const _v1 = new Vector3()
 const _v2 = new Vector3()
