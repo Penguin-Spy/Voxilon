@@ -47,7 +47,9 @@ export default class World {
       scene: { enumerable: true, value: scene }
     })
 
-    this.nextNetID = 0 // unique across everything (even bodies & components won't share one)
+    this.nextBodyID = 0 // unique across all bodies
+    this.nextComponentID = 0 // unique across all components
+
     this.netSyncQueue = new CircularQueue()
 
     // load bodies
@@ -56,13 +58,11 @@ export default class World {
     this.spawn_point = new THREE.Vector3(...data.spawn_point)
   }
 
-  serialize(noBodies = false) {
+  serialize() {
     const data = { "VERSION": WORLD_VERSION }
     data.name = this.name
     data.spawn_point = this.spawn_point.toArray()
-    if(!noBodies) {
-      data.bodies = this.bodies.map(b => b.serialize())
-    }
+    data.bodies = this.bodies.map(b => b.serialize())
     return data
   }
 
@@ -92,6 +92,16 @@ export default class World {
       return body instanceof CelestialBody || body instanceof ContraptionBody
     })
   }
+  
+  /** Gets the next unique id for a body */
+  getNextBodyID() {
+    return this.nextBodyID++; // return the value, then increment it
+  }
+  
+  /** Gets the next unique id for a component */
+  getNextComponentID() {
+    return this.nextComponentID++; // return the value, then increment it
+  }
 
   /**
    * Gets the character body of a player by their uuid, or creates a new one if none is found. <br>
@@ -100,18 +110,7 @@ export default class World {
    * @returns {CharacterBody}
    */
   getPlayersCharacterBody(uuid) {
-    // first try to find a character with matching uuid
-    /** @type {CharacterBody} */
-    let characterBody = this.bodies.find(body => body.player_uuid === uuid)
-    if(characterBody) return characterBody
-    // check character bodies in control seats too
-    for(const contraptionBody of this.getAllBodiesByType("voxilon:contraption_body")) {
-      for(const component of contraptionBody.contraption.components) {
-        if(component.type === "voxilon:control_seat" && component.storedCharacterBody && component.storedCharacterBody.player_uuid === uuid) {
-          return component.storedCharacterBody
-        }
-      }
-    }
+    
 
     /* TODO: this needs to not happen when loading the 2nd ever player in multiplayer
     // otherwise if there's just one character, change it's uuid and return it
@@ -123,14 +122,6 @@ export default class World {
       return characterBody
     }*/
 
-    // otherwise there's multiple players and this player doesn't have one, create a new one
-    console.log(`Spawning in new character for player ${uuid}`)
-    characterBody = this.loadBody({
-      type: "voxilon:character_body",
-      position: this.spawn_point.toArray(),
-      player_uuid: uuid
-    })
-    return characterBody
   }
 
   /**
@@ -166,7 +157,6 @@ export default class World {
     this.physics.removeBody(body.rigidBody)
     if(body.mesh) this.scene.remove(body.mesh)
     this.bodies.splice(index, 1)
-    body.netID = false // indicate that it had one and it was removed
   }
   /**
    * Adds a body to the world that has already been loaded by {@link World#loadBody}.
@@ -177,16 +167,14 @@ export default class World {
     if(body.mesh) this.scene.add(body.mesh)
     this.bodies.push(body)
 
-    body.netID = this.nextNetID
-    this.nextNetID++
     body.netPriority = 0
     this.netSyncQueue.push(body)
   }
 
-  getBodyByNetID(netID) {
-    const body = this.bodies.find(body => body.netID === netID)
+  getBodyByID(id) {
+    const body = this.bodies.find(body => body.id === id)
     if(!body) {
-      throw new Error(`body with a netID of '${netID}' not found!`)
+      throw new Error(`body with an id of '${id}' not found!`)
     }
     return body
   }

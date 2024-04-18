@@ -33,9 +33,11 @@ export default class Body {
     }
 
     this.world = world
+    const id = data.id ?? world.getNextBodyID() // generate a new body id if necessary
 
     // read-only properties
     Object.defineProperties(this, {
+      id: { enumerable: true, value: id },
       rigidBody: { enumerable: true, value: rigidBody },
       position: { enumerable: true, value: rigidBody.position },
       velocity: { enumerable: true, value: rigidBody.velocity },
@@ -63,11 +65,11 @@ export default class Body {
   serialize() {
     const data = {}
     data.type = this.type
+    data.id = this.id
     data.position = this.position.toArray()
     data.velocity = this.velocity.toArray()
     data.quaternion = this.quaternion.toArray()
     data.angularVelocity = this.angularVelocity.toArray()
-    // data.mass = this.mass
     return data
   }
 

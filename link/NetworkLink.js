@@ -1,13 +1,12 @@
 import GUI from 'client/GUI.js'
 import World from 'engine/World.js'
 import PeerConnection from 'link/PeerConnection.js'
-import PacketEncoder from 'link/PacketEncoder.js'
+import { default as PacketEncoder, PacketType } from 'link/PacketEncoder.js'
 import PacketDecoder from 'link/PacketDecoder.js'
 import Link from 'link/Link.js'
 import PlayerController from 'client/PlayerController.js'
-import { PacketType } from 'link/Constants.js'
 import { parseSignalTarget } from 'link/util.js'
-const { CHAT, LOAD_WORLD, SET_CONTROLLER_STATE, SYNC_BODY } = PacketType
+const { CHAT, LOAD_WORLD, SET_CONTROLLER_STATE, SYNC_BODY, LOAD_BODY } = PacketType
 
 
 // CONNECTING: waiting for WebSocket connect, join request, and WebRTC connect
@@ -121,19 +120,24 @@ export default class NetworkLink extends Link {
           this.client.attach(this)
         }
 
-        const body = this.world.getBodyByNetID(packet.netID)
+        const body = this.world.getBodyByID(packet.id)
         this.client.setController(packet.type, body)
 
         break;
 
       case SYNC_BODY:
-        const syncedBody = this.world.getBodyByNetID(packet.i)
+        const syncedBody = this.world.getBodyByID(packet.i)
 
         syncedBody.position.set(...packet.p)
         syncedBody.velocity.set(...packet.v)
         syncedBody.quaternion.set(...packet.q)
         syncedBody.angularVelocity.set(...packet.a)
 
+        break;
+      
+      case LOAD_BODY:
+        const loadedBody = this.world.loadBody(packet.data)
+        console.log("loaded body from packet", packet, loadedBody)
         break;
 
       default:
@@ -173,16 +177,16 @@ export default class NetworkLink extends Link {
   /* --- Link interface methods --- */
   // apply to local world, and send over WebRTC data channel
 
-  playerMove(velocity) {  // vector of direction to move in
+  /*playerMove(velocity) {  // vector of direction to move in
     this._playerBody.velocity.copy(velocity)
   }
   playerRotate(bodyQuaternion, lookQuaternion) {  // sets player's rotation
     this._playerBody.quaternion = bodyQuaternion
     this._playerBody.lookQuaternion = lookQuaternion
-  }
+  }*/
 
-
-  // Chat
+  /** Send a chat message as this player.
+   * @param {string} msg  the message to send. uses the Link's username.  */
   sendChat(msg) {
     console.info(`[NetworkLink] Sending chat message: "${msg}"`)
     this.send(PacketEncoder.CHAT(this.username, msg))

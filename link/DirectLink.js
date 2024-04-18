@@ -1,11 +1,11 @@
 import GUI from 'client/GUI.js'
-import World from 'engine/World.js'
-import PeerConnection from 'link/PeerConnection.js'
-import PacketEncoder from 'link/PacketEncoder.js'
+import ServerWorld from 'engine/ServerWorld.js'
+import { default as PacketEncoder, PacketType } from 'link/PacketEncoder.js'
 import PacketDecoder from 'link/PacketDecoder.js'
 import Link from 'link/Link.js'
-import { PacketType } from 'link/Constants.js'
 import Client from 'client/Client.js'
+import LocalPlayer from 'link/LocalPlayer.js'
+import RemotePlayer from 'link/RemotePlayer.js'
 import { sessionPublishURL } from 'link/util.js'
 const { CHAT, SYNC_BODY } = PacketType
 
@@ -27,9 +27,9 @@ export default class DirectLink extends Link {
     /** @type {World} */
     let world
     if(worldOptions.type === "load") {
-      world = new World(worldOptions.data)
+      world = new ServerWorld(worldOptions.data, this)
     } else if(worldOptions.type === "new") {
-      world = new World({
+      world = new ServerWorld({
         VERSION: "alpha_1",
         name: worldOptions.name,
         spawn_point: [0, 44, 0],
@@ -55,7 +55,7 @@ export default class DirectLink extends Link {
             is_static: true, is_box: false
           }
         ]
-      })
+      }, this)
     } else {
       throw new TypeError(`Unknown world type ${worldOptions.type}`)
     }
@@ -66,11 +66,11 @@ export default class DirectLink extends Link {
     })
 
     // initalize client
-    this.client = client
+    this.localPlayer = new LocalPlayer(this, client)
     client.attach(this)
-
-    client.setController("player", world.getPlayersCharacterBody(client.uuid))
-
+    
+    this.localPlayer.setController("player", world.joinPlayer(this.localPlayer))
+    
     // create Integrated server
   }
 
@@ -82,7 +82,7 @@ export default class DirectLink extends Link {
 
       // create session & start listening for WebRTC connections
       this.ws = new WebSocket(sessionPublishURL)
-      this.ws.addEventListener("message", e => {
+      this.ws.addEventListener("message", async e => {
         const data = JSON.parse(e.data)
         console.log("[link signal receive]", data)
         switch(data.type) {
@@ -100,40 +100,20 @@ export default class DirectLink extends Link {
               approved: true // always approve the request for now
             }))
 
-            const client = this._clients[data.from] = {}
-            client.id = data.from
-            client.uuid = data.uuid
+            const player = this._clients[data.from] = new RemotePlayer(this, data.username, data.uuid, data.from);
+            
+            await player.ready
+            
+            // send world data
+            const world_data = this.world.serialize()
+            player.sendSyncPacket(PacketEncoder.LOAD_WORLD(world_data))
+            
+            // add the player to the world. may load a new character body if necessary. always returns the player's body
+            const playerBody = this.world.joinPlayer(player)
 
-            client.pc = new PeerConnection(this.ws, client.id)
-
-            client.dataChannel = client.pc.createDataChannel("link", {
-              ordered: false,
-              negotiated: true, id: 0
-            })
-            client.dataChannel.onclose = e => { console.info(`[dataChannel:${client.id}] close`, e) }
-            client.dataChannel.onmessage = ({ data }) => {
-              try {
-                this._handlePacket(client, data)
-              } catch(e) {
-                console.error(data)
-                GUI.showError("Error occured while handling packet", e)
-              }
-            }
-
-            client.dataChannel.onopen = e => {
-              console.info(`[dataChannel:${client.id}] open`)
-
-              // get or create client's player body (do this first so it gets serialized)
-              client.body = this.world.getPlayersCharacterBody(client.uuid)
-
-              // send world data
-              const world_data = this.world.serialize()
-              client.dataChannel.send(PacketEncoder.LOAD_WORLD(world_data))
-
-              // tell the client to load in as their player
-              console.log("setting client", client, "controller to player with netid", client.body.netID)
-              client.dataChannel.send(PacketEncoder.SET_CONTROLLER_STATE("player", client.body.netID))
-            }
+            // tell the client to load in as their player
+            console.log("setting player", player, "controller to player with netid", playerBody)
+            player.setController("player", playerBody)
 
             break;
           default:
@@ -150,36 +130,41 @@ export default class DirectLink extends Link {
     }
   }
 
-  _handlePacket(client, data) {
-    const packet = PacketDecoder.decode(data)
+  handlePacket(client, data) {
+    try {
+      const packet = PacketDecoder.decode(data)
 
-    // handle receiving packets
-    switch(packet.$) {
-      case CHAT:
-        this.emit('chat_message', packet)
-        this.broadcast(PacketEncoder.CHAT(packet.author, packet.msg))
-        break;
-      case SYNC_BODY:
-        // validate it is the clients own body
-        if(packet.i !== client.body.netID) {
-          console.error(`client #${client.id} sent sync packet for incorrect body:`, packet)
-          client.dataChannel.close()
-          break
-        }
+      // handle receiving packets
+      switch(packet.$) {
+        case CHAT:
+          this.emit('chat_message', packet)
+          this.broadcast(PacketEncoder.CHAT(packet.author, packet.msg))
+          break;
+        case SYNC_BODY:
+          // validate it is the clients own body
+          if(packet.i !== client.body.id) {
+            console.error(`client #${client.id} sent sync packet for incorrect body:`, packet)
+            client.dataChannel.close()
+            break
+          }
 
-        client.body.position.set(...packet.p)
-        client.body.velocity.set(...packet.v)
-        client.body.quaternion.set(...packet.q)
-        client.body.angularVelocity.set(...packet.a)
+          client.body.position.set(...packet.p)
+          client.body.velocity.set(...packet.v)
+          client.body.quaternion.set(...packet.q)
+          client.body.angularVelocity.set(...packet.a)
 
-        break;
-      default:
-        throw new TypeError(`Unknown packet type ${packet.$}`)
+          break;
+        default:
+          throw new TypeError(`Unknown packet type ${packet.$}`)
+      }
+    } catch(e) {
+      console.error("client:", client, "packet data:", data)
+      GUI.showError("Error occured while handling packet", e)
     }
   }
 
   send(id, packet) {
-    this._clients[id].send(packet)
+    throw new Error("link#send called?", id, packet)
   }
 
   broadcast(packet) {
@@ -188,6 +173,10 @@ export default class DirectLink extends Link {
         client.dataChannel.send(packet)
       }
     }
+  }
+  
+  sendLoadBody(body) {
+    this.broadcast(PacketEncoder.LOAD_BODY(body))
   }
 
   // ran after each DT world step
@@ -205,30 +194,33 @@ export default class DirectLink extends Link {
   }
 
   stop() {
-    this.ws.close(1000, "stopping client")
-    for(const client of this._clients) {
-      client.dataChannel.close()
+    if(this.ws) {
+      this.ws.close(1000, "stopping client")
+      for(const client of this._clients) {
+        client.dataChannel.close()
+      }
     }
   }
 
 
   /* --- Link interface methods --- */
 
-  /*playerMove(velocity) {  // vector of direction to move in
-    this.playerBody.velocity.copy(velocity)
-  }*/
-  /*playerRotate(bodyQuaternion, lookQuaternion) {  // sets player's rotation
-    this.playerBody.quaternion = bodyQuaternion
-    this.playerBody.lookQuaternion = lookQuaternion
-  }*/
-
-  // Chat
+  /** Send a chat message as this player.
+   * @param {string} msg  the message to send. uses the Link's username.  */
   sendChat(msg) {
     console.info(`[DirectLink] Sending chat message: "${msg}"`)
     // broadcast chat msg packet to all clients
     this.broadcast(PacketEncoder.CHAT(this.username, msg))
     // send it to ourselves via the event handler
     this.emit('chat_message', { author: this.username, msg })
+  }
+  
+  /** Informs the server that the player interacted with a component.
+   * @param {Component} component The component that was interacted with
+   * @param {string} action       The type of interaction, one of `open_gui`, `sit`
+   */
+  interact(component, action) {
+    throw new TypeError("interact not implemented directlink")
   }
 
   // --- Building ---

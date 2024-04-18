@@ -21,6 +21,7 @@ export default class Client {
       localStorage.setItem("player_uuid", this.uuid)
     }
     console.log("[client] player uuid", this.uuid)
+    this.username = "localplayer"
   }
 
   attach(link) {
