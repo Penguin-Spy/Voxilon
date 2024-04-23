@@ -414,19 +414,12 @@ export default class PlayerController extends Controller {
         /** @type {Component} */
         const component = intersect.object
 
-        if(component.type === "voxilon:control_seat") {
-          console.log("interacted with seat!")
-          Voxilon.Debug.setPointPosition("red", intersect.point)
-          
-          if(!Input.get('down')) { // sit in the seat, or open its gui if holding shift
-            this.link.interact(component, "sit")
-          } else {
-            this.link.interact(component, "open_gui")
-          }
-        } else {
-          console.log("interacted with something else")
-          this.link.interact(component, "open_gui")
-        }
+        console.log("interacted with", component)
+        Voxilon.Debug.setPointPosition("red", intersect.point)
+        
+        // if shift is not pressed, do normal interaction, otherwise do 'alternate' interaction
+        // TODO: refactor Input class to allow multiple controls per key so this doesn't necessarily have the same binding as "fly down"
+        this.link.interact(component, Input.get('down'))
       }
     }
   }

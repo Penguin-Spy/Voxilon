@@ -1,5 +1,4 @@
 import ControlSeat from 'engine/components/ControlSeat.js'
-import CharacterBody from 'engine/bodies/CharacterBody.js'
 
 import { Vector3, Quaternion } from 'three'
 import Input from 'client/Input.js'
@@ -26,14 +25,11 @@ export default class ContraptionController extends Controller {
 
   /**
    * @param {ControlSeat} component       the ControlSeat to control with
-   * @param {CharacterBody} characterBody the player's previous character body
    */
-  activate(component, characterBody) {
+  activate(component) {
     this.component = component
     this.contraption = component.getParent()
     this.body = this.contraption.getBody()
-
-    component.storeBody(characterBody)
 
     this.thrustManager = component.getThrustManager()
     this.gyroManager = component.getGyroManager()
@@ -125,10 +121,9 @@ export default class ContraptionController extends Controller {
   preRender(deltaTime) {
 
     if(Input.get("dismount")) {
-      const body = this.component.retrieveBody()
       console.log("dismount")
-      // TODO: replace with Action
-      //this.controllerManager.setActiveController("player", body)
+      // the normal interaction with a seat while the player is riding it is to dismount
+      this.link.interact(this.component, false)
     }
 
     let front_back = 0, left_right = 0, up_down = 0,

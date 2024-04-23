@@ -217,10 +217,10 @@ export default class DirectLink extends Link {
   
   /** Informs the server that the player interacted with a component.
    * @param {Component} component The component that was interacted with
-   * @param {string} action       The type of interaction, one of `open_gui`, `sit`
+   * @param {boolean} alternate   True if the 'alternate' interaction action should be taken (e.g. open gui instead of activating component)
    */
-  interact(component, action) {
-    throw new TypeError("interact not implemented directlink")
+  interact(component, alternate) {
+    component.interact(this.localPlayer, alternate)
   }
 
   // --- Building ---

@@ -51,22 +51,22 @@ export default class Link {
   /** Send a chat message as this player.
    * @param {string} msg  the message to send. uses the Link's username.  */
   sendChat(msg) {
-    throw new TypeError("sendChat not implemented")
+    throw new TypeError(`sendChat not implemented for ${this.constructor.name}`)
   }
   
   /** Informs the server that the player interacted with a component.
    * @param {Component} component The component that was interacted with
-   * @param {string} action       The type of interaction, one of `open_gui`, `sit`
+   * @param {boolean} alternate   True if the 'alternate' interaction action should be taken (e.g. open gui instead of activating component)
    */
-  interact(component, action) {
-    throw new TypeError("interact not implemented")
+  interact(component, alternate) {
+    throw new TypeError(`interact not implemented for ${this.constructor.name}`)
   }
 
   // --- Building ---
 
   // debugging
   newTestBody(stuff) {
-    throw new TypeError("newTestBody not implemented")
+    throw new TypeError(`newTestBody not implemented for ${this.constructor.name}`)
   }
 
   /**
@@ -76,7 +76,7 @@ export default class Link {
    * @param {object}           firstComponent data for the first component of the contraption
    */
   newStandaloneContraption(position, quaternion, firstComponent) {
-    throw new TypeError("newStandaloneContraption not implemented")
+    throw new TypeError(`newStandaloneContraption not implemented for ${this.constructor.name}`)
   }
 
   /**
@@ -88,7 +88,7 @@ export default class Link {
    * @param {object}           firstComponent data for the first component of the contraption
    */
   newAnchoredContraption(parent, positionOffset, quaternion, firstComponent) {
-    throw new TypeError("newAnchoredContraption not implemented")
+    throw new TypeError(`newAnchoredContraption not implemented for ${this.constructor.name}`)
   }
 
   /**
@@ -97,6 +97,6 @@ export default class Link {
    * @param {object} component        data for the new component
    */
   editContraption(contraption, component) {
-    throw new TypeError("editContraption not implemented")
+    throw new TypeError(`editContraption not implemented for ${this.constructor.name}`)
   }
 }

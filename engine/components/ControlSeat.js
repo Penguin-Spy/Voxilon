@@ -35,6 +35,8 @@ export default class ControlSeat extends NetworkedComponent {
     } else {
       this.storedCharacterBody = null
     }
+    
+    this.seatedPlayer = null
   }
 
   serialize() {
@@ -71,20 +73,54 @@ export default class ControlSeat extends NetworkedComponent {
   getGyroManager() {
     return this.gyroManager
   }
-
-  // stores the body of the character that is in this seat for serializing
-  storeBody(characterBody) {
-    this.storedCharacterBody = characterBody
-    this.world.removeBody(characterBody)
+  
+  /** Processes the player interacting with the seat.
+   * @param {Player} player     The player who interacted with the seat
+   * @param {boolean} alternate The main action is to sit in the seat, the alternate is to open the configuration gui
+   */
+  interact(player, alternate) {
+    if(!alternate) {
+      console.log("sit", player, this)
+      if(this.seatedPlayer === player) {
+        this.stopSitting(player)
+      } else {
+        this.sit(player) // will kick out the player currently in the seat if there is one
+      }
+    } else {
+      console.log("gui", player, this)
+    }
   }
-
-  // gets the body of the character in this seat and removes it from being stored
-  retrieveBody() {
-    const body = this.storedCharacterBody
+  
+  /** Makes the given player sit in this seat */
+  sit(player) {
+    // kick out any player that's already in the seat
+    if(this.seatedPlayer) {
+      this.stopSitting(this.seatedPlayer)
+    }
+    
+    const character = player.getCharacter()
+    if(character === null) {
+      console.warn("player", player, "does not have a character, cannot sit on", this)
+      return
+    }
+    // make player's character body sit in this seat
+    this.storedCharacterBody = character
+    this.world.removeBody(character)
+    
+    // set player's controller to ContraptionController with this seat as the seat
+    player.setController("contraption", this)
+    this.seatedPlayer = player
+  }
+  
+  /** Makes the given player dismount this seat */
+  stopSitting(player) {
+    const character = this.storedCharacterBody
     this.storedCharacterBody = null
-    this.world.addBody(body)
+    this.world.addBody(character)
     // TODO: set the body's position, velocity, rotation, and angular velocity to match this component's values (offset position up 1 meter)
-    return body
+    
+    player.setController("player", character)
+    this.seatedPlayer = null
   }
 
   static type = type
