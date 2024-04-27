@@ -3,6 +3,7 @@ import * as THREE from 'three'
 import Body from 'engine/Body.js'
 import { STANDING_PLAYER } from 'engine/PhysicsMaterials.js'
 import { check } from 'engine/util.js'
+import PacketEncoder from 'link/PacketEncoder.js'
 
 const geometry = new THREE.CapsuleGeometry(0.4, 1, 4, 12)
 const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 })
@@ -60,6 +61,20 @@ export default class CharacterBody extends Body {
     return data
   }
 
+  /** Receives the self sync packet data */
+  receiveSelfSync(data) {
+    switch(data.action) {
+      case "sit":
+        this.sitOn(this.world.getComponentByID(data.a))
+        break
+      case "stopSitting":
+        this.stopSitting(this.world.getComponentByID(data.a))
+        break
+      default:
+        throw new TypeError(`unknown character state action ${data.action}`)
+    }
+  }
+
   attach(playerController) {
     this.controller = playerController
   }
@@ -74,6 +89,21 @@ export default class CharacterBody extends Body {
   setNoclip(state) {
     this.rigidBody.collisionResponse = !state
     this.noclip = state
+  }
+
+  sitOn(seat) {
+    this.world.removeBody(this)
+    seat.storedCharacterBody = this
+    if(this.world.isServer) {
+      this.sendSelfSync(PacketEncoder.SYNC_CHARACTER_STATE(this.id, "sit", seat.id, null, null))
+    }
+  }
+  stopSitting(seat) {
+    this.world.addBody(this)
+    seat.storedCharacterBody = null
+    if(this.world.isServer) {
+      this.sendSelfSync(PacketEncoder.SYNC_CHARACTER_STATE(this.id, "stopSitting", seat.id, null, null))
+    }
   }
 
   update() {

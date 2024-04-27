@@ -1,4 +1,5 @@
 import Body from 'engine/Body.js'
+import Component from 'engine/Component.js'
 
 import * as CANNON from 'cannon'
 import * as THREE from 'three'
@@ -21,6 +22,8 @@ const constructors = {
 export default class World {
   /** @type {Body[]} */
   bodies
+  /** @type {Map<number, Component} */
+  components
 
   constructor(data) {
     if(data.VERSION !== WORLD_VERSION) throw new Error(`Unknown world version: ${data.VERSION}`)
@@ -43,14 +46,19 @@ export default class World {
 
     Object.defineProperties(this, {
       bodies: { enumerable: true, value: [] },
+      components: { enumerable: true, value: new Map() },
       physics: { enumerable: true, value: physics },
       scene: { enumerable: true, value: scene }
     })
 
+    // this is networking-related but it has to happen before loading the bodies
+    // TODO: figure out how to put these in the ServerWorld
+    // oh also the next ids need to be serialized
     this.nextBodyID = 0 // unique across all bodies
     this.nextComponentID = 0 // unique across all components
-
     this.netSyncQueue = new CircularQueue()
+    // TODO: rework how bodies are added/removed
+    this.removedBodies = [] /* this isn't serialized because bodies here should be serialized elsewhere */
 
     // load bodies
     data.bodies.forEach(b => this.loadBody(b))
@@ -92,16 +100,6 @@ export default class World {
       return body instanceof CelestialBody || body instanceof ContraptionBody
     })
   }
-  
-  /** Gets the next unique id for a body */
-  getNextBodyID() {
-    return this.nextBodyID++; // return the value, then increment it
-  }
-  
-  /** Gets the next unique id for a component */
-  getNextComponentID() {
-    return this.nextComponentID++; // return the value, then increment it
-  }
 
   /**
    * Gets the character body of a player by their uuid, or creates a new one if none is found. <br>
@@ -110,7 +108,7 @@ export default class World {
    * @returns {CharacterBody}
    */
   getPlayersCharacterBody(uuid) {
-    
+
 
     /* TODO: this needs to not happen when loading the 2nd ever player in multiplayer
     // otherwise if there's just one character, change it's uuid and return it
@@ -157,6 +155,8 @@ export default class World {
     this.physics.removeBody(body.rigidBody)
     if(body.mesh) this.scene.remove(body.mesh)
     this.bodies.splice(index, 1)
+
+    this.removedBodies.push(body)
   }
   /**
    * Adds a body to the world that has already been loaded by {@link World#loadBody}.
@@ -167,16 +167,25 @@ export default class World {
     if(body.mesh) this.scene.add(body.mesh)
     this.bodies.push(body)
 
-    body.netPriority = 0
-    this.netSyncQueue.push(body)
+    const index = this.removedBodies.indexOf(body)
+    if(index === -1) return
+    this.removedBodies.splice(index, 1)
   }
 
   getBodyByID(id) {
-    const body = this.bodies.find(body => body.id === id)
-    if(!body) {
-      throw new Error(`body with an id of '${id}' not found!`)
-    }
+    let body = this.bodies.find(body => body.id === id)
+    if(!body) body = this.removedBodies.find(body => body.id === id)
+    if(!body) return false
+
     return body
+  }
+
+  addComponent(component) {
+    this.components.set(component.id, component)
+  }
+
+  getComponentByID(id) {
+    return this.components.get(id)
   }
 
   preRender() {

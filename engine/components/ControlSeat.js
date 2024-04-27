@@ -104,8 +104,7 @@ export default class ControlSeat extends NetworkedComponent {
       return
     }
     // make player's character body sit in this seat
-    this.storedCharacterBody = character
-    this.world.removeBody(character)
+    character.sitOn(this)
     
     // set player's controller to ContraptionController with this seat as the seat
     player.setController("contraption", this)
@@ -115,8 +114,7 @@ export default class ControlSeat extends NetworkedComponent {
   /** Makes the given player dismount this seat */
   stopSitting(player) {
     const character = this.storedCharacterBody
-    this.storedCharacterBody = null
-    this.world.addBody(character)
+    character.stopSitting(this)
     // TODO: set the body's position, velocity, rotation, and angular velocity to match this component's values (offset position up 1 meter)
     
     player.setController("player", character)

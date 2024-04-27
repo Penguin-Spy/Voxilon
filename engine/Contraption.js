@@ -143,6 +143,7 @@ export default class Contraption {
     if(component instanceof NetworkedComponent) {
       component.connectToNetwork(this.network)
     }
+    this.#parent.world.addComponent(component)
 
     if(updateMassProperties) {
       this.#parent.updateMassProperties()

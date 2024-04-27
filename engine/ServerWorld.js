@@ -5,9 +5,19 @@ export default class ServerWorld extends World {
     console.log("constructing server world", data, link)
     super(data)
     this.link = link
-    console.log(this.link)
+    this.isServer = true
   }
-  
+
+  /** Gets the next unique id for a body */
+  getNextBodyID() {
+    return this.nextBodyID++; // return the value, then increment it
+  }
+
+  /** Gets the next unique id for a component */
+  getNextComponentID() {
+    return this.nextComponentID++; // return the value, then increment it
+  }
+
   /** Joins a player to the world, spawing in a character body if they're new to the world. Returns the player's body
    * @param {Player} player
    * @returns {Body}
@@ -26,7 +36,7 @@ export default class ServerWorld extends World {
         }
       }
     }
-    
+
     if(!characterBody) {
       // if characterBody is undefined, a new one must be spawned
       console.log("Spawning in new character for player", player)
@@ -36,7 +46,7 @@ export default class ServerWorld extends World {
         player_uuid: player.uuid
       })
     }
-    
+
     return characterBody
   }
 
@@ -56,5 +66,13 @@ export default class ServerWorld extends World {
 
     return body
   }
-}
 
+  addBody(body) {
+    super.addBody(body)
+    this.netSyncQueue.push(body)
+  }
+  removeBody(body) {
+    super.removeBody(body)
+    this.netSyncQueue.remove(body)
+  }
+}

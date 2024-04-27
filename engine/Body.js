@@ -2,9 +2,9 @@ import * as CANNON from 'cannon'
 import * as THREE from 'three'
 import { DT } from 'engine/util.js'
 
-const _v = new THREE.Vector3();
+const _v = new THREE.Vector3()
 
-export const G = 6.6743e-11;
+export const G = 6.6743e-11
 
 /**
  * Base class for all independent objects in the World
@@ -71,6 +71,17 @@ export default class Body {
     data.quaternion = this.quaternion.toArray()
     data.angularVelocity = this.angularVelocity.toArray()
     return data
+  }
+
+  /** Sends the encoded packet to this body on all client's worlds
+   * @param {Object} packet Must be a `SYNC_something` packet that the NetworkLink will call receiveSelfSync with
+   */
+  sendSelfSync(packet) {
+    this.world.link.broadcast(packet)
+  }
+  /** Receives the sync data. This method must be overridden in all Body subclasses */
+  receiveSelfSync(packet) {
+    throw new TypeError(`receiveSelfSync not implemented for ${this.constructor.name}`)
   }
 
   /**

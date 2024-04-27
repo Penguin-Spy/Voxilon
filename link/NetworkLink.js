@@ -4,9 +4,8 @@ import PeerConnection from 'link/PeerConnection.js'
 import { default as PacketEncoder, PacketType } from 'link/PacketEncoder.js'
 import PacketDecoder from 'link/PacketDecoder.js'
 import Link from 'link/Link.js'
-import PlayerController from 'client/PlayerController.js'
 import { parseSignalTarget } from 'link/util.js'
-const { CHAT, LOAD_WORLD, SET_CONTROLLER_STATE, SYNC_BODY, LOAD_BODY } = PacketType
+const { CHAT, LOAD_WORLD, SET_CONTROLLER_STATE, SYNC_BODY, LOAD_BODY, SYNC_CHARACTER_STATE } = PacketType
 
 
 // CONNECTING: waiting for WebSocket connect, join request, and WebRTC connect
@@ -112,7 +111,7 @@ export default class NetworkLink extends Link {
         console.log("loaded world")
         break;
 
-      case SET_CONTROLLER_STATE:
+      case SET_CONTROLLER_STATE: {
         // initalize the client if this was the first set controller state packet of the session
         if(this._readyState === LOADED) {
           this._readyState = ATTACHED
@@ -123,23 +122,33 @@ export default class NetworkLink extends Link {
         const body = this.world.getBodyByID(packet.id)
         this.client.setController(packet.type, body)
 
-        break;
+        break
+      }
+      case SYNC_BODY: {
+        const body = this.world.getBodyByID(packet.i)
+        if(!body) {
+          console.warn("received sync packet for unknown body", packet.i)
+          return
+        }
+        body.position.set(...packet.p)
+        body.velocity.set(...packet.v)
+        body.quaternion.set(...packet.q)
+        body.angularVelocity.set(...packet.a)
 
-      case SYNC_BODY:
-        const syncedBody = this.world.getBodyByID(packet.i)
-
-        syncedBody.position.set(...packet.p)
-        syncedBody.velocity.set(...packet.v)
-        syncedBody.quaternion.set(...packet.q)
-        syncedBody.angularVelocity.set(...packet.a)
-
-        break;
-      
-      case LOAD_BODY:
-        const loadedBody = this.world.loadBody(packet.data)
-        console.log("loaded body from packet", packet, loadedBody)
-        break;
-
+        break
+      }
+      case LOAD_BODY: {
+        const body = this.world.loadBody(packet.data)
+        console.log("loaded body from packet", packet, body)
+        break
+      }
+      case SYNC_CHARACTER_STATE: {
+        /* other body self sync packets also use this case */
+        const body = this.world.getBodyByID(packet.id)
+        if(!body) throw new Error(`Cannot handle self sync packet for unknown body ${packet.id}`)
+        body.receiveSelfSync(packet)
+        break
+      }
       default:
         throw new TypeError(`Unknown packet type ${packet.$}`)
     }

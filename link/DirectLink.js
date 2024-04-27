@@ -68,9 +68,9 @@ export default class DirectLink extends Link {
     // initalize client
     this.localPlayer = new LocalPlayer(this, client)
     client.attach(this)
-    
+
     this.localPlayer.setController("player", world.joinPlayer(this.localPlayer))
-    
+
     // create Integrated server
   }
 
@@ -101,13 +101,13 @@ export default class DirectLink extends Link {
             }))
 
             const player = this._clients[data.from] = new RemotePlayer(this, data.username, data.uuid, data.from);
-            
+
             await player.ready
-            
+
             // send world data
             const world_data = this.world.serialize()
             player.sendSyncPacket(PacketEncoder.LOAD_WORLD(world_data))
-            
+
             // add the player to the world. may load a new character body if necessary. always returns the player's body
             const playerBody = this.world.joinPlayer(player)
 
@@ -174,10 +174,6 @@ export default class DirectLink extends Link {
       }
     }
   }
-  
-  sendLoadBody(body) {
-    this.broadcast(PacketEncoder.LOAD_BODY(body))
-  }
 
   // ran after each DT world step
   postUpdate() {
@@ -202,6 +198,11 @@ export default class DirectLink extends Link {
     }
   }
 
+  /* --- 'Host' interface methods */
+
+  sendLoadBody(body) {
+    this.broadcast(PacketEncoder.LOAD_BODY(body))
+  }
 
   /* --- Link interface methods --- */
 
@@ -214,7 +215,7 @@ export default class DirectLink extends Link {
     // send it to ourselves via the event handler
     this.emit('chat_message', { author: this.username, msg })
   }
-  
+
   /** Informs the server that the player interacted with a component.
    * @param {Component} component The component that was interacted with
    * @param {boolean} alternate   True if the 'alternate' interaction action should be taken (e.g. open gui instead of activating component)

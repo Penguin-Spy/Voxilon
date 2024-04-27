@@ -46,6 +46,17 @@ class CircularQueue {
     }
     return element
   }
+
+  /** Removes an element from the queue.
+   * @param {any} element */
+  remove(element) {
+    const index = this.#array.indexOf(element)
+    if(index > -1) {
+      this.#array.splice(index, 1)
+    } else {
+      throw new Error("Cannot remove an element that is not part of the queue")
+    }
+  }
 }
 
 /**

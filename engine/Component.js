@@ -47,9 +47,11 @@ export default class Component {
     }
 
     this.world = world
+    const id = data.id ?? world.getNextComponentID() // generate a new component id if necessary
 
     Object.defineProperties(this, {
       // read-only properties
+      id: { enumerable: true, value: id },
       mesh: { enumerable: true, value: mesh },
       shape: { enumerable: true, value: shape },
       position: { enumerable: true, value: new THREE.Vector3() },
@@ -76,6 +78,7 @@ export default class Component {
   serialize() {
     const data = {}
     data.type = this.type
+    data.id = this.id
     data.position = this.position.toArray()
     data.rotation = this.rotation
     return data
