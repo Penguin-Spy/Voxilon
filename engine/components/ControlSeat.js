@@ -1,7 +1,7 @@
 import World from 'engine/World.js'
 
 import { Vector3 } from 'three'
-import { Vec3, Box } from 'cannon'
+import { Vec3, Box } from 'cannon-es'
 import { check } from 'engine/util.js'
 import NetworkedComponent from 'engine/NetworkedComponent.js'
 import { boundingBoxFromDimensions, generatePreviewMesh } from 'engine/components/componentUtil.js'
@@ -31,11 +31,11 @@ export default class ControlSeat extends NetworkedComponent {
 
     const characterBodyData = check(data.storedCharacterBody, "object?")
     if(characterBodyData) {
-      this.storedCharacterBody = world.loadBody(characterBodyData, false)
+      this.storedCharacterBody = world.loadBody(characterBodyData)
     } else {
       this.storedCharacterBody = null
     }
-    
+
     this.seatedPlayer = null
   }
 
@@ -73,7 +73,7 @@ export default class ControlSeat extends NetworkedComponent {
   getGyroManager() {
     return this.gyroManager
   }
-  
+
   /** Processes the player interacting with the seat.
    * @param {Player} player     The player who interacted with the seat
    * @param {boolean} alternate The main action is to sit in the seat, the alternate is to open the configuration gui
@@ -90,14 +90,14 @@ export default class ControlSeat extends NetworkedComponent {
       console.log("gui", player, this)
     }
   }
-  
+
   /** Makes the given player sit in this seat */
   sit(player) {
     // kick out any player that's already in the seat
     if(this.seatedPlayer) {
       this.stopSitting(this.seatedPlayer)
     }
-    
+
     const character = player.getCharacter()
     if(character === null) {
       console.warn("player", player, "does not have a character, cannot sit on", this)
@@ -105,18 +105,18 @@ export default class ControlSeat extends NetworkedComponent {
     }
     // make player's character body sit in this seat
     character.sitOn(this)
-    
+
     // set player's controller to ContraptionController with this seat as the seat
     player.setController("contraption", this)
     this.seatedPlayer = player
   }
-  
+
   /** Makes the given player dismount this seat */
   stopSitting(player) {
     const character = this.storedCharacterBody
     character.stopSitting(this)
     // TODO: set the body's position, velocity, rotation, and angular velocity to match this component's values (offset position up 1 meter)
-    
+
     player.setController("player", character)
     this.seatedPlayer = null
   }

@@ -1,4 +1,4 @@
-import { Vec3, Box } from 'cannon'
+import { Vec3, Box } from 'cannon-es'
 import { BoxGeometry, Mesh } from 'three'
 import Component from 'engine/Component.js'
 import { DEBUG_COMPASS } from 'engine/RenderMaterials.js'

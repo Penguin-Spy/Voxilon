@@ -1,4 +1,4 @@
-import { Vec3, Box } from 'cannon'
+import { Vec3, Box } from 'cannon-es'
 import NetworkedComponent from 'engine/NetworkedComponent.js'
 import { boundingBoxFromDimensions, generatePreviewMesh } from 'engine/components/componentUtil.js'
 import { loadGLTF } from 'engine/ModelLoader.js'

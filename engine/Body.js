@@ -1,10 +1,21 @@
-import * as CANNON from 'cannon'
+/** @typedef {import('engine/World.js').default} World */
+
+import * as CANNON from 'cannon-es'
 import * as THREE from 'three'
 import { DT } from 'engine/util.js'
 
 const _v = new THREE.Vector3()
 
 export const G = 6.6743e-11
+
+/**
+ * @typedef {object} BodyData
+ * @property {number?} id
+ * @property {[number,number,number]} position
+ * @property {[number,number,number]} velocity
+ * @property {[number,number,number,number]} quaternion
+ * @property {[number,number,number]} angularVelocity
+ */
 
 /**
  * Base class for all independent objects in the World
@@ -14,9 +25,11 @@ export default class Body {
   rigidBody
   /** @type {THREE.Mesh|undefined} may be undefined if the body has no mesh*/
   mesh
+  /** @type {string} @readonly */
+  type
 
   /**
-   * @param {Object} data
+   * @param {BodyData} data
    * @param {World} world
    * @param {CANNON.Body} rigidBody
    * @param {THREE.Mesh} mesh
@@ -33,17 +46,14 @@ export default class Body {
     }
 
     this.world = world
-    const id = data.id ?? world.getNextBodyID() // generate a new body id if necessary
+    this.id = data.id ?? world.getNextBodyID() // generate a new body id if necessary
 
     // read-only properties
-    Object.defineProperties(this, {
-      id: { enumerable: true, value: id },
-      rigidBody: { enumerable: true, value: rigidBody },
-      position: { enumerable: true, value: rigidBody.position },
-      velocity: { enumerable: true, value: rigidBody.velocity },
-      quaternion: { enumerable: true, value: rigidBody.quaternion },
-      angularVelocity: { enumerable: true, value: rigidBody.angularVelocity }
-    })
+    /** @readonly */ this.rigidBody = rigidBody
+    /** @readonly */ this.position = rigidBody.position
+    /** @readonly */ this.velocity = rigidBody.velocity
+    /** @readonly */ this.quaternion = rigidBody.quaternion
+    /** @readonly */ this.angularVelocity = rigidBody.angularVelocity
 
     data = { // default values
       position: [0, 0, 0],

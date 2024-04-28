@@ -1,3 +1,5 @@
+/** @typedef {import('engine/World.js').default} World */
+
 import GUI from 'client/GUI.js'
 import ServerWorld from 'engine/ServerWorld.js'
 import { default as PacketEncoder, PacketType } from 'link/PacketEncoder.js'

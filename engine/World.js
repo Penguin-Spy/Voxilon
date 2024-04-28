@@ -1,7 +1,7 @@
 import Body from 'engine/Body.js'
 import Component from 'engine/Component.js'
 
-import * as CANNON from 'cannon'
+import * as CANNON from 'cannon-es'
 import * as THREE from 'three'
 import { CircularQueue, DT } from 'engine/util.js'
 import CelestialBody from 'engine/bodies/CelestialBody.js'

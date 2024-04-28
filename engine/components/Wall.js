@@ -1,4 +1,4 @@
-import { Vec3, Box } from 'cannon'
+import { Vec3, Box } from 'cannon-es'
 import { BoxGeometry, Mesh } from 'three'
 import Component from 'engine/Component.js'
 import { wall_top, wall_bottom, wall_front, wall_back, wall_left, wall_right } from 'engine/RenderMaterials.js'

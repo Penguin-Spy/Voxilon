@@ -1,4 +1,4 @@
-import * as CANNON from 'cannon'
+import * as CANNON from 'cannon-es'
 import * as THREE from 'three'
 import Contraption from 'engine/Contraption.js'
 import Body from 'engine/Body.js'
