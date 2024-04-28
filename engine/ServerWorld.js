@@ -1,4 +1,4 @@
-import Body from 'engine/Body.js'
+/** @typedef {import('engine/bodies/CharacterBody.js').default} CharacterBody */
 
 import World from 'engine/World.js'
 
@@ -22,7 +22,7 @@ export default class ServerWorld extends World {
 
   /** Joins a player to the world, spawing in a character body if they're new to the world. Returns the player's body
    * @param {Player} player
-   * @returns {Body}
+   * @returns {CharacterBody}
    */
   joinPlayer(player) {
     // first try to find a character with matching uuid

@@ -37,7 +37,7 @@ export default {
       }
     },
 
-    { $: 'span', content: "alpha-11_1", class: 'version' },
+    { $: 'span', content: "alpha-12_1", class: 'version' },
     {
       $: 'a', content: "view source", class: 'source',
       href: "https://github.com/Penguin-Spy/Voxilon", target: '_blank'

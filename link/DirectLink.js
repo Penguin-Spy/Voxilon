@@ -1,5 +1,3 @@
-/** @typedef {import('engine/World.js').default} World */
-
 import GUI from 'client/GUI.js'
 import ServerWorld from 'engine/ServerWorld.js'
 import { default as PacketEncoder, PacketType } from 'link/PacketEncoder.js'
@@ -9,10 +7,10 @@ import Client from 'client/Client.js'
 import LocalPlayer from 'link/LocalPlayer.js'
 import RemotePlayer from 'link/RemotePlayer.js'
 import { sessionPublishURL } from 'link/util.js'
-const { CHAT, SYNC_BODY } = PacketType
+const { CHAT, SYNC_BODY, INTERACT } = PacketType
 
 export default class DirectLink extends Link {
-  /** @type {World} */
+  /** @type {ServerWorld} */
   world
 
   /**
@@ -23,10 +21,10 @@ export default class DirectLink extends Link {
     this.username = "host" // maybe load from LocalStorage?
 
     // networking stuff
-    this._clients = []
+    this.remotePlayers = []
 
     // create/load world
-    /** @type {World} */
+    /** @type {ServerWorld} */
     let world
     if(worldOptions.type === "load") {
       world = new ServerWorld(worldOptions.data, this)
@@ -102,7 +100,7 @@ export default class DirectLink extends Link {
               approved: true // always approve the request for now
             }))
 
-            const player = this._clients[data.from] = new RemotePlayer(this, data.username, data.uuid, data.from);
+            const player = this.remotePlayers[data.from] = new RemotePlayer(this, data.username, data.uuid, data.from);
 
             await player.ready
 
@@ -111,11 +109,11 @@ export default class DirectLink extends Link {
             player.sendSyncPacket(PacketEncoder.LOAD_WORLD(world_data))
 
             // add the player to the world. may load a new character body if necessary. always returns the player's body
-            const playerBody = this.world.joinPlayer(player)
+            const character = this.world.joinPlayer(player)
 
-            // tell the client to load in as their player
-            console.log("setting player", player, "controller to player with netid", playerBody)
-            player.setController("player", playerBody)
+            // tell the remote player to load in as their character
+            console.log("setting player", player, "controller to player with netid", character)
+            player.setController("player", character)
 
             break;
           default:
@@ -132,47 +130,53 @@ export default class DirectLink extends Link {
     }
   }
 
-  handlePacket(client, data) {
+  handlePacket(player, data) {
     try {
       const packet = PacketDecoder.decode(data)
 
       // handle receiving packets
       switch(packet.$) {
-        case CHAT:
+        case CHAT: {
           this.emit('chat_message', packet)
           this.broadcast(PacketEncoder.CHAT(packet.author, packet.msg))
-          break;
-        case SYNC_BODY:
-          // validate it is the clients own body
-          if(packet.i !== client.character.id) {
-            console.error(`client #${client.id} sent sync packet for incorrect body:`, packet)
-            client.dataChannel.close()
+          break
+        }
+        case SYNC_BODY: {
+          // validate it is the player's own body
+          if(packet.i !== player.character.id) {
+            console.error(`player #${player.id} sent sync packet for incorrect body:`, packet)
+            player.dataChannel.close()
             break
           }
 
-          client.character.position.set(...packet.p)
-          client.character.velocity.set(...packet.v)
-          client.character.quaternion.set(...packet.q)
-          client.character.angularVelocity.set(...packet.a)
+          player.character.position.set(...packet.p)
+          player.character.velocity.set(...packet.v)
+          player.character.quaternion.set(...packet.q)
+          player.character.angularVelocity.set(...packet.a)
 
-          break;
+          break
+        }
+        case INTERACT: {
+          const component = this.world.getComponentByID(packet.id)
+          if(!component) {
+            return console.warn(`player #${player.id} sent interact packet for unknown component:`, packet)
+          }
+          component.interact(player, packet.alternate)
+          break
+        }
         default:
           throw new TypeError(`Unknown packet type ${packet.$}`)
       }
     } catch(e) {
-      console.error("client:", client, "packet data:", data)
+      console.error("player:", player, "packet data:", data)
       GUI.showError("Error occured while handling packet", e)
     }
   }
 
-  send(id, packet) {
-    throw new Error("link#send called?", id, packet)
-  }
-
   broadcast(packet) {
-    for(const client of this._clients) {
-      if(client.dataChannel.readyState === "open") {
-        client.dataChannel.send(packet)
+    for(const player of this.remotePlayers) {
+      if(player.dataChannel.readyState === "open") {
+        player.dataChannel.send(packet)
       }
     }
   }
@@ -183,19 +187,19 @@ export default class DirectLink extends Link {
     if(!body) return
     const bodySync = PacketEncoder.SYNC_BODY(body)
 
-    for(const client of this._clients) {
-      if(client.dataChannel.readyState === "open" &&
-        client.body !== body) { // do not send a client a sync packet for their own body, they have the authoritative state of it
-        client.dataChannel.send(bodySync)
+    for(const player of this.remotePlayers) {
+      if(player.dataChannel.readyState === "open" &&
+        player.character !== body) { // do not send a player a sync packet for their own body, they have the authoritative state of it
+        player.dataChannel.send(bodySync)
       }
     }
   }
 
   stop() {
     if(this.ws) {
-      this.ws.close(1000, "stopping client")
-      for(const client of this._clients) {
-        client.dataChannel.close()
+      this.ws.close(1000, "stopping host")
+      for(const player of this.remotePlayers) {
+        player.dataChannel.close()
       }
     }
   }
@@ -212,7 +216,7 @@ export default class DirectLink extends Link {
    * @param {string} msg  the message to send. uses the Link's username.  */
   sendChat(msg) {
     console.info(`[DirectLink] Sending chat message: "${msg}"`)
-    // broadcast chat msg packet to all clients
+    // broadcast chat msg packet to all players
     this.broadcast(PacketEncoder.CHAT(this.username, msg))
     // send it to ourselves via the event handler
     this.emit('chat_message', { author: this.username, msg })

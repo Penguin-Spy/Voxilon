@@ -5,6 +5,7 @@ import { default as PacketEncoder, PacketType } from 'link/PacketEncoder.js'
 import PacketDecoder from 'link/PacketDecoder.js'
 import Link from 'link/Link.js'
 import { parseSignalTarget } from 'link/util.js'
+import PlayerController from 'client/PlayerController.js'
 const { CHAT, LOAD_WORLD, SET_CONTROLLER_STATE, SYNC_BODY, LOAD_BODY, SYNC_CHARACTER_STATE } = PacketType
 
 
@@ -119,8 +120,13 @@ export default class NetworkLink extends Link {
           this.client.attach(this)
         }
 
-        const body = this.world.getBodyByID(packet.id)
-        this.client.setController(packet.type, body)
+        let object
+        if(packet.type === "player") {
+          object = this.world.getBodyByID(packet.id)
+        } else {
+          object = this.world.getComponentByID(packet.id)
+        }
+        this.client.setController(packet.type, object)
 
         break
       }
@@ -162,11 +168,13 @@ export default class NetworkLink extends Link {
     // update the world (physics & gameplay)
     super.step(deltaTime)
 
-    // then calculate the priority of syncing our own body
-    this.bodyNetPriority++
-    if(this.bodyNetPriority > 30) {
-      this.bodyNetPriority = 0
-      this.dataChannel.send(PacketEncoder.SYNC_BODY(this.client.activeController.body))
+    // then calculate the priority of syncing our own body (if in the character controller)
+    if(this.client.activeController instanceof PlayerController) {
+      this.bodyNetPriority++
+      if(this.bodyNetPriority > 30) {
+        this.bodyNetPriority = 0
+        this.dataChannel.send(PacketEncoder.SYNC_BODY(this.client.activeController.body))
+      }
     }
   }
 
@@ -199,5 +207,13 @@ export default class NetworkLink extends Link {
   sendChat(msg) {
     console.info(`[NetworkLink] Sending chat message: "${msg}"`)
     this.send(PacketEncoder.CHAT(this.username, msg))
+  }
+
+  /** Informs the server that the player interacted with a component.
+   * @param {Component} component The component that was interacted with
+   * @param {boolean} alternate   True if the 'alternate' interaction action should be taken (e.g. open gui instead of activating component)
+   */
+  interact(component, alternate) {
+    this.send(PacketEncoder.INTERACT(component, alternate))
   }
 }

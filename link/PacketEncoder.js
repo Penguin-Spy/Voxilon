@@ -4,11 +4,12 @@ const PacketType = Object.freeze({
   SET_CONTROLLER_STATE: 2,
   SYNC_BODY: 3,
   LOAD_BODY: 4,
-  SYNC_CHARACTER_STATE: 5
+  SYNC_CHARACTER_STATE: 5,
+  INTERACT: 6,
 })
 export { PacketType }
 
-const { CHAT, LOAD_WORLD, SET_CONTROLLER_STATE, SYNC_BODY, LOAD_BODY, SYNC_CHARACTER_STATE } = PacketType
+const { CHAT, LOAD_WORLD, SET_CONTROLLER_STATE, SYNC_BODY, LOAD_BODY, SYNC_CHARACTER_STATE, INTERACT } = PacketType
 
 export default {
   CHAT(author, msg) {
@@ -48,11 +49,18 @@ export default {
       data: body.serialize()
     })
   },
-  /** syncs the stat of a character entity (movement, jetpack state, or toggles sititng in a seat) */
+  /** syncs the state of a character entity (movement, jetpack state, or toggles sititng in a seat) */
   SYNC_CHARACTER_STATE(id, action, a, b, c) {
     return JSON.stringify({
       $: SYNC_CHARACTER_STATE,
       id, action, a, b, c
+    })
+  },
+  /** sends an interaction with the component */
+  INTERACT(component, alternate) {
+    return JSON.stringify({
+      $: INTERACT,
+      id: component.id, alternate
     })
   }
 }

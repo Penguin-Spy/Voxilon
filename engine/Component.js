@@ -100,6 +100,14 @@ export default class Component {
     return this.#parentContraption
   }
 
+  /** Processes the player interacting with the component.
+   * @param {Player} player     The player who interacted with the component
+   * @param {boolean} alternate True if the 'alternate' interaction action should be taken (e.g. open gui instead of activating component)
+   */
+  interact(player, alternate) {
+    // interacting does nothing by default; will be implemented by subclasses if necessary
+  }
+
   raycast(raycaster, intersects) {
     // TODO: bounding sphere intersect stuff
     //_ray.copy(raycaster.ray).recast(raycaster.near)
