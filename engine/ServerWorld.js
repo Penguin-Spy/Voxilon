@@ -1,3 +1,5 @@
+import Body from 'engine/Body.js'
+
 import World from 'engine/World.js'
 
 export default class ServerWorld extends World {
@@ -25,7 +27,7 @@ export default class ServerWorld extends World {
   joinPlayer(player) {
     // first try to find a character with matching uuid
     /** @type {CharacterBody} */
-    let characterBody = this.bodies.find(body => body.player_uuid === player.uuid)
+    let characterBody = this.activeBodies.find(body => body.player_uuid === player.uuid)
     if(!characterBody) {
       // check character bodies in control seats too
       for(const contraptionBody of this.getAllBodiesByType("voxilon:contraption_body")) {
@@ -36,6 +38,16 @@ export default class ServerWorld extends World {
         }
       }
     }
+
+    /* TODO: this needs to not happen when loading the 2nd ever player in multiplayer
+    // otherwise if there's just one character, change it's uuid and return it
+    let characterBodies = this.bodies.filter(body => body.type === "voxilon:character_body")
+    if(characterBodies.length === 1) {
+      characterBody = characterBodies[0]
+      console.info(`Changing UUID of singleplayer body from ${characterBody.player_uuid} to ${uuid}`)
+      characterBody.player_uuid = uuid
+      return characterBody
+    }*/
 
     if(!characterBody) {
       // if characterBody is undefined, a new one must be spawned
@@ -52,14 +64,13 @@ export default class ServerWorld extends World {
 
   /**
    * Loads a Body's serialized form, adds it to the world, and sends a LOAD_BODY packet to all players
-   * @param {Object} data           The serialized data
-   * @param {boolean} [addToWorld]  Should the body be added to the world & sent to players, default true. If false, just deserializes the body and returns it
-   * @returns {Body}                The loaded body
+   * @param {Object} data         The serialized data
+   * @returns {Body}              The loaded body
    */
-  loadBody(data, addToWorld = true) {
-    const body = super.loadBody(data, addToWorld)
+  loadBody(data) {
+    const body = super.loadBody(data)
 
-    if(addToWorld && this.link) {
+    if(this.link) {
       // send all players a LOAD_BODY packet
       this.link.sendLoadBody(body)
     }
@@ -67,12 +78,12 @@ export default class ServerWorld extends World {
     return body
   }
 
-  addBody(body) {
-    super.addBody(body)
+  activateBody(body) {
+    super.activateBody(body)
     this.netSyncQueue.push(body)
   }
-  removeBody(body) {
-    super.removeBody(body)
+  deactivateBody(body) {
+    super.deactivateBody(body)
     this.netSyncQueue.remove(body)
   }
 }

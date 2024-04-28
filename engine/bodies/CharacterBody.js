@@ -92,14 +92,14 @@ export default class CharacterBody extends Body {
   }
 
   sitOn(seat) {
-    this.world.removeBody(this)
+    this.world.deactivateBody(this)
     seat.storedCharacterBody = this
     if(this.world.isServer) {
       this.sendSelfSync(PacketEncoder.SYNC_CHARACTER_STATE(this.id, "sit", seat.id, null, null))
     }
   }
   stopSitting(seat) {
-    this.world.addBody(this)
+    this.world.activateBody(this)
     seat.storedCharacterBody = null
     if(this.world.isServer) {
       this.sendSelfSync(PacketEncoder.SYNC_CHARACTER_STATE(this.id, "stopSitting", seat.id, null, null))

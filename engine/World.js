@@ -20,10 +20,17 @@ const constructors = {
 }
 
 export default class World {
-  /** @type {Body[]} */
-  bodies
-  /** @type {Map<number, Component} */
-  components
+  /** @type {Map<number, Body>} Contains all loaded bodies, mapped from body ID to Body object */
+  #bodiesMap
+  /** @type {Map<number, Component>} Contains all loaded components, mapped from component ID to Component object */
+  #componentsMap
+  /** @type {Body[]} @protected Just the currently active bodies */
+  activeBodies
+  /** @type {Body[]} @readonly Just bodies that have gravitational influence */
+  gravityBodies
+  /** @type {Body[]} @readonly Just bodies that can be raycast through for building/interaction */
+  buildableBodies
+  /** @type {Body[]} @readonly */ interactableBodies
 
   constructor(data) {
     if(data.VERSION !== WORLD_VERSION) throw new Error(`Unknown world version: ${data.VERSION}`)
@@ -31,25 +38,26 @@ export default class World {
     this.name = data.name ?? "A Universe"
 
     // --- CANNON ---
-    const physics = new CANNON.World({
+    this.physics = new CANNON.World({
       frictionGravity: new CANNON.Vec3(0, -9.82, 0) // direction doesn't matter, only magnitude is used in friction calculations
     })
     for(const contactMaterial of contactMaterials) {
-      physics.addContactMaterial(contactMaterial)
+      this.physics.addContactMaterial(contactMaterial)
     }
     this.orbitalGravityEnabled = true
 
     // --- THREE ---
-    const scene = new THREE.Scene()
+    this.scene = new THREE.Scene()
 
-    // read-only properties
+    this.#bodiesMap = new Map()
+    this.#componentsMap = new Map()
+    this.activeBodies = []
 
-    Object.defineProperties(this, {
-      bodies: { enumerable: true, value: [] },
-      components: { enumerable: true, value: new Map() },
-      physics: { enumerable: true, value: physics },
-      scene: { enumerable: true, value: scene }
-    })
+    this.gravityBodies = []
+    this.buildableBodies = []
+    this.interactableBodies = this.buildableBodies
+
+    this.isServer = false
 
     // this is networking-related but it has to happen before loading the bodies
     // TODO: figure out how to put these in the ServerWorld
@@ -57,8 +65,6 @@ export default class World {
     this.nextBodyID = 0 // unique across all bodies
     this.nextComponentID = 0 // unique across all components
     this.netSyncQueue = new CircularQueue()
-    // TODO: rework how bodies are added/removed
-    this.removedBodies = [] /* this isn't serialized because bodies here should be serialized elsewhere */
 
     // load bodies
     data.bodies.forEach(b => this.loadBody(b))
@@ -70,134 +76,95 @@ export default class World {
     const data = { "VERSION": WORLD_VERSION }
     data.name = this.name
     data.spawn_point = this.spawn_point.toArray()
-    data.bodies = this.bodies.map(b => b.serialize())
+    data.bodies = []
+    for(const b of this.#bodiesMap.values()) {
+      data.bodies.push(b.serialize())
+    }
     return data
   }
 
-  /**
-   * an array of all bodies that create a gravitational field
-   */
-  get gravityBodies() {
-    return this.bodies.filter(body => {
-      return body instanceof CelestialBody && body.rigidBody.mass > 0
-    })
-  }
-  /**
-   * an array of all bodies that can be built upon. used for building raycasting
-   * @returns {(CelestialBody|ContraptionBody)[]}
-   */
-  get buildableBodies() {
-    return this.bodies.filter(body => {
-      return body instanceof CelestialBody || body instanceof ContraptionBody
-    })
-  }
-  /**
-   * an array of all bodies that can be interacted with. used for interaction raycasting
-   * @returns {(CelestialBody|ContraptionBody)[]}
-   */
-  get interactableBodies() {
-    return this.bodies.filter(body => {
-      return body instanceof CelestialBody || body instanceof ContraptionBody
-    })
-  }
-
-  /**
-   * Gets the character body of a player by their uuid, or creates a new one if none is found. <br>
-   * If there is only one player in a world, the uuid is ignored (for shared singleplayer worlds)
-   * @param {string} uuid
-   * @returns {CharacterBody}
-   */
-  getPlayersCharacterBody(uuid) {
-
-
-    /* TODO: this needs to not happen when loading the 2nd ever player in multiplayer
-    // otherwise if there's just one character, change it's uuid and return it
-    let characterBodies = this.bodies.filter(body => body.type === "voxilon:character_body")
-    if(characterBodies.length === 1) {
-      characterBody = characterBodies[0]
-      console.info(`Changing UUID of singleplayer body from ${characterBody.player_uuid} to ${uuid}`)
-      characterBody.player_uuid = uuid
-      return characterBody
-    }*/
-
-  }
-
-  /**
-   * Loads a Body's serialized form and adds it to the world
+  /** Loads a Body's serialized form and adds it to the world. Newly-loaded bodies are active by default.
    * @param {Object} data           The serialized data
-   * @param {boolean} [addToWorld]  Should the body be added to the world, default true. If false, just deserializes the body and returns it
    * @returns {Body}                The loaded body
    */
-  loadBody(data, addToWorld = true) {
+  loadBody(data) {
+    /** @type {Body} */
     const body = new constructors[data.type](data, this)
-
-    if(addToWorld) {
-      this.addBody(body)
-    }
-
+    this.#bodiesMap.set(body.id, body)
+    this.activateBody(body)
     return body
   }
-
-  getAllBodiesByType(type) {
-    return this.bodies.filter(b => b.type === type)
-  }
-
-  /**
-   * Removes a body from the world, such that is is no longer visible, interactable, or is updated. Does not destroy the object itself.
+  /** Marks a body as active (participates in ticking, rendering, and physics). Newly-loaded bodies are active by default.
    * @param {Body} body
    */
-  removeBody(body) {
-    const index = this.bodies.indexOf(body)
+  activateBody(body) {
+    this.physics.addBody(body.rigidBody)
+    if(body.mesh) this.scene.add(body.mesh)
+    this.activeBodies.push(body)
+
+    if(body instanceof CelestialBody && body.rigidBody.mass > 0) {
+      this.gravityBodies.push(body)
+    }
+    if(body instanceof CelestialBody || body instanceof ContraptionBody) {
+      this.interactableBodies.push(body)
+    }
+  }
+  /** Marks a body as inactive, such that is is no longer visible, interactable, or is updated. The Body continues to be loaded and be accessable by references or its ID.
+   * @param {Body} body
+   */
+  deactivateBody(body) {
+    const index = this.activeBodies.indexOf(body)
     if(index === -1) {
-      console.error(`given body is not in world:`, body)
-      throw new Error(`given body is not in world!`)
+      console.error(body)
+      throw new TypeError(`given body is not active!`)
     }
     this.physics.removeBody(body.rigidBody)
     if(body.mesh) this.scene.remove(body.mesh)
-    this.bodies.splice(index, 1)
+    this.activeBodies.splice(index, 1)
 
-    this.removedBodies.push(body)
+    const gravityIndex = this.gravityBodies.indexOf(body)
+    if(gravityIndex !== -1) this.gravityBodies.splice(gravityIndex, 1)
+    const interactableIndex = this.interactableBodies.indexOf(body)
+    if(interactableIndex !== -1) this.interactableBodies.splice(interactableIndex, 1)
   }
-  /**
-   * Adds a body to the world that has already been loaded by {@link World#loadBody}.
-   * @param {Body} body
+
+  /** Gets all bodies with the given type
+   * @param {string} type
    */
-  addBody(body) {
-    this.physics.addBody(body.rigidBody)
-    if(body.mesh) this.scene.add(body.mesh)
-    this.bodies.push(body)
-
-    const index = this.removedBodies.indexOf(body)
-    if(index === -1) return
-    this.removedBodies.splice(index, 1)
+  getAllBodiesByType(type) {
+    const filteredBodies = []
+    for(const body of this.#bodiesMap.values()) {
+      if(body.type === type) filteredBodies.push(body)
+    }
+    return filteredBodies
   }
 
+  /** Gets the body with the given ID
+   * @param {number} id
+   */
   getBodyByID(id) {
-    let body = this.bodies.find(body => body.id === id)
-    if(!body) body = this.removedBodies.find(body => body.id === id)
-    if(!body) return false
-
-    return body
+    return this.#bodiesMap.get(id)
   }
 
+  /** @param {Component} component */
   addComponent(component) {
-    this.components.set(component.id, component)
+    this.#componentsMap.set(component.id, component)
   }
-
+  /** @param {number} id */
   getComponentByID(id) {
-    return this.components.get(id)
+    return this.#componentsMap.get(id)
   }
 
   preRender() {
     // updates THREE meshes
-    for(const body of this.bodies) {
+    for(const body of this.activeBodies) {
       body.preRender()
     }
   }
 
   step() {
     // calculates gravity & updates bodies' additional behavior (i.e. contraptions' components)
-    for(const body of this.bodies) {
+    for(const body of this.activeBodies) {
       body.update()
       body.postUpdate()
     }
