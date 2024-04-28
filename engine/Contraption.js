@@ -66,6 +66,11 @@ export default class Contraption {
       }
     }
   }
+  reviveReferences() {
+    for(const c of this.components) {
+      c.reviveReferences()
+    }
+  }
 
   serialize() {
     const networkData = {}

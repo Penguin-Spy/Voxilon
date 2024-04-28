@@ -9,16 +9,7 @@ export default class LocalPlayer extends Player {
 
   /** Sets this player's controller */
   setController(type, ...options) {
+    super.setController(type, ...options)
     this.client.setController(type, ...options)
   }
-
-  /** Gets the character body of this player, or `null` if there is no relevant character. */
-  getCharacter() {
-    if(this.client.activeController instanceof PlayerController) {
-      return this.client.activeController.body
-    } else {
-      return null
-    }
-  }
 }
-

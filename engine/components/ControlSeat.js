@@ -1,4 +1,5 @@
-import World from 'engine/World.js'
+/** @typedef {import('engine/World.js').default} World */
+/** @typedef {import('link/Player.js').default} Player */
 
 import { Vector3 } from 'three'
 import { Vec3, Box } from 'cannon-es'
@@ -15,6 +16,7 @@ const [boundingBox, offset] = boundingBoxFromDimensions(1, 1, 1)
 const type = "voxilon:control_seat"
 
 export default class ControlSeat extends NetworkedComponent {
+  #seatedCharacterID
 
   /**
    * @param {Object} data
@@ -29,20 +31,20 @@ export default class ControlSeat extends NetworkedComponent {
     this.thrustManager = new ThrustManager(this)
     this.gyroManager = new GyroManager(this)
 
-    const characterBodyData = check(data.storedCharacterBody, "object?")
-    if(characterBodyData) {
-      this.storedCharacterBody = world.loadBody(characterBodyData)
-    } else {
-      this.storedCharacterBody = null
+    this.seatedCharacter = null
+    this.#seatedCharacterID = data.seatedCharacterID ?? false
+  }
+  reviveReferences() {
+    if(this.#seatedCharacterID) {
+      this.seatedCharacter = this.world.getBodyByID(this.#seatedCharacterID)
+      this.#seatedCharacterID = false
     }
-
-    this.seatedPlayer = null
   }
 
   serialize() {
     const data = super.serialize()
-    if(this.storedCharacterBody) {
-      data.storedCharacterBody = this.storedCharacterBody.serialize()
+    if(this.seatedCharacter) {
+      data.seatedCharacterID = this.seatedCharacter.id
     }
     return data
   }
@@ -81,44 +83,45 @@ export default class ControlSeat extends NetworkedComponent {
   interact(player, alternate) {
     if(!alternate) {
       console.log("sit", player, this)
-      if(this.seatedPlayer === player) {
-        this.stopSitting(player)
+      if(!this.seatedCharacter) { // if the seat is unoccupied, the player may sit
+        this.sit(player)
       } else {
-        this.sit(player) // will kick out the player currently in the seat if there is one
+        const character = player.character
+        if(this.seatedCharacter === character) { // if the player is already in this seat, stop sitting
+          this.stopSitting(player)
+        } else { // seat is occupied by a different character, cannot sit
+          console.warn("cannot sit in occupied seat")
+        }
       }
     } else {
       console.log("gui", player, this)
     }
   }
 
-  /** Makes the given player sit in this seat */
+  /** Makes the given player sit in this seat
+   * @param {Player} player */
   sit(player) {
-    // kick out any player that's already in the seat
-    if(this.seatedPlayer) {
-      this.stopSitting(this.seatedPlayer)
-    }
-
-    const character = player.getCharacter()
+    const character = player.character
     if(character === null) {
       console.warn("player", player, "does not have a character, cannot sit on", this)
       return
     }
     // make player's character body sit in this seat
     character.sitOn(this)
+    this.seatedCharacter = character
 
     // set player's controller to ContraptionController with this seat as the seat
     player.setController("contraption", this)
-    this.seatedPlayer = player
   }
 
   /** Makes the given player dismount this seat */
   stopSitting(player) {
-    const character = this.storedCharacterBody
+    const character = this.seatedCharacter
     character.stopSitting(this)
+    this.seatedCharacter = null
     // TODO: set the body's position, velocity, rotation, and angular velocity to match this component's values (offset position up 1 meter)
 
     player.setController("player", character)
-    this.seatedPlayer = null
   }
 
   static type = type

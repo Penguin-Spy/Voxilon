@@ -144,16 +144,16 @@ export default class DirectLink extends Link {
           break;
         case SYNC_BODY:
           // validate it is the clients own body
-          if(packet.i !== client.body.id) {
+          if(packet.i !== client.character.id) {
             console.error(`client #${client.id} sent sync packet for incorrect body:`, packet)
             client.dataChannel.close()
             break
           }
 
-          client.body.position.set(...packet.p)
-          client.body.velocity.set(...packet.v)
-          client.body.quaternion.set(...packet.q)
-          client.body.angularVelocity.set(...packet.a)
+          client.character.position.set(...packet.p)
+          client.character.velocity.set(...packet.v)
+          client.character.quaternion.set(...packet.q)
+          client.character.angularVelocity.set(...packet.a)
 
           break;
         default:

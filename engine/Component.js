@@ -1,4 +1,5 @@
-import Contraption from 'engine/Contraption.js'
+/** @typedef {import('engine/World.js').default} World */
+/** @typedef {import('engine/Contraption.js').default} Contraption */
 
 import * as THREE from 'three'
 import { check } from 'engine/util.js'
@@ -33,6 +34,7 @@ export default class Component {
 
   /**
    * @param {component_data} data
+   * @param {World} world
    * @param {CANNON.Shape} shape
    * @param {THREE.Mesh} mesh
    */
@@ -74,6 +76,7 @@ export default class Component {
     this.mesh.position.copy(this.position).add(this.offset)
     ComponentDirection.rotateQuaternion(this.mesh.quaternion, this.rotation)
   }
+  reviveReferences() { }
 
   serialize() {
     const data = {}

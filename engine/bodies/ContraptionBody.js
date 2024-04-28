@@ -33,6 +33,9 @@ export default class ContraptionBody extends Body {
     this.lookQuaternion = new THREE.Quaternion() // client-side, independent of body rotation & world stepping
     this.lookPositionOffset = new THREE.Vector3(0, 0.7, 0) // player center is 0.9m off the ground, so eye height is at 1.6m
   }
+  reviveReferences() {
+    this.contraption.reviveReferences()
+  }
 
   serialize() {
     const data = super.serialize()

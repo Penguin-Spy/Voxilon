@@ -71,6 +71,7 @@ export default class Body {
     this.gravityDirection = new THREE.Vector3()
     this.totalGravityVector = new THREE.Vector3()
   }
+  reviveReferences() { }
 
   serialize() {
     const data = {}

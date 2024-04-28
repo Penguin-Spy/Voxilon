@@ -37,18 +37,22 @@ export default class CelestialBody extends Body {
 
     super(data, world, rigidBody, mesh)
 
-    const contraptions = []
+    this.contraptions = []
     Object.defineProperties(this, {
       // read-only properties
       type: { enumerable: true, value: "voxilon:celestial_body" },
       radius: { enumerable: true, value: radius },
-      surfaceGravity: { enumerable: true, value: surfaceGravity },
-      contraptions: { enumerable: true, value: contraptions }
+      surfaceGravity: { enumerable: true, value: surfaceGravity }
     })
 
     contraptions_data.forEach(c_data => {
-      contraptions.push(new Contraption(c_data, this))
+      this.contraptions.push(new Contraption(c_data, this))
     })
+  }
+  reviveReferences() {
+    for(const c of this.contraptions) {
+      c.reviveReferences()
+    }
   }
 
   serialize() {
