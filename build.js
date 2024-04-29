@@ -14,9 +14,8 @@ try {
 
 fs.cpSync("./www", STATIC, RECURSIVE)
 fs.cpSync("./client", `${STATIC}/client`, RECURSIVE)
-fs.cpSync("./common", `${STATIC}/common`, RECURSIVE)
+fs.cpSync("./engine", `${STATIC}/engine`, RECURSIVE)
 fs.cpSync("./assets", `${STATIC}/assets`, RECURSIVE)
 fs.cpSync("./link", `${STATIC}/link`, RECURSIVE)
 
 fs.cpSync("./vercel_config.json", `${OUTPUT}/config.json`)
-
