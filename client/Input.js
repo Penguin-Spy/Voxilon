@@ -125,60 +125,6 @@ function handleTouch(event) {
   }
 }
 
-// behavior of key events in a gui
-function handleGuiKeyDown(event) {
-  const activeElement = document.activeElement
-  const parent = activeElement.parentNode
-  let code = event.code
-
-  // if nothing's selected, do custom enter behavior
-  if(parent !== GUI.mainFrame) {
-    if(code === "Enter") {
-      GUI.proceed(event)
-      event.preventDefault()
-      return
-    }
-  }
-
-  // regardless of if something's selected:
-
-  //  do esc
-  if(code === "Escape") {
-    GUI.back()
-    event.preventDefault()
-    return
-
-    //  do arrow keys & enter navigation
-    //    if nothing's selected, arrows go to 0 and .length
-  } else if(code === "ArrowUp" || code === "ArrowDown" || code === "Enter") {
-    let index = GUI.focusableNodes.indexOf(activeElement)
-    // if index === -1 (no child focused), the index over/underflow code will behave properly still
-
-    if(code === "Enter") {
-      event.preventDefault()
-      if(GUI.runAction(index, event)) {
-        return // if the element had an action that ran, return
-      } else {
-        console.log("next focusable element")
-        code = "ArrowDown" // otherwise, go to the next focusable element
-      }
-    }
-    if(code === "ArrowDown") {
-      index++
-      if(index >= GUI.focusableNodes.length) {
-        index = 0
-      }
-    } else if(code === "ArrowUp") {
-      index--
-      if(index < 0) {
-        index = GUI.focusableNodes.length - 1
-      }
-    }
-
-    GUI.focusableNodes[index].focus()
-  }
-}
-
 // behavior of key events during gameplay
 function handleGameKeyDown(event) {
   // re-allow typing in <input>s & ignore typed text
@@ -206,7 +152,7 @@ function handleKeyDown(event) {
     if(document.pointerLockElement === canvas) {
       handleGameKeyDown(event)
     } else if(GUI.hasScreenOpen) {
-      handleGuiKeyDown(event)
+      GUI.screen.handleKeyDown(event)
     }
   } catch(e) {
     GUI.showError("Error while handling keydown", e)

@@ -21,6 +21,12 @@ input, button {
   display: none !important;
 }
 
+body[data-cursor="loading"] {
+  cursor: wait;
+}
+body[data-cursor="disabled"] {
+  cursor: not-allowed;
+}
 
 #gui {
   position: absolute;
@@ -50,7 +56,7 @@ input, button {
   flex-direction: column;
   align-items: center;
 }
-.gui-mainFrame:not(:empty) {
+.gui-mainFrame[data-screen] {
   pointer-events: initial;
 }
 
@@ -116,44 +122,6 @@ input, button {
 .bg-right::before, .bg-right::after { border-right: 16px solid transparent; }
 
 
-/* common styles */
-.gui-mainFrame input {
-  font-size: 1em;
-}
-.gui-mainFrame button {
-  font-size: 1em;
-}
-button.big {
-  color: white;
-  border: white solid 4px;
-  margin: 6px 6px 10px;
-  padding: 6px 12px;
-  background-color: transparent;
-  cursor: pointer;
-  box-shadow: 4px 4px 0 #555;
-}
-button.back {
-  align-self: baseline;
-  margin-top: 32px;
-}
-button.invisible {
-  opacity: 0;
-  pointer-events: none;
-}
-button.big[disabled] {
-  color: gray;
-  border-color: gray;
-  cursor: not-allowed;
-  box-shadow: 4px 4px 0 #333;
-}
-body[data-cursor="loading"] {
-  cursor: wait;
-}
-body[data-cursor="disabled"] {
-  cursor: not-allowed;
-}
-
-
 /* HUD */
 .gui-hud .chat-container {
   position: absolute;
@@ -200,33 +168,6 @@ body[data-cursor="disabled"] {
   flex-direction: column;
   padding: 0px 8px 8px 16px;
 }
-
-
-/* Main Menu */
-.gui-mainFrame[data-screen="main_menu"] h1 {
-  font-size: 6em;
-  font-weight: normal;
-  margin: 0;
-  text-shadow: 6px 6px 0 #555;
-}
-.gui-mainFrame[data-screen="main_menu"] h2 {
-  font-size: 2em;
-  font-weight: normal;
-  margin: 0 0 24px;
-}
-.gui-mainFrame[data-screen="main_menu"] .version {
-  position: fixed;
-  bottom: 24px;
-  right: 4px;
-}
-.gui-mainFrame[data-screen="main_menu"] .source {
-  position: fixed;
-  bottom: 4px;
-  right: 4px;
-  color: unset;
-  cursor: alias;
-}
-
 
 /* Loading screen (before main.js has loaded & ran) */
 .gui-messages > span {

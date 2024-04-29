@@ -9,7 +9,7 @@ import Input from 'client/Input.js'
 import GUI from 'client/GUI.js'
 import Debug from 'client/Debug.js'
 
-import main_menu from 'client/screens/main_menu.js'
+import MainMenuScreen from 'client/screens/main_menu/MainMenuScreen.js'
 
 // debug interface object
 const Voxilon = { Input, GUI, Debug }
@@ -127,10 +127,10 @@ async function networkLink(button, target, username) {
 }
 
 
-GUI.loadScreen(main_menu, "title", { directLink, networkLink })
+GUI.loadScreen(new MainMenuScreen(directLink, networkLink))
 
 // remove loading error handler
-window.onerror = undefined;
+window.onerror = undefined
 
 // debugging interface
 Voxilon.animate = animate
