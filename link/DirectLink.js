@@ -1,4 +1,3 @@
-import GUI from 'client/GUI.js'
 import ServerWorld from 'engine/ServerWorld.js'
 import { default as PacketEncoder, PacketType } from 'link/PacketEncoder.js'
 import PacketDecoder from 'link/PacketDecoder.js'
@@ -169,7 +168,7 @@ export default class DirectLink extends Link {
       }
     } catch(e) {
       console.error("player:", player, "packet data:", data)
-      GUI.showError("Error occured while handling packet", e)
+      Voxilon.showError("Error occured while handling packet", e)
     }
   }
 

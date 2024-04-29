@@ -52,33 +52,6 @@ class GUI {
     delete this.mainFrame.dataset.screen
     this.screen = null
   }
-
-  // displays an error over the whole screen, stops game.
-  // only for use with unhandled/catastrophic errors
-  showError(context, e) {
-    console.error(context + " -", e)
-    this.clearScreen()
-    Input.stop()
-    Voxilon.stop() // stops animate/step loop - TODO: more graceful stop/showError method in the Link instead
-
-    this.mainFrame.className = "gui-messages"
-    this.mainFrame.dataset.screen = "error"
-    newMessage(`${context} - ${e.name}: ${e.message}`, "error")
-    newMessage(`@ ${e.fileName}:${e.line}:${e.column}`, "stacktrace")
-
-    for(const line of e.stack.split("\n")) {
-      newMessage(line, "stacktrace")
-      if(line.startsWith("FrameRequestCallback")) {  // don't fill the rest of the screen with the animate callback trace
-        newMessage("...", "stacktrace")
-        break
-      }
-    }
-  }
-
-  // displays an error in the top left of the screen
-  showWarning(warn) {
-    console.warn(warn)
-  }
 }
 
 export default new GUI()

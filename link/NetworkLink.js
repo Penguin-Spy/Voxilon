@@ -1,4 +1,3 @@
-import GUI from 'client/GUI.js'
 import World from 'engine/World.js'
 import PeerConnection from 'link/PeerConnection.js'
 import { default as PacketEncoder, PacketType } from 'link/PacketEncoder.js'
@@ -48,14 +47,14 @@ export default class NetworkLink extends Link {
             this.dataChannel.onclose = e => {
               console.info("[dataChannel] close:", e)
               // need to stop the client and display a message when the connection is closed by the host, but not overwrite the shown error if we close our own data channel
-              //GUI.showError("connection to host closed", {})
+              //Voxilon.showError("connection to host closed", {})
             }
             this.dataChannel.onmessage = ({ data }) => {
               try {
                 this._handlePacket(data)
               } catch(e) {
                 console.error(data)
-                GUI.showError("Error occured while handling packet", e)
+                Voxilon.showError("Error occured while handling packet", e)
               }
             }
             this.dataChannel.onopen = e => {

@@ -155,7 +155,7 @@ function handleKeyDown(event) {
       GUI.screen.handleKeyDown(event)
     }
   } catch(e) {
-    GUI.showError("Error while handling keydown", e)
+    Voxilon.showError("Error while handling keydown", e)
   }
 }
 
@@ -179,7 +179,7 @@ function handleMouseDown(event) {
       callback(event)
     }
   } catch(e) {
-    GUI.showError("Error while handling mousedown", e)
+    Voxilon.showError("Error while handling mousedown", e)
   }
 }
 function handleMouseUp(event) {

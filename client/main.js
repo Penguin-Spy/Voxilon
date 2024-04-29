@@ -39,7 +39,7 @@ function animate(now) {
 
     link.step(deltaTime)
   } catch(e) {
-    GUI.showError("Error occured while ticking", e)
+    showError("Error occured while ticking", e)
     return
   }
 
@@ -50,7 +50,7 @@ function animate(now) {
     client.activeController.preRender(deltaTime)
     renderer.render()
   } catch(e) {
-    GUI.showError("Error occured while rendering", e)
+    showError("Error occured while rendering", e)
     return
   }
 
@@ -75,7 +75,38 @@ function start() {
 
 function stop() {
   cancelAnimationFrame(renderRequest)
-  link.stop()
+  Input.stop()
+  if(link) link.stop()
+}
+
+// displays an error over the whole screen, stops game.
+// only for use with unhandled/catastrophic errors
+function showError(context, error) {
+  console.error(context + " -", error)
+  stop()
+
+  const gui = document.querySelector("#gui")
+  // clear focus from gui main frame
+  gui.children[0]?.shadowRoot?.activeElement?.blur()
+
+  const errorFrame = document.createElement("div")
+  errorFrame.setAttribute("class", "gui-messages error-screen")
+  gui.prepend(errorFrame)
+
+  function newMessage(message, type) {
+    const element = errorFrame.appendChild(document.createElement("span"))
+    element.innerText = message
+    if(type) element.className = type
+  }
+
+  newMessage(`${context} - ${error.name}: ${error.message}`, "error")
+  for(const line of error.stack.split("\n")) {
+    newMessage(line, "stacktrace")
+    if(line.startsWith("FrameRequestCallback")) {  // don't fill the rest of the screen with the animate callback trace
+      newMessage("...", "stacktrace")
+      break
+    }
+  }
 }
 
 /* --- Direct/Network link --- */
@@ -100,7 +131,7 @@ async function directLink(button, worldOptions) {
     link = new linkModules.direct(client, worldOptions)
     start()
   } catch(e) {
-    GUI.showError("Error when starting direct link", e)
+    showError("Error when starting direct link", e)
   }
 }
 async function networkLink(button, target, username) {
@@ -122,10 +153,9 @@ async function networkLink(button, target, username) {
     await link.ready
     start()
   } catch(e) {
-    GUI.showError("Error when starting network link", e)
+    showError("Error when starting network link", e)
   }
 }
-
 
 GUI.loadScreen(new MainMenuScreen(directLink, networkLink))
 
@@ -135,4 +165,5 @@ window.onerror = undefined
 // debugging interface
 Voxilon.animate = animate
 Voxilon.stop = stop
-window.Voxilon = Voxilon //{  stop, animate, };
+Voxilon.showError = showError
+window.Voxilon = Voxilon

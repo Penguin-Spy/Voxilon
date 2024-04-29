@@ -1,5 +1,3 @@
-import GUI from 'client/GUI.js'
-
 export async function loadTemplateFromPath(path) {
   const template = document.createElement('template')
   const html = await fetch("/client/screens/" + path).then(res => res.text())
@@ -63,7 +61,7 @@ export default class Screen {
       try {
         listener.call(this, event)
       } catch(error) {
-        GUI.showError("Error while running GUI action", error)
+        Voxilon.showError("Error while running GUI action", error)
       }
     } else {
       console.warn("no event listener for", elementID, event.target, event)
@@ -77,23 +75,26 @@ export default class Screen {
     const activeElement = this.content.activeElement
     let code = event.code
     // recompute this to account for Screens dynamically adding/removing elements
-    const focusableNodes = Array.from(this.content.querySelectorAll("input, select, textarea, button, object"))
+    const focusableNodes = Array.from(this.content.querySelectorAll("a[href], input, select, textarea, button, object"))
 
-    //  do arrow keys & enter navigation
-    //    if nothing's selected, arrows go to 0 and .length
+    // do arrow keys & enter navigation
+    // if nothing's selected, arrows go to 0 and .length
     if(code === "ArrowUp" || code === "ArrowDown" || code === "Enter") {
       let index = focusableNodes.indexOf(activeElement)
 
       if(code === "Enter") {
-        event.preventDefault()
         if(index === -1) { // if no element focused, focus the first one
           index = 0
         } else if(activeElement.nodeName === "BUTTON") {
+          event.preventDefault()
           this.handleClick(activeElement.id, event)
           return
+        } else if(activeElement.nodeName === "A") {
+          return // allow default action of event
         } else {
           code = "ArrowDown" // otherwise, go to the next focusable element
         }
+        event.preventDefault()
       }
       if(code === "ArrowDown") {
         index++

@@ -35,12 +35,12 @@
     </div>
   </div>
   <script>
-    const loadingFrame = document.querySelector(".gui-messages")
+    let messagesFrame = document.querySelector(".gui-messages")
     function newMessage(message, type) {
       const element = document.createElement("span")
       element.innerText = message
       if(type) element.className = type
-      loadingFrame.appendChild(element)
+      messagesFrame.appendChild(element)
     }
     window.onerror = (msg, source, line, column) => {
       if(msg.startsWith("TypeError: Error resolving module specifier")) {
@@ -48,13 +48,20 @@
         console.info("Caught module import TypeError.")
         return true // prevent error from showing in console
       } else {
-        loadingFrame.dataset.screen = "error"
+        const gui = document.querySelector("#gui")
+        // clear focus from gui main frame
+        gui.children[0]?.shadowRoot?.activeElement?.blur()
+
+        messagesFrame = document.createElement("div")
+        messagesFrame.setAttribute("class", "gui-messages error-screen")
+        gui.prepend(messagesFrame)
+    
         newMessage(`Loading failed: ${msg}`, "error")
         newMessage(`@ ${source}:${line}:${column}`, "stacktrace")
       }
     }
   </script>
-  <script type="module" src="./client/main.js"></script>
+  <script type="module" src="client/main.js"></script>
 </body>
 
 </html>
