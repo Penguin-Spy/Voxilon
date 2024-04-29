@@ -21,24 +21,31 @@ export default class MainMenuScreen extends MultiViewScreen {
     super.loadView(view)
     switch(view) {
       case "title":
-        this.content.querySelector("#singleplayer").addEventListener("click", e => this.singleplayer(e))
-        this.content.querySelector("#multiplayer").addEventListener("click", e => this.multiplayer(e))
-        this.content.querySelector("#settings").addEventListener("click", e => this.settings(e))
+        this.setEventHandlers({
+          singleplayer: this.singleplayer,
+          multiplayer: this.multiplayer,
+          settings: this.settings
+        })
         break
       case "singleplayer":
-        this.content.querySelector("#new_universe").addEventListener("click", e => this.forward("new_universe"))
-        this.content.querySelector("#load_from_string").addEventListener("click", e => this.load_from_string(e))
-        this.content.querySelector("#load_debug_world").addEventListener("click", e => this.load_debug_world(e))
+        this.setEventHandlers({
+          new_universe: e => this.forward("new_universe"),
+          load_from_string: this.load_from_string,
+          load_debug_world: this.load_debug_world
+        })
         break
       case "new_universe":
-        this.content.querySelector("#start").addEventListener("click", e => this.new_universe_start(e))
+        this.setEventHandlers({
+          start: this.new_universe_start
+        })
         break
       case "multiplayer":
-        this.content.querySelector("#join").addEventListener("click", e => this.multiplayer_join(e))
+        this.setEventHandlers({
+          join: this.multiplayer_join
+        })
         break
     }
-    const back = this.content.querySelector("#back")
-    if(back) back.addEventListener("click", e => this.backward())
+    this.addEventHandler("back", this.backward)
   }
 
   singleplayer(e) {

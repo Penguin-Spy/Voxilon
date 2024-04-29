@@ -1,3 +1,5 @@
+import GUI from 'client/GUI.js'
+
 export async function loadTemplateFromPath(path) {
   const template = document.createElement('template')
   const html = await fetch("/client/screens/" + path).then(res => res.text())
@@ -17,6 +19,8 @@ const defaultStyle = await loadStyleSheetFromPath("style.css")
 export default class Screen {
   /** @type {DocumentFragment} The DocumentFragment currently containing the screen's elements. May be a ShadowRoot */
   content
+  /** @type {Map<HTMLElement, function>} @protected  The event handlers for this Screen's elements */
+  
 
   /**
    * @param {HTMLTemplateElement?} template The template element to generate this Screen's content from. (Optional for MultiViewScreen's implementation)
@@ -27,6 +31,7 @@ export default class Screen {
     } else {
       this.content = new DocumentFragment()
     }
+    this.eventHandlers = []
   }
 
   /** Moves this Screen's contents to the shadow root
@@ -36,6 +41,33 @@ export default class Screen {
     shadowRoot.adoptedStyleSheets.push(defaultStyle)
     shadowRoot.replaceChildren(this.content)
     this.content = shadowRoot
+    shadowRoot.addEventListener("click", e => this.handleClick(e.target.id, e))
+  }
+  
+  /** Sets the event handlers for this screen's content.
+   * @param {Record<string, function>} handlers  A mapping of element id to event handler function
+   */
+  setEventHandlers(handlers) {
+    this.eventHandlers = handlers
+  }
+  addEventHandler(id, handler) {
+    this.eventHandlers[id] = handler
+  }
+  
+  /** Handles clicking on & pressing enter on elements that may or may not have a handler registered.
+   * @param {string} elementID  The ID of the element that was clicked/activated
+   * @param {KeyboardEvent|MouseEvent} event  The event that was raised */
+  handleClick(elementID, event) {
+    const listener = this.eventHandlers[elementID]
+    if(listener) {
+      try {
+        listener.call(this, event)
+      } catch(error) {
+        GUI.showError("Error while running GUI action", error)
+      }
+    } else {
+      console.warn("no event listener for", elementID, event.target, event)
+    }
   }
 
   /** Handles navigating with the keyboard
@@ -43,8 +75,9 @@ export default class Screen {
    */
   handleKeyDown(event) {
     const activeElement = this.content.activeElement
-    const focusableNodes = Array.from(this.content.querySelectorAll("input, select, textarea, button, object"))
     let code = event.code
+    // recompute this to account for Screens dynamically adding/removing elements
+    const focusableNodes = Array.from(this.content.querySelectorAll("input, select, textarea, button, object"))
 
     //  do arrow keys & enter navigation
     //    if nothing's selected, arrows go to 0 and .length
@@ -56,8 +89,7 @@ export default class Screen {
         if(index === -1) { // if no element focused, focus the first one
           index = 0
         } else if(activeElement.nodeName === "BUTTON") {
-          // TODO: this doesn't pass forward the state of modifier keys (shift, ctrl, etc.) will need to save the event handler function on the element to do this
-          activeElement.click() // simulate clicking the button
+          this.handleClick(activeElement.id, event)
           return
         } else {
           code = "ArrowDown" // otherwise, go to the next focusable element
