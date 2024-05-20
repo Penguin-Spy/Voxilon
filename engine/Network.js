@@ -10,12 +10,12 @@ import { check } from 'engine/util.js'
 export default class Network {
   /** @type {Object} */
   #hostnameIndexes
-  /** @type {Object} */
+  /** @type {Map<string,Component} */
   #components
 
   constructor(data) {
     this.#hostnameIndexes = check(data.hostnameIndexes, "object?") ?? {}
-    this.#components = {}
+    this.#components = new Map()
   }
 
   serialize() {
@@ -50,7 +50,7 @@ export default class Network {
    * @param {Component} component
    */
   addComponent(hostname, component) {
-    this.#components[hostname] = component
+    this.#components.set(hostname, component)
   }
 
   /**
@@ -59,10 +59,25 @@ export default class Network {
    * @returns {Component}
    */
   getComponent(hostname) {
-    const c = this.#components[hostname]
+    const c = this.#components.get(hostname)
     if(!c) {
       throw new Error(`No component found with hostname ${hostname}`)
     }
     return c
+  }
+  
+  /**
+   * Gets a list of compnents by their type
+   * @param {string} type
+   * @returns {Component[]}
+   */
+  getComponents(type) {
+    const matches = []
+    for (const [key, value] of this.#components) {
+      if(value.type === type) {
+        matches.push(value)
+      }
+    }
+    return matches
   }
 }

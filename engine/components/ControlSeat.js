@@ -95,6 +95,7 @@ export default class ControlSeat extends NetworkedComponent {
       }
     } else {
       console.log("gui", player, this)
+      player.setScreen("control_seat", this)
     }
   }
 

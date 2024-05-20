@@ -102,8 +102,28 @@ export default class GyroManager {
    * @param {Gyroscope} gyroscope  a gyro component for this manager to control
    */
   addGyroscope(gyroscope) {
+    console.log("manager adding gyroscope", gyroscope)
     this.#gyroscopes.push(gyroscope)
     this.#totalTorque.addScalar(gyroscope.maxTorque)
+  }
+  
+  /** Removes the gyroscope with the given hostname form this manager's control
+   * @param {string} hostname */
+  removeGyroscope(hostname) {
+    console.log("manager removing gyroscope", hostname)
+    const index = this.#gyroscopes.findIndex(g => g.hostname === hostname)
+    if(index === -1) {
+      console.error(this, hostname)
+      throw new Error("cannot remove gyroscope that is not controlled by this manager")
+    }
+    const gyroscope = this.#gyroscopes.splice(index, 1)[0]
+    this.#totalTorque.subScalar(gyroscope.maxTorque)
+  }
+  
+  /** Returns a list of all gyroscopes this manager controls
+   * @return {Gyroscope[]} */
+  getGyroscopes() {
+    return this.#gyroscopes
   }
 
   // calculate output torque necessary

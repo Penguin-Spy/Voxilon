@@ -50,12 +50,15 @@ export default class ContraptionController extends Controller {
 
     Input.on("toggle_inertia_damping", () => { this.setDampeners(!this.dampeners) })
     this.setDampeners(true)
+    
+    Input.on("interact", () => { this.link.interact(this.component, true) })
   }
 
   deactivate() {
     Input.off("zoom_in")
     Input.off("zoom_out")
     Input.off("toggle_inertia_damping")
+    Input.off("interact")
   }
 
   setDampeners(dampeners) {

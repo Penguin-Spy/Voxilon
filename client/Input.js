@@ -32,7 +32,7 @@ const controlMap = new TwoWayMap({
   "KeyC": "toggle_cruise_control",
   "Tab": "toggle_chat",
   "AltLeft": "camera_look", // hold to move the camera around when controlling a contraption
-  "KeyF": "dismount",
+  "KeyF": "dismount", // TODO: let keys have multiple actions, change dismount to left shift
 
   "Digit1": "hotbar_1",
   "Digit2": "hotbar_2",
@@ -221,6 +221,7 @@ export default {
     canvas.removeEventListener('click', canvas.requestPointerLock)
   },
   requestPointerLock() { canvas.requestPointerLock() },
+  exitPointerLock() { document.exitPointerLock() },
 
   useCanvas(threeCanvas) {
     canvas = threeCanvas;

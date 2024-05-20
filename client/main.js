@@ -157,7 +157,7 @@ async function networkLink(button, target, username) {
   }
 }
 
-GUI.loadScreen(new MainMenuScreen(directLink, networkLink))
+GUI.showScreen(new MainMenuScreen(directLink, networkLink))
 
 // remove loading error handler
 window.onerror = undefined

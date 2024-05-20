@@ -177,7 +177,65 @@ export default class ThrustManager {
         this.#totalNegativeThrust.z -= thruster.maxThrust
         break;
     }
-
+  }
+  
+  
+  /** Removes the thruster with the given hostname form this manager's control
+   * @param {string} hostname */
+  removeThruster(hostname) {
+    // this sucks
+    const filter = t => t.hostname === hostname
+    let index = this.#pxThrusters.findIndex(filter)
+    if(index !== -1) {
+      const thruster = this.#pxThrusters.splice(index, 1)[0]
+      this.#totalPositiveThrust.x -= thruster.maxThrust
+      return
+    }
+    index = this.#nxThrusters.findIndex(filter)
+    if(index !== -1) {
+      const thruster = this.#nxThrusters.splice(index, 1)[0]
+      this.#totalNegativeThrust.x += thruster.maxThrust
+      return
+    }
+    index = this.#pyThrusters.findIndex(filter)
+    if(index !== -1) {
+      const thruster = this.#pyThrusters.splice(index, 1)[0]
+      this.#totalPositiveThrust.y -= thruster.maxThrust
+      return
+    }
+    index = this.#nyThrusters.findIndex(filter)
+    if(index !== -1) {
+      const thruster = this.#nyThrusters.splice(index, 1)[0]
+      this.#totalNegativeThrust.y += thruster.maxThrust
+      return
+    }
+    index = this.#pzThrusters.findIndex(filter)
+    if(index !== -1) {
+      const thruster = this.#pzThrusters.splice(index, 1)[0]
+      this.#totalPositiveThrust.z -= thruster.maxThrust
+      return
+    }
+    index = this.#nzThrusters.findIndex(filter)
+    if(index !== -1) {
+      const thruster = this.#nzThrusters.splice(index, 1)[0]
+      this.#totalNegativeThrust.z += thruster.maxThrust
+      return
+    }
+    console.error(this, hostname)
+    throw new Error("cannot remove thruster that is not controlled by this manager")
+  }
+  
+  /** Returns a list of all thrusters this manager controls
+   * @return {Thruster[]} */
+  getThrusters() {
+    const thrusters = []
+    thrusters.push(...this.#pxThrusters)
+    thrusters.push(...this.#nxThrusters)
+    thrusters.push(...this.#pyThrusters)
+    thrusters.push(...this.#nyThrusters)
+    thrusters.push(...this.#pzThrusters)
+    thrusters.push(...this.#nzThrusters)
+    return thrusters
   }
 
   // calculate output thrust necessary

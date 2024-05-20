@@ -34,16 +34,10 @@ class GUI {
   /** Displays the given screen
    * @param {Screen} screen
    */
-  loadScreen(screen) {
+  showScreen(screen) {
     screen.attach(this.mainShadowRoot)
     this.mainFrame.dataset.screen = screen.constructor.name
     this.screen = screen
-    // recreate script elements to run them
-    /*for(const script of this.mainShadowRoot.querySelectorAll("script")) {
-      const clone = document.createElement("script")
-      clone.textContent = script.textContent
-      script.replaceWith(clone)
-    }*/
   }
 
   // removes the current screen from the mainFrame

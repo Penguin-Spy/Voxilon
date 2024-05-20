@@ -1,10 +1,17 @@
 import Renderer from 'client/Renderer.js'
 import HUD from 'client/HUD.js'
 import Input from 'client/Input.js'
+import GUI from 'client/GUI.js'
 import Debug from 'client/Debug.js'
 
 import PlayerController from 'client/PlayerController.js'
 import ContraptionController from 'client/ContraptionController.js'
+
+import ControlSeatScreen from 'client/screens/control_seat/ControlSeatScreen.js'
+
+const screens = {
+  "control_seat": ControlSeatScreen
+}
 
 export default class Client {
   /** @type {PlayerController|ContraptionController|undefined} */
@@ -40,7 +47,7 @@ export default class Client {
 
   }
 
-  /**
+  /** Sets this player's controller
    * @param {string} type     The controller type; one of `"player"`, `"contraption"`.
    * @param {...any} options  Additional parameters to pass to the controller initalization.
    */
@@ -50,11 +57,16 @@ export default class Client {
     this.activeController.activate(...options)
   }
 
-  /**
-   * @param {string} type  The GUI type. One of `"example1"`, `"example_two"`, or `false` to close any open GUI.
-   * @param {...any} state Additional parameters to pass to the GUI.
+  /** Sets this player's current Screen (the main GUI window)
+   * @param {string} type     The Screen type, or `false` to close any open Screen.
+   * @param {...any} options  Additional parameters to pass to the Screen.
    */
-  setGUI(type, ...state) {
-
+  setScreen(type, ...options) {
+    if(type) {
+      const screen = new screens[type](...options)
+      GUI.showScreen(screen)
+    } else {
+      GUI.clearScreen()
+    }
   }
 }

@@ -63,8 +63,6 @@ export default class Screen {
       } catch(error) {
         Voxilon.showError("Error while running GUI action", error)
       }
-    } else {
-      console.warn("no event listener for", elementID, event.target, event)
     }
   }
 

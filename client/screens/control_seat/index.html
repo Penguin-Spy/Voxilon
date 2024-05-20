@@ -1,0 +1,57 @@
+<style>
+  main {
+    background-color: var(--bg);
+    width: 100%;
+    height: 100%;
+  }
+  .select-list {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    grid-template-rows: auto 1fr;
+    height: 100%;
+    padding: 16px;
+  }
+  .select-list>:nth-child(2) {
+    grid-column-start: 3;
+  }
+  .select-list>label {
+    margin: 10px auto;
+  }
+  .swap-buttons {
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+  }
+</style>
+
+<main>
+  hi
+  <section class="select-list">
+    <label for="current_gyroscopes">current gyroscopes</label>
+    <label for="available_gyroscopes">available gyroscopes</label>
+    
+    <select id="current_gyroscopes" multiple></select>
+    
+    <div class="swap-buttons">
+      <button id="add_gyroscope">&lt;</button>
+      <button id="remove_gyroscope">&gt;</button>
+    </div>
+    
+    <select id="available_gyroscopes" multiple></select>
+  </section>
+  
+  <section class="select-list">
+    <label for="current_thrusters">current thrusters</label>
+    <label for="available_thrusters">available thrusters</label>
+    
+    <select id="current_thrusters" multiple></select>
+    
+    <div class="swap-buttons">
+      <button id="add_thruster">&lt;</button>
+      <button id="remove_thruster">&gt;</button>
+    </div>
+    
+    <select id="available_thrusters" multiple></select>
+  </section>
+</main>
+
