@@ -1,3 +1,5 @@
+/** @typedef {import('engine/Component.js').default} Component */
+
 import ServerWorld from 'engine/ServerWorld.js'
 import { default as PacketEncoder, PacketType } from 'link/PacketEncoder.js'
 import PacketDecoder from 'link/PacketDecoder.js'
@@ -227,6 +229,17 @@ export default class DirectLink extends Link {
    */
   interact(component, alternate) {
     component.interact(this.localPlayer, alternate)
+  }
+
+  // --- Screens ---
+
+  /** Performs an action on a component due to interacting with a screen (click a button, component does something)
+   * @param {Component} component The component to perform an action on
+   * @param {string} action       The action to perform on the component
+   * @param {object} data         Arbitrary, serializable data to be passed to the component's screen action handler
+   */
+  screenAction(component, action, data) {
+    component.receiveScreenAction(this.localPlayer, action, data)
   }
 
   // --- Building ---

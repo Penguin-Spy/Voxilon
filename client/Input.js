@@ -94,6 +94,9 @@ document.addEventListener('mousedown', handleMouseDown)
 document.addEventListener('mouseup', handleMouseUp)
 document.addEventListener('wheel', handleWheel, { passive: false })
 
+// we never want/need the default context menu
+document.addEventListener('contextmenu', e => e.preventDefault())
+
 
 /* EVENT HANDLERS */
 function lockChangeAlert() {
@@ -169,7 +172,7 @@ function handleKeyUp(event) {
 const mouseButtonMap = ["MousePrimary", "MouseAuxiliary", "MouseSecondary", "MouseX1", "MouseX2"]
 function handleMouseDown(event) {
   try {
-    if(document.pointerLockElement !== canvas) return;
+    if(document.pointerLockElement !== canvas) return
 
     const code = mouseButtonMap[event.button]
     currentKeys[code] = true
@@ -183,11 +186,13 @@ function handleMouseDown(event) {
   }
 }
 function handleMouseUp(event) {
+  if(document.pointerLockElement !== canvas) return
   currentKeys[mouseButtonMap[event.button]] = false
 }
 
 /** @param {WheelEvent} event */
 function handleWheel(event) {
+  if(document.pointerLockElement !== canvas) return
   let callback
 
   // positive delta values are in the direction of the "right-most edge, bottom-most edge, and farthest depth (away from the user) of the document" (https://w3c.github.io/uievents/#dom-wheeleventinit-deltaz)
@@ -219,6 +224,7 @@ export default {
   },
   disablePointerLock() {
     canvas.removeEventListener('click', canvas.requestPointerLock)
+    document.exitPointerLock()
   },
   requestPointerLock() { canvas.requestPointerLock() },
   exitPointerLock() { document.exitPointerLock() },
@@ -265,7 +271,6 @@ export default {
     if(canvas) {
       this.disablePointerLock()
     }
-    document.exitPointerLock()
 
     document.removeEventListener('touchstart', handleTouch)
     document.removeEventListener('touchstop', handleTouch)

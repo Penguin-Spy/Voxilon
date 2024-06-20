@@ -1,3 +1,5 @@
+/** @typedef {import('link/Link.js').default} Link */
+
 import Renderer from 'client/Renderer.js'
 import HUD from 'client/HUD.js'
 import Input from 'client/Input.js'
@@ -16,6 +18,8 @@ const screens = {
 export default class Client {
   /** @type {PlayerController|ContraptionController|undefined} */
   activeController
+  /** @type {Link} */
+  link
 
   constructor() {
     // generate a UUID for the player if one does not exist
@@ -64,9 +68,21 @@ export default class Client {
   setScreen(type, ...options) {
     if(type) {
       const screen = new screens[type](...options)
+      screen.client = this
       GUI.showScreen(screen)
+      Input.disablePointerLock()
     } else {
       GUI.clearScreen()
+      Input.enablePointerLock()
+      Input.requestPointerLock()
     }
+  }
+
+  /** Sends an update message to the player's current Screen
+   * @param {string} action The action of the update
+   * @param {object} data   Serializable data for the update
+   */
+  receiveScreenUpdate(action, data) {
+    GUI.screen.receiveScreenUpdate(action, data)
   }
 }

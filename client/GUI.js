@@ -17,6 +17,9 @@ class GUI {
     this.mainFrame.replaceChildren() // this removes the loading message
 
     this.mainShadowRoot = this.mainFrame.attachShadow({ mode: "open" })
+    this.mainShadowRoot.addEventListener("click", e => {
+      if(this.screen) this.screen.handleClick(e.target.id, e)
+    })
   }
 
   get cursor() { return body.dataset.cursor }

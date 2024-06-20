@@ -1,3 +1,5 @@
+/** @typedef {import('link/Component.js').default} Component */
+
 const PacketType = Object.freeze({
   CHAT: 0,
   LOAD_WORLD: 1,
@@ -6,10 +8,12 @@ const PacketType = Object.freeze({
   LOAD_BODY: 4,
   SYNC_CHARACTER_STATE: 5,
   INTERACT: 6,
+  SCREEN_ACTION: 7,
+  SYNC_CONTROL_SEAT_STATE: 8
 })
 export { PacketType }
 
-const { CHAT, LOAD_WORLD, SET_CONTROLLER_STATE, SYNC_BODY, LOAD_BODY, SYNC_CHARACTER_STATE, INTERACT } = PacketType
+const { CHAT, LOAD_WORLD, SET_CONTROLLER_STATE, SYNC_BODY, LOAD_BODY, SYNC_CHARACTER_STATE, INTERACT, SCREEN_ACTION, SYNC_CONTROL_SEAT_STATE } = PacketType
 
 export default {
   CHAT(author, msg) {
@@ -61,6 +65,25 @@ export default {
     return JSON.stringify({
       $: INTERACT,
       id: component.id, alternate
+    })
+  },
+  /**
+   * @param {Component} component
+   * @param {string} action
+   * @param {object} data
+   */
+  SCREEN_ACTION(component, action, data) {
+    return JSON.stringify({
+      $: SCREEN_ACTION,
+      id: component.id,
+      action,
+      data
+    })
+  },
+  SYNC_CONTROL_SEAT_STATE(id, action, data) {
+    return JSON.stringify({
+      $: SYNC_CONTROL_SEAT_STATE,
+      id, action, data
     })
   }
 }

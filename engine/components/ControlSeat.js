@@ -9,6 +9,7 @@ import { boundingBoxFromDimensions, generatePreviewMesh } from 'engine/component
 import { loadGLTF } from 'engine/ModelLoader.js'
 import ThrustManager from 'engine/ThrustManager.js'
 import GyroManager from 'engine/GyroManager.js'
+import PacketEncoder from 'link/PacketEncoder.js'
 
 const mesh = await loadGLTF("/assets/components/control_seat.gltf")
 
@@ -74,6 +75,71 @@ export default class ControlSeat extends NetworkedComponent {
   }
   getGyroManager() {
     return this.gyroManager
+  }
+
+  // well now this is extra dumb
+  // TODO: don't even sync the network/internal state of components to the client, they don't need to know any of it
+  receiveSelfSync(packet) {
+    switch(packet.action) {
+      case "add_thruster":
+        for(const hostname of packet.data) {
+          this.thrustManager.addThruster(this.network.getComponent(hostname))
+        }
+        break
+      case "remove_thruster":
+        for(const hostname of packet.data) {
+          this.thrustManager.removeThruster(hostname)
+        }
+        break
+      case "add_gyroscope":
+        for(const hostname of packet.data) {
+          this.gyroManager.addGyroscope(this.network.getComponent(hostname))
+        }
+        break
+      case "remove_gyroscope":
+        for(const hostname of packet.data) {
+          this.gyroManager.removeGyroscope(hostname)
+        }
+        break
+      default:
+        throw new Error(`unknown sync action on ControlSeat '${packet.action}'`)
+    }
+  }
+
+  /** Receives a screen action triggered by a player
+   * @param {Player} player The player who performed the action
+   * @param {string} action The action
+   * @param {object} data Data for the action
+  */
+  receiveScreenAction(player, action, data) {
+    switch(action) {
+      case "add_thruster":
+        for(const hostname of data) {
+          this.thrustManager.addThruster(this.network.getComponent(hostname))
+        }
+        break
+      case "remove_thruster":
+        for(const hostname of data) {
+          this.thrustManager.removeThruster(hostname)
+        }
+        break
+      case "add_gyroscope":
+        for(const hostname of data) {
+          this.gyroManager.addGyroscope(this.network.getComponent(hostname))
+        }
+        break
+      case "remove_gyroscope":
+        for(const hostname of data) {
+          this.gyroManager.removeGyroscope(hostname)
+        }
+        break
+      default:
+        throw new Error(`unknown action on ControlSeat '${action}'`)
+    }
+    // send self sync packet to all clients
+    this.sendSelfSync(PacketEncoder.SYNC_CONTROL_SEAT_STATE(this.id, action, data))
+    // send update screen packet to player
+    player.sendScreenUpdate("refresh")
   }
 
   /** Processes the player interacting with the seat.

@@ -52,7 +52,16 @@ export default class RemotePlayer extends Player {
     console.error(type, ...options)
     throw new Error("setScreen not implemented for RemotePlayer")
     super.setScreen(type, ...options)
-//    this.client.setScreen(type, ...options)
+    //    this.client.setScreen(type, ...options)
+  }
+
+  /** Sends an update message to the player's current Screen
+   * @param {string} action The action of the update
+   * @param {object} data   Serializable data for the update
+   */
+  sendScreenUpdate(action, data) {
+    console.error(action, data)
+    throw new Error("sendScreenUpdate not implemented for RemotePlayer")
   }
 }
 

@@ -6,22 +6,23 @@ export default class ControlSeatScreen extends Screen {
   constructor(seat) {
     super(template)
     this.seat = seat
-    
+
     this.current_thrusters = this.content.querySelector("#current_thrusters")
     this.available_thrusters = this.content.querySelector("#available_thrusters")
     this.current_gyroscopes = this.content.querySelector("#current_gyroscopes")
     this.available_gyroscopes = this.content.querySelector("#available_gyroscopes")
-    
+
     this.rebuildOptions()
-    
+
     this.setEventHandlers({
       add_thruster: this.addThruster,
       remove_thruster: this.removeThruster,
       add_gyroscope: this.addGyroscope,
-      remove_gyroscope: this.removeGyroscope
+      remove_gyroscope: this.removeGyroscope,
+      close: this.close
     })
   }
-  
+
   rebuildOptions() {
     const ourThrusters = this.seat.thrustManager.getThrusters()
     this.current_thrusters.length = 0
@@ -37,7 +38,7 @@ export default class ControlSeatScreen extends Screen {
       }
     }
     this.available_thrusters.add(new Option("<select all>", "$"))
-    
+
     const ourGyroscopes = this.seat.gyroManager.getGyroscopes()
     this.current_gyroscopes.length = 0
     for(const g of ourGyroscopes) {
@@ -53,52 +54,52 @@ export default class ControlSeatScreen extends Screen {
     }
     this.available_gyroscopes.add(new Option("<select all>", "$"))
   }
-  
+
   addThruster(event) {
     console.log("add thruster", event)
+    const thrusters = []
     for(const option of this.available_thrusters.selectedOptions) {
-      const hostname = option.value
-      const thruster = this.seat.network.getComponent(hostname)
-      if(thruster) {
-        this.seat.thrustManager.addThruster(thruster)
-      }
+      thrusters.push(option.value)
     }
-    this.rebuildOptions()
+    // send packet via link
+    this.client.link.screenAction(this.seat, "add_thruster", thrusters)
   }
   removeThruster(event) {
     console.log("remove thruster", event)
+    const thrusters = []
     for(const option of this.current_thrusters.selectedOptions) {
-      this.seat.thrustManager.removeThruster(option.value)
+      thrusters.push(option.value)
     }
-    this.rebuildOptions()
+    // send packet via link
+    this.client.link.screenAction(this.seat, "remove_thruster", thrusters)
   }
-  
+
   addGyroscope(event) {
     console.log("add gyroscope", event)
+    const gyroscopes = []
     for(const option of this.available_gyroscopes.selectedOptions) {
-      const hostname = option.value
-      const gyro = this.seat.network.getComponent(hostname)
-      if(gyro) {
-        this.seat.gyroManager.addGyroscope(gyro)
-      }
+      gyroscopes.push(option.value)
     }
-    this.rebuildOptions()
+    // send packet via link
+    this.client.link.screenAction(this.seat, "add_gyroscope", gyroscopes)
   }
   removeGyroscope(event) {
     console.log("remove gyroscope", event)
+    const gyroscopes = []
     for(const option of this.current_gyroscopes.selectedOptions) {
-      this.seat.gyroManager.removeGyroscope(option.value)
+      gyroscopes.push(option.value)
     }
-    this.rebuildOptions()
+    // send packet via link
+    this.client.link.screenAction(this.seat, "remove_gyroscope", gyroscopes)
   }
-  
+
   selectAll(event) {
     for(const option of event.target.parentElement.options) {
       option.selected = true
     }
     event.target.selected = false
   }
-  
+
   handleClick(elementID, event) {
     if(event.target.value === "$") {
       this.selectAll(event)
@@ -106,9 +107,15 @@ export default class ControlSeatScreen extends Screen {
       super.handleClick(elementID, event)
     }
   }
-  
+
   handleKeyDown(event) {
     return
+  }
+
+  receiveScreenUpdate(action, data) {
+    if(action === "refresh") {
+      this.rebuildOptions()
+    }
   }
 }
 

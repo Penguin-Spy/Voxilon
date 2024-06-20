@@ -5,7 +5,7 @@ import PacketDecoder from 'link/PacketDecoder.js'
 import Link from 'link/Link.js'
 import { parseSignalTarget } from 'link/util.js'
 import PlayerController from 'client/PlayerController.js'
-const { CHAT, LOAD_WORLD, SET_CONTROLLER_STATE, SYNC_BODY, LOAD_BODY, SYNC_CHARACTER_STATE } = PacketType
+const { CHAT, LOAD_WORLD, SET_CONTROLLER_STATE, SYNC_BODY, LOAD_BODY, SYNC_CHARACTER_STATE, SYNC_CONTROL_SEAT_STATE } = PacketType
 
 
 // CONNECTING: waiting for WebSocket connect, join request, and WebRTC connect
@@ -152,6 +152,13 @@ export default class NetworkLink extends Link {
         const body = this.world.getBodyByID(packet.id)
         if(!body) throw new Error(`Cannot handle self sync packet for unknown body ${packet.id}`)
         body.receiveSelfSync(packet)
+        break
+      }
+      case SYNC_CONTROL_SEAT_STATE: {
+        /* other component self sync packets also use this case */
+        const component = this.world.getComponentByID(packet.id)
+        if(!component) throw new Error(`Cannot handle self sync packet for unknown component ${packet.id}`)
+        component.receiveSelfSync(packet)
         break
       }
       default:

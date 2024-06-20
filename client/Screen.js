@@ -1,3 +1,5 @@
+/** @typedef {import('client/Client.js').default} Client */
+
 export async function loadTemplateFromPath(path) {
   const template = document.createElement('template')
   const html = await fetch("/client/screens/" + path).then(res => res.text())
@@ -17,8 +19,11 @@ const defaultStyle = await loadStyleSheetFromPath("style.css")
 export default class Screen {
   /** @type {DocumentFragment} The DocumentFragment currently containing the screen's elements. May be a ShadowRoot */
   content
-  /** @type {Map<HTMLElement, function>} @protected  The event handlers for this Screen's elements */
-  
+  /** @type {Record<string, function>} @protected  A mapping of element id to event handler function */
+  handlers
+  /** @type {Client} */
+  client
+
 
   /**
    * @param {HTMLTemplateElement?} template The template element to generate this Screen's content from. (Optional for MultiViewScreen's implementation)
@@ -39,9 +44,8 @@ export default class Screen {
     shadowRoot.adoptedStyleSheets.push(defaultStyle)
     shadowRoot.replaceChildren(this.content)
     this.content = shadowRoot
-    shadowRoot.addEventListener("click", e => this.handleClick(e.target.id, e))
   }
-  
+
   /** Sets the event handlers for this screen's content.
    * @param {Record<string, function>} handlers  A mapping of element id to event handler function
    */
@@ -51,7 +55,7 @@ export default class Screen {
   addEventHandler(id, handler) {
     this.eventHandlers[id] = handler
   }
-  
+
   /** Handles clicking on & pressing enter on elements that may or may not have a handler registered.
    * @param {string} elementID  The ID of the element that was clicked/activated
    * @param {KeyboardEvent|MouseEvent} event  The event that was raised */
@@ -108,5 +112,18 @@ export default class Screen {
 
       focusableNodes[index].focus()
     }
+  }
+
+  /** Receives an update message to the player's current Screen
+   * @param {string} action The action of the update
+   * @param {object} data   Data for the update
+   */
+  receiveScreenUpdate(action, data) {
+    console.warn(`receiveScreenUpdate not implemented for ${this.constructor.name}`)
+  }
+
+  close() {
+    this.client.setScreen(false)
+    // TODO: does this also need to notify the server that the screen closed?
   }
 }

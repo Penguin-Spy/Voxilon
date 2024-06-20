@@ -106,7 +106,7 @@ export default class GyroManager {
     this.#gyroscopes.push(gyroscope)
     this.#totalTorque.addScalar(gyroscope.maxTorque)
   }
-  
+
   /** Removes the gyroscope with the given hostname form this manager's control
    * @param {string} hostname */
   removeGyroscope(hostname) {
@@ -119,7 +119,7 @@ export default class GyroManager {
     const gyroscope = this.#gyroscopes.splice(index, 1)[0]
     this.#totalTorque.subScalar(gyroscope.maxTorque)
   }
-  
+
   /** Returns a list of all gyroscopes this manager controls
    * @return {Gyroscope[]} */
   getGyroscopes() {
@@ -159,6 +159,8 @@ export default class GyroManager {
         _twist.x = max(_twist.x, dampPitch)
       } else if(_twist.x < 0) {
         _twist.x = min(_twist.x, dampPitch)
+      } else {
+        _twist.x = dampPitch
       }
       const dampYaw = min(this.#totalTorque.y, abs(_angularVelocity.y)) * -sign(_angularVelocity.y)
       if(_twist.y > 0) {

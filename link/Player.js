@@ -22,13 +22,21 @@ export default class Player {
       // ?
     }
   }
-  
+
   /** Sets this player's current Screen (the main GUI window)
    * @param {string} type     The Screen type, or `false` to close any open Screen.
    * @param {...any} options  Additional parameters to pass to the Screen.
    */
   setScreen(type, ...options) {
-  
+
+  }
+
+  /** Sends an update message to the player's current Screen
+   * @param {string} action The action of the update
+   * @param {object} data   Serializable data for the update
+   */
+  sendScreenUpdate(action, data) {
+
   }
 }
 

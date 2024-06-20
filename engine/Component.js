@@ -1,5 +1,6 @@
 /** @typedef {import('engine/World.js').default} World */
 /** @typedef {import('engine/Contraption.js').default} Contraption */
+/** @typedef {import('link/Player.js').default} Player */
 
 import * as THREE from 'three'
 import { check } from 'engine/util.js'
@@ -85,6 +86,26 @@ export default class Component {
     data.position = this.position.toArray()
     data.rotation = this.rotation
     return data
+  }
+
+  /** Sends the encoded packet to this component on all client's worlds
+   * @param {Object} packet Must be a `SYNC_something` packet that the NetworkLink will call receiveSelfSync with
+   */
+  sendSelfSync(packet) {
+    this.world.link.broadcast(packet)
+  }
+  /** Receives the sync data. This method must be overridden in all Component subclasses */
+  receiveSelfSync(packet) {
+    throw new TypeError(`receiveSelfSync not implemented for ${this.constructor.name}`)
+  }
+
+  /** Receives a screen action triggered by a player
+   * @param {Player} player The player who performed the action
+   * @param {string} action The action
+   * @param {object} data Data for the action
+  */
+  receiveScreenAction(player, action, data) {
+    throw new TypeError(`receiveScreenAction not implemented for ${this.constructor.name}`)
   }
 
   /** Sets the parent contraption for this component
