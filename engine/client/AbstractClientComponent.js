@@ -1,10 +1,13 @@
-/** @typedef {import('engine/World.js').default} World */
-/** @typedef {import('engine/Contraption.js').default} Contraption */
+/** @typedef {import('engine/ClientWorld.js').default} ClientWorld */
+//** @typedef {import('engine/Contraption.js').default} Contraption */
+/** @typedef {import('engine/AbstractComponent.js').component_data} component_data*/
 /** @typedef {import('link/Player.js').default} Player */
 
 import * as THREE from 'three'
+import * as CANNON from 'cannon-es'
 import { check } from 'engine/util.js'
-import { ComponentDirection, rotateBoundingBox } from 'engine/components/componentUtil.js'
+import AbstractComponent from 'engine/AbstractComponent.js'
+import { ComponentDirection, rotateBoundingBox } from 'engine/componentUtil.js'
 
 const _ray = new THREE.Ray()
 const _matrix4 = new THREE.Matrix4()
@@ -16,31 +19,19 @@ const _q1 = new THREE.Quaternion()
 /**
  * Base class for all components
  */
-export default class Component {
+export default class AbstractClientComponent extends AbstractComponent {
   /** @type {THREE.Mesh} */
   mesh = null
-  /** @type {CANNON.Shape} */
-  shape = null
-  /** @type {THREE.Vector3} */
-  position
-  /** @type {ComponentDirection} */
-  rotation
-  /** @type {string} */
-  type
-  /** @type {number} */
-  mass
-
-  /** @type {Contraption} */
-  #parentContraption = null
 
   /**
    * @param {component_data} data
-   * @param {World} world
+   * @param {ClientWorld} world
    * @param {CANNON.Shape} shape
    * @param {THREE.Mesh} mesh
    */
   constructor(data, world, shape, mesh) {
-    //const data_position = check(data.position, "number[]")
+    super(data, world, shape)
+    /*//const data_position = check(data.position, "number[]")
     //const rotation = check(data.rotation, "number")
 
     data = { // default values
@@ -50,13 +41,13 @@ export default class Component {
     }
 
     this.world = world
-    const id = data.id ?? world.getNextComponentID() // generate a new component id if necessary
+    const id = data.id*/
 
-    Object.defineProperties(this, {
+    /*Object.defineProperties(this, {
       // read-only properties
-      id: { enumerable: true, value: id },
-      mesh: { enumerable: true, value: mesh },
-      shape: { enumerable: true, value: shape },
+      id: { enumerable: true, value: id },*/
+      this.mesh = mesh
+      /*shape: { enumerable: true, value: shape },
       position: { enumerable: true, value: new THREE.Vector3() },
       rotation: { enumerable: true, value: data.rotation },
       // static properties
@@ -64,69 +55,18 @@ export default class Component {
       mass: { enumerable: true, value: this.constructor.mass }  // constant mass in kg (affects center of mass of contraption)
     })
 
-    this.position.set(...data.position)
+    this.position.set(...data.position)*/
 
-    // calculate rotated bounding box & offset
-    /** @type {THREE.Vector3} */
+    /*// calculate rotated bounding box & offset
+    /** @type {THREE.Vector3} *//*
     this.offset = this.constructor.offset.clone()
-    /** @type {THREE.Box3} */
+    /** @type {THREE.Box3} *//*
     this.boundingBox = this.constructor.boundingBox.clone()
 
-    rotateBoundingBox(this.boundingBox.min, this.boundingBox.max, this.offset, this.rotation)
+    rotateBoundingBox(this.boundingBox.min, this.boundingBox.max, this.offset, this.rotation)*/
     // offset & rotate three.js mesh by this component's position in the contraption
     this.mesh.position.copy(this.position).add(this.offset)
     ComponentDirection.rotateQuaternion(this.mesh.quaternion, this.rotation)
-  }
-  reviveReferences() { }
-
-  serialize() {
-    const data = {}
-    data.type = this.type
-    data.id = this.id
-    data.position = this.position.toArray()
-    data.rotation = this.rotation
-    return data
-  }
-
-  /** Sends the encoded packet to this component on all client's worlds
-   * @param {Object} packet Must be a `SYNC_something` packet that the NetworkLink will call receiveSelfSync with
-   */
-  sendSelfSync(packet) {
-    this.world.link.broadcast(packet)
-  }
-  /** Receives the sync data. This method must be overridden in all Component subclasses */
-  receiveSelfSync(packet) {
-    throw new TypeError(`receiveSelfSync not implemented for ${this.constructor.name}`)
-  }
-
-  /** Receives a screen action triggered by a player
-   * @param {Player} player The player who performed the action
-   * @param {string} action The action
-   * @param {object} data Data for the action
-  */
-  receiveScreenAction(player, action, data) {
-    throw new TypeError(`receiveScreenAction not implemented for ${this.constructor.name}`)
-  }
-
-  /** Sets the parent contraption for this component
-   * @param {Contraption} contraption
-   */
-  setParent(contraption) {
-    this.#parentContraption = contraption
-  }
-  /** Returns this component's parent contraption
-   * @returns {Contraption}
-   */
-  getParent() {
-    return this.#parentContraption
-  }
-
-  /** Processes the player interacting with the component.
-   * @param {Player} player     The player who interacted with the component
-   * @param {boolean} alternate True if the 'alternate' interaction action should be taken (e.g. open gui instead of activating component)
-   */
-  interact(player, alternate) {
-    // interacting does nothing by default; will be implemented by subclasses if necessary
   }
 
   raycast(raycaster, intersects) {
@@ -135,9 +75,9 @@ export default class Component {
 
     // calculate transformation matrix for the center of this component
     _v1.copy(this.position)
-    this.#parentContraption.toWorldPosition(_v1)
+    this.parentContraption.toWorldPosition(_v1)
     _q1.identity()
-    this.#parentContraption.toWorldQuaternion(_q1)
+    this.parentContraption.toWorldQuaternion(_q1)
     _v2.set(1, 1, 1)
     _matrix4.compose(_v1, _q1, _v2)
 
@@ -174,7 +114,6 @@ export default class Component {
 
   /*
   preRender() { }
-  update() { }
   */
 }
 

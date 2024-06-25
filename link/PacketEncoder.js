@@ -9,11 +9,12 @@ const PacketType = Object.freeze({
   SYNC_CHARACTER_STATE: 5,
   INTERACT: 6,
   SCREEN_ACTION: 7,
-  SYNC_CONTROL_SEAT_STATE: 8
+  SYNC_CONTROL_SEAT_STATE: 8,
+  SEND_INPUT_STATE: 9,
 })
 export { PacketType }
 
-const { CHAT, LOAD_WORLD, SET_CONTROLLER_STATE, SYNC_BODY, LOAD_BODY, SYNC_CHARACTER_STATE, INTERACT, SCREEN_ACTION, SYNC_CONTROL_SEAT_STATE } = PacketType
+const { CHAT, LOAD_WORLD, SET_CONTROLLER_STATE, SYNC_BODY, LOAD_BODY, SYNC_CHARACTER_STATE, INTERACT, SCREEN_ACTION, SYNC_CONTROL_SEAT_STATE, SEND_INPUT_STATE } = PacketType
 
 export default {
   CHAT(author, msg) {
@@ -84,6 +85,21 @@ export default {
     return JSON.stringify({
       $: SYNC_CONTROL_SEAT_STATE,
       id, action, data
+    })
+  },
+  /**
+   * @param {-1|0|1} front_back
+   * @param {-1|0|1} left_right
+   * @param {-1|0|1} up_down
+   * @param {number} pitch_x    adjustment of pitch (`-1|0|1`) for contraption, quaternion x for character
+   * @param {number} yaw_y
+   * @param {number} roll_z
+   * @param {number} [w]
+   */
+  SEND_INPUT_STATE(front_back, left_right, up_down, pitch_x, yaw_y, roll_z, w) {
+    return JSON.stringify({
+      $: SEND_INPUT_STATE,
+      front_back, left_right, up_down, pitch_x, yaw_y, roll_z, w
     })
   }
 }

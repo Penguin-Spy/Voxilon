@@ -2,6 +2,9 @@
   "compilerOptions": {
     "target": "ES2022",
     "lib": [ "ES2022", "DOM" ],
-    "baseUrl": "."
+    "baseUrl": ".",
+    "moduleResolution": "nodenext",
+    "module": "NodeNext", // don't need but VSC complains
+    "checkJs": true
   }
 }

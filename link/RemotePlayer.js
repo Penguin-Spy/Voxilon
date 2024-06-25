@@ -37,11 +37,11 @@ export default class RemotePlayer extends Player {
 
   /** Sets this player's controller
    * @param {string} type     The controller type; one of `"player"`, `"contraption"`.
-   * @param {...any} options  Additional parameters to pass to the controller initalization.
+   * @param {CharacterServerBody|ControlSeatServer} thing  The object being controlled.
    */
-  setController(type, ...options) {
-    super.setController(type, ...options)
-    this.sendSyncPacket(PacketEncoder.SET_CONTROLLER_STATE(type, ...options))
+  setController(type, thing) {
+    super.setController(type, thing)
+    this.sendSyncPacket(PacketEncoder.SET_CONTROLLER_STATE(type, thing))
   }
 
   /** Sets this player's current Screen (the main GUI window)

@@ -38,6 +38,7 @@ function animate(now) {
     hud.update()
 
     link.step(deltaTime)
+    //client.activeController.update()
   } catch(e) {
     showError("Error occured while ticking", e)
     return
@@ -118,7 +119,7 @@ async function directLink(button, worldOptions) {
   GUI.cursor = "loading"
   if(!linkModules.direct) {
     try {
-      linkModules.direct = (await import('/link/DirectLink.js')).default
+      linkModules.direct = (await import('link/DirectLink.js')).default
     } catch(err) {
       button.disabled = false
       GUI.cursor = "default"
@@ -139,7 +140,7 @@ async function networkLink(button, target, username) {
   GUI.cursor = "loading"
   if(!linkModules.network) {
     try {
-      linkModules.network = (await import('/link/NetworkLink.js')).default
+      linkModules.network = (await import('link/NetworkLink.js')).default
     } catch(err) {
       button.disabled = false
       GUI.cursor = "default"

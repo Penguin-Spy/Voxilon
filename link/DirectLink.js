@@ -1,6 +1,7 @@
 /** @typedef {import('engine/Component.js').default} Component */
+/** @typedef {import('engine/server/AbstractServerBody.js').default} AbstractServerBody */
 
-import ServerWorld from 'engine/ServerWorld.js'
+import HostWorld from 'engine/HostWorld.js'
 import { default as PacketEncoder, PacketType } from 'link/PacketEncoder.js'
 import PacketDecoder from 'link/PacketDecoder.js'
 import Link from 'link/Link.js'
@@ -11,8 +12,8 @@ import { sessionPublishURL } from 'link/util.js'
 const { CHAT, SYNC_BODY, INTERACT } = PacketType
 
 export default class DirectLink extends Link {
-  /** @type {ServerWorld} */
-  world
+  /** @type {HostWorld}*/
+  _world = undefined
 
   /**
    * @param {Client} client
@@ -24,18 +25,17 @@ export default class DirectLink extends Link {
     // networking stuff
     this.remotePlayers = []
 
-    // create/load world
-    /** @type {ServerWorld} */
-    let world
+    // create/load server world
+    this._world = new HostWorld(this)
     if(worldOptions.type === "load") {
-      world = new ServerWorld(worldOptions.data, this)
+      this._world.load(worldOptions.data)
     } else if(worldOptions.type === "new") {
-      world = new ServerWorld({
+      this._world.load({
         VERSION: "alpha_1",
         name: worldOptions.name,
         spawn_point: [0, 44, 0],
         bodies: [
-          {
+          /*{
             type: "voxilon:celestial_body",
             radius: 40,
             surfaceGravity: 9.8,
@@ -46,7 +46,7 @@ export default class DirectLink extends Link {
             radius: 10,
             surfaceGravity: 9.8,
             contraptions: []
-          }, {
+          },*/ {
             type: "voxilon:test_body",
             position: [2, 44, -7],
             is_static: false, is_box: false
@@ -56,23 +56,18 @@ export default class DirectLink extends Link {
             is_static: true, is_box: false
           }
         ]
-      }, this)
+      })
     } else {
       throw new TypeError(`Unknown world type ${worldOptions.type}`)
     }
-
-    // read-only properties
-    Object.defineProperties(this, {
-      world: { enumerable: true, value: world }
-    })
 
     // initalize client
     this.localPlayer = new LocalPlayer(this, client)
     client.attach(this)
 
-    this.localPlayer.setController("player", world.joinPlayer(this.localPlayer))
-
-    // create Integrated server
+    const playerServerBody = this._world.joinPlayer(this.localPlayer)
+    console.info(`attaching player ${this.localPlayer.username} to body #${playerServerBody.id}`)
+    this.localPlayer.setController("player", playerServerBody)
   }
 
   /* --- Direct Link methods --- */
@@ -106,11 +101,11 @@ export default class DirectLink extends Link {
             await player.ready
 
             // send world data
-            const world_data = this.world.serialize()
+            const world_data = this._world.serialize()
             player.sendSyncPacket(PacketEncoder.LOAD_WORLD(world_data))
 
             // add the player to the world. may load a new character body if necessary. always returns the player's body
-            const character = this.world.joinPlayer(player)
+            const character = this._world.joinPlayer(player)
 
             // tell the remote player to load in as their character
             console.log("setting player", player, "controller to player with netid", character)
@@ -158,7 +153,7 @@ export default class DirectLink extends Link {
           break
         }
         case INTERACT: {
-          const component = this.world.getComponentByID(packet.id)
+          const component = this._world.getComponentByID(packet.id)
           if(!component) {
             return console.warn(`player #${player.id} sent interact packet for unknown component:`, packet)
           }
@@ -184,7 +179,7 @@ export default class DirectLink extends Link {
 
   // ran after each DT world step
   postUpdate() {
-    const body = this.world.netSyncQueue.next()
+    const body = this._world.netSyncQueue.next()
     if(!body) return
     const bodySync = PacketEncoder.SYNC_BODY(body)
 
@@ -207,8 +202,16 @@ export default class DirectLink extends Link {
 
   /* --- 'Host' interface methods */
 
+  /**
+   * @param {AbstractServerBody} body
+   */
   sendLoadBody(body) {
     this.broadcast(PacketEncoder.LOAD_BODY(body))
+    this._world.loadClientBody(body.serialize())
+  }
+
+  preRender() {
+    this._world.preRender()
   }
 
   /* --- Link interface methods --- */
@@ -231,6 +234,25 @@ export default class DirectLink extends Link {
     component.interact(this.localPlayer, alternate)
   }
 
+  /** Sends a packet updating the input state of the controller
+   * @param {-1|0|1} front_back
+   * @param {-1|0|1} left_right
+   * @param {-1|0|1} up_down
+   * @param {number} pitch_x    adjustment of pitch (`-1|0|1`) for contraption, quaternion x for character
+   * @param {number} yaw_y
+   * @param {number} roll_z
+   * @param {number} [w]
+   */
+  sendInputState(front_back, left_right, up_down, pitch_x, yaw_y, roll_z, w) {
+    if(this.localPlayer.character) {
+      this.localPlayer.character.setInputState(front_back, left_right, up_down, pitch_x, yaw_y, roll_z, w)
+    } else if(this.localPlayer.controlSeat) {
+      throw new Error("control seat set input state not implemented")
+    } else {
+      throw new Error("unexpeced player state (missing both character & control seat)")
+    }
+  }
+
   // --- Screens ---
 
   /** Performs an action on a component due to interacting with a screen (click a button, component does something)
@@ -251,7 +273,7 @@ export default class DirectLink extends Link {
 
   // debugging
   newTestBody(stuff) {
-    this.world.loadBody({
+    this._world.loadBody({
       type: "voxilon:test_body",
       position: stuff.position.toArray(),
       quaternion: stuff.quaternion.toArray(),
@@ -266,7 +288,7 @@ export default class DirectLink extends Link {
    * @param {object}           firstComponent data for the first component of the contraption
    */
   newStandaloneContraption(position, quaternion, firstComponent) {
-    this.world.loadBody({
+    this._world.loadBody({
       type: "voxilon:contraption_body",
       position: position.toArray(),
       quaternion: quaternion.toArray(),

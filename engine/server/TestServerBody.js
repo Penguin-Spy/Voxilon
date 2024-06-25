@@ -1,15 +1,9 @@
 import * as CANNON from 'cannon-es'
-import * as THREE from 'three'
-import Body from 'engine/Body.js'
+import AbstractServerBody from 'engine/server/AbstractServerBody.js'
 import { GROUND } from 'engine/PhysicsMaterials.js'
 import { check } from 'engine/util.js'
-import { DEBUG_GRID, DEBUG_COMPASS } from 'engine/RenderMaterials.js'
 
-const geometry = new THREE.BoxGeometry(1, 1, 1);
-const staticMesh = new THREE.Mesh(geometry, DEBUG_COMPASS)
-const dynamicMesh = new THREE.Mesh(geometry, DEBUG_GRID)
-
-export default class TestBody extends Body {
+export default class TestServerBody extends AbstractServerBody {
 
   constructor(data, world) {
     const is_static = check(data.is_static, "boolean")
@@ -30,13 +24,11 @@ export default class TestBody extends Body {
       type: is_static ? CANNON.Body.KINEMATIC : CANNON.Body.DYNAMIC,
     })
 
-    super(data, world, rigidBody, is_static ? staticMesh.clone() : dynamicMesh.clone())
-    // read-only properties
-    Object.defineProperties(this, {
-      type: { enumerable: true, value: "voxilon:test_body" },
-      is_static: { enumerable: true, value: is_static },
-      is_box: { enumerable: true, value: is_box },
-    })
+    super(data, world, rigidBody)
+
+    this.is_static = is_static
+    this.is_box = is_box
+    this.type = "voxilon:test_body"
   }
 
   serialize() {

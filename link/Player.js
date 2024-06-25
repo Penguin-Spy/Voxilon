@@ -1,25 +1,36 @@
-/** @typedef {import('engine/bodies/CharacterBody.js').default} CharacterBody */
+/** @typedef {import('engine/server/CharacterServerBody.js').default} CharacterServerBody */
+/** @typedef {import('link/Link.js').default} Link */
 
 export default class Player {
-  /** @type {CharacterBody?} */
+  /** @type {CharacterServerBody?} */
   character
+  /** @type {ControlSeatServer?} */
+  controlSeat
 
+  /**
+   * @param {Link} link
+   * @param {string} username
+   * @param {string} uuid
+   */
   constructor(link, username, uuid) {
     this.link = link
     this.username = username
     this.uuid = uuid
     this.character = null
+    this.controlSeat = null
   }
 
   /** Sets this player's controller
    * @param {string} type     The controller type; one of `"player"`, `"contraption"`.
-   * @param {...any} options  Additional parameters to pass to the controller initalization.
+   * @param {CharacterServerBody|ControlSeatServer} thing  The thing being controlled.
    */
-  setController(type, ...options) {
+  setController(type, thing) {
     if(type === "player") {
-      this.character = options[0]
+      this.character = thing
+      this.controlSeat = null
     } else if(type === "contraption") {
-      // ?
+      this.controlSeat = thing
+      this.character = null
     }
   }
 

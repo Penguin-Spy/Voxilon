@@ -119,13 +119,13 @@ export default class NetworkLink extends Link {
           this.client.attach(this)
         }
 
-        let object
+        let thing
         if(packet.type === "player") {
-          object = this.world.getBodyByID(packet.id)
+          thing = this.world.getBodyByID(packet.id)
         } else {
-          object = this.world.getComponentByID(packet.id)
+          thing = this.world.getComponentByID(packet.id)
         }
-        this.client.setController(packet.type, object)
+        this.client.setController(packet.type, thing)
 
         break
       }

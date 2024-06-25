@@ -1,7 +1,13 @@
+/** @typedef {import('link/DirectLink.js').default} DirectLink */
+/** @typedef {import('client/Client.js').default} Client */
+
 import Player from 'link/Player.js'
-import PlayerController from 'client/PlayerController.js'
 
 export default class LocalPlayer extends Player {
+  /**
+   * @param {DirectLink} link
+   * @param {Client} client
+   */
   constructor(link, client) {
     super(link, client.username, client.uuid)
     this.client = client
@@ -9,11 +15,16 @@ export default class LocalPlayer extends Player {
 
   /** Sets this player's controller
    * @param {string} type     The controller type; one of `"player"`, `"contraption"`.
-   * @param {...any} options  Additional parameters to pass to the controller initalization.
+   * @param {CharacterServerBody|ControlSeatServer} thing  The thing being controlled.
    */
-  setController(type, ...options) {
-    super.setController(type, ...options)
-    this.client.setController(type, ...options)
+  setController(type, thing) {
+    super.setController(type, thing)
+    if(type === "player") {
+      this.client.setController(type, this.link._world.getClientBodyByID(thing.id))
+    } else if(type === "contraption") {
+      //this.client.setController(type, this.link._world.getClientComponentByID(thing.id))
+      throw new Error("not implemented")
+    }
   }
 
   /** Sets this player's current Screen (the main GUI window)

@@ -1,6 +1,6 @@
 import { Raycaster } from 'three'
-import ContraptionBody from 'engine/bodies/ContraptionBody.js'
-import CelestialBody from 'engine/bodies/CelestialBody.js'
+//import ContraptionBody from 'engine/bodies/ContraptionBody.js'
+//import CelestialBody from 'engine/bodies/CelestialBody.js'
 
 
 /**
@@ -12,7 +12,7 @@ export default class BuildingRaycaster extends Raycaster {
     for(let i = 0, l = bodies.length; i < l; i++) {
       //intersectObject(objects[i], this, intersects, recursive);
       const body = bodies[i]
-      if(body instanceof ContraptionBody) {
+      if(body instanceof /*ContraptionBody*/ undefined) {
         // TODO: bounding sphere/box checks
 
         // raycast each component of the one contraption
@@ -21,7 +21,7 @@ export default class BuildingRaycaster extends Raycaster {
           components[j].raycast(this, intersects)
         }
 
-      } else if(body instanceof CelestialBody) {
+      } else if(body instanceof /*CelestialBody*/ undefined) {
         // TODO: bounding sphere/box checks on the celestial body itself
         // raycast the celestial body
         body.raycast(this, intersects)

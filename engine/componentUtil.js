@@ -23,7 +23,7 @@ const FACE_NZ = new Quaternion().setFromAxisAngle(AXIS_Y, HALF_PI)       // face
  * @param {number} width
  * @param {number} depth
  * @param {number} height
- * @returns {[THREE.Box3|THREE.Vector3]}
+ * @returns {[THREE.Box3,THREE.Vector3]}
  */
 function boundingBoxFromDimensions(width, depth, height) {
   const box = new Box3(

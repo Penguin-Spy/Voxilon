@@ -3,7 +3,8 @@ import * as THREE from 'three';
 const _v = new THREE.Vector3()
 
 export default class Renderer {
-  #previewMesh = false
+  /** @typedef {THREE.Mesh} */
+  #previewMesh = null
 
   constructor(link) {
     this.camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -18,7 +19,7 @@ export default class Renderer {
     })
 
     this.body = null
-    this.scene = link.world.scene
+    this.scene = link._world.scene
 
     // initalize the scene
     this.scene.background = new THREE.CubeTextureLoader()

@@ -80,9 +80,10 @@ class Debug {
     })
 
     Input.on("debug_save", async () => {
-      let worldString
+      this.#hud.showChatMessage("[debug] world quicksaving not implemented")
+      /*let worldString
       try {
-        const worldData = this.#link.world.serialize()
+        const worldData = this.#link._world.serialize()
         worldString = JSON.stringify(worldData)
       } catch(e) {
         this.#hud.showChatMessage("[debug] failed to save world, see console")
@@ -96,7 +97,7 @@ class Debug {
         console.error(`error while writing to clipboard -`, e)
         console.info(worldString)
         this.#hud.showChatMessage("[debug] saved world to console")
-      }
+      }*/
     })
   }
 
@@ -110,8 +111,8 @@ class Debug {
     this.#link = link
     this.#hud = hud
 
-    const scene = link.world.scene
-    const physics = link.world.physics
+    const scene = link._world.scene
+    const physics = link._world.physics
 
     this.debugger = new CannonDebugger(scene, physics, {
       /**
@@ -134,18 +135,6 @@ class Debug {
     for(const point of Object.values(this.points)) {
       scene.add(point)
     }
-
-    Input.on("debug_gravity_mode", function () {
-      const world = link.world
-      world.orbitalGravityEnabled = !world.orbitalGravityEnabled
-      if(world.orbitalGravityEnabled) {
-        physics.gravity.y = 0
-        hud.showChatMessage("[debug] orbital gravity enabled")
-      } else {
-        physics.gravity.y = -9.82 // m/s²
-        hud.showChatMessage("[debug] orbital gravity disabled")
-      }
-    })
 
     /*Input.on("debug_noclip", () => {
       const body = link.playerBody

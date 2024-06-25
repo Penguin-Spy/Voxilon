@@ -1,4 +1,4 @@
-import ControlSeat from 'engine/components/ControlSeat.js'
+//import ControlSeat from 'engine/components/ControlSeat.js'
 
 import { Vector3, Quaternion } from 'three'
 import Input from 'client/Input.js'
@@ -50,7 +50,7 @@ export default class ContraptionController extends Controller {
 
     Input.on("toggle_inertia_damping", () => { this.setDampeners(!this.dampeners) })
     this.setDampeners(true)
-    
+
     Input.on("interact", () => { this.link.interact(this.component, true) })
   }
 

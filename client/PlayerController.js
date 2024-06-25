@@ -1,14 +1,15 @@
-import Contraption from 'engine/Contraption.js'
-import Component from 'engine/Component.js'
-import CharacterBody from 'engine/bodies/CharacterBody.js'
+//** @typedef {import('engine/Contraption.js').default} Contraption  */
+//import Component from 'engine/Component.js'
+//import CharacterBody from 'engine/bodies/CharacterBody.js'
+/** @typedef {import('engine/client/CharacterClientBody.js').default} CharacterClientBody*/
 
 import { Vector3, Quaternion, Matrix4, BoxGeometry, Mesh, MeshBasicMaterial } from 'three'
 import { DT } from 'engine/util.js'
 import Input from 'client/Input.js'
 import * as Materials from 'engine/PhysicsMaterials.js'
-import Components from 'engine/components/index.js'
+//import Components from 'engine/components/index.js'
 import BuildingRaycaster from 'client/BuildingRaycaster.js'
-import { ComponentDirection, rotateBoundingBox } from 'engine/components/componentUtil.js'
+import { ComponentDirection, rotateBoundingBox } from 'engine/componentUtil.js'
 import Controller from 'client/Controller.js'
 
 const _v1 = new Vector3()
@@ -26,20 +27,8 @@ const ZERO = new Vector3(0, 0, 0)
 
 const HALF_PI = Math.PI / 2
 
-// strength of jetpack:
-const LINEAR_DAMPING = 20   // m/s²
-const WALK_SPEED = 20       // m/s², affected by friction
-const JUMP_STRENGTH = 16    // idk the unit lol
-const FLY_SPEED = 40        // m/s²
 
-const max = Math.max, min = Math.min
-function toZero(value, delta) {
-  if(value > 0) {
-    return max(value - delta, 0)
-  } else {
-    return min(value + delta, 0)
-  }
-}
+const min = Math.min
 
 // outside of HUD because there's only ever one pointer
 const _raycaster = new BuildingRaycaster();
@@ -49,20 +38,22 @@ const _fakePointer = { x: 0, y: 0 } // fake pointer bc it's always in the middle
 const defaultPreviewMesh = new Mesh(new BoxGeometry(1, 1, 1), new MeshBasicMaterial({ color: "#ffff00" }))
 
 export default class PlayerController extends Controller {
+  #front_back; #left_right; #up_down;
+
   constructor(link, hud, renderer) {
     super(link, hud, renderer)
 
     /* movement */
     this.lookSpeed = 0.75
-    this.walkSpeed = WALK_SPEED
-    this.jumpStrength = JUMP_STRENGTH
-    this.flySpeed = FLY_SPEED
-    this.linearDampingStrength = LINEAR_DAMPING
+    //this.walkSpeed = WALK_SPEED
+    //this.jumpStrength = JUMP_STRENGTH
+    //this.flySpeed = FLY_SPEED
+    //this.linearDampingStrength = LINEAR_DAMPING
 
     this.linearDampingActive = true
     this.jetpackActive = false
 
-    this.jumpLockout = 0 // counts down steps until player can jump again
+    //this.jumpLockout = 0 // counts down steps until player can jump again
 
     this.bodyQuaternion = new Quaternion() // for storing edits to this before they're applied during the physics
     this.pitch = 0
@@ -75,12 +66,12 @@ export default class PlayerController extends Controller {
       { type: "tool", name: "grinder" },
       { type: "test", name: "box" }, // name is only used to check this (currently)
       { type: "test", name: "sphere" },
-      { type: "component", class: Components["voxilon:cube"] },
+      /*{ type: "component", class: Components["voxilon:cube"] },
       { type: "component", class: Components["voxilon:rectangle"] },
       { type: "component", class: Components["voxilon:wall"] },
       { type: "component", class: Components["voxilon:thruster"] },
       { type: "component", class: Components["voxilon:gyroscope"] },
-      { type: "component", class: Components["voxilon:control_seat"] },
+      { type: "component", class: Components["voxilon:control_seat"] },*/
 
       /*{ type: "entity", name: "assembler" },
       { type: "entity", name: "refinery" },
@@ -89,8 +80,10 @@ export default class PlayerController extends Controller {
       { type: "entity", name: "network_cable" }*/
     ]
 
+    /** @type {any} */
     this.selectedItem = false
     this.buildPreview = { // keeps track of current build preview data, such as where the component would get placed
+      /** @type {ComponentDirection} */
       rotation: ComponentDirection.PZ_UP, // current rotation of build preview component (for Contraption, todo: use quaternion for free-floating/celestial body build preview)
       rotationQuaternion: new Quaternion(), // current quaternion of the current component rotation
       previousQuaternion: new Quaternion(), // for slerping
@@ -107,15 +100,16 @@ export default class PlayerController extends Controller {
 
   }
 
-  /** @param {CharacterBody} characterBody  */
+  /** @param {CharacterClientBody} characterBody  */
   activate(characterBody) {
     this.body = characterBody
     this.hud.updateStatus(this)
     this.hud.updateHotbar(this)
 
     this.renderer.attach(this.body, this)
-    this.body.attach(this)
+    //this.body.attach(this)
     this.lookPositionOffset.copy(this.body.lookPositionOffset)
+    //this.lookPositionOffset.set(0, 4, -6)
 
     Input.on("toggle_inertia_damping", () => this.toggleInertiaDamping())
     Input.on("toggle_jetpack", () => this.toggleJetpack())
@@ -142,7 +136,7 @@ export default class PlayerController extends Controller {
   }
 
   deactivate() {
-    this.body.detach(this)
+    //this.body.detach(this)
 
     Input.off("toggle_inertia_damping")
     Input.off("toggle_jetpack")
@@ -260,7 +254,7 @@ export default class PlayerController extends Controller {
     } else if(this.selectedItem.type === "component") {
       _raycaster.setFromCamera(_fakePointer, this.renderer.camera)
 
-      const intersects = _raycaster.intersectBuildableBodies(this.link.world.buildableBodies)
+      const intersects = _raycaster.intersectBuildableBodies(this.link._world.buildableBodies)
       const intersect = intersects[0]
       this._debugIntersects = intersects
 
@@ -405,7 +399,7 @@ export default class PlayerController extends Controller {
     _raycaster.setFromCamera(_fakePointer, this.renderer.camera)
 
     // TODO: will need to change this method if other interactable bodies are added
-    const intersects = _raycaster.intersectBuildableBodies(this.link.world.interactableBodies)
+    const intersects = _raycaster.intersectBuildableBodies(this.link._world.interactableBodies)
     const intersect = intersects[0]
     this._debugIntersects = intersects
 
@@ -416,7 +410,7 @@ export default class PlayerController extends Controller {
 
         console.log("interacted with", component)
         Voxilon.Debug.setPointPosition("red", intersect.point)
-        
+
         // if shift is not pressed, do normal interaction, otherwise do 'alternate' interaction
         // TODO: refactor Input class to allow multiple controls per key so this doesn't necessarily have the same binding as "fly down"
         this.link.interact(component, Input.get('down'))
@@ -441,14 +435,14 @@ export default class PlayerController extends Controller {
   }
 
   // Take input data and apply it to the player's body
-  update() {
+  /*update() {
     this.body.quaternion.copy(this.bodyQuaternion)
     if(this.jetpackActive) {
       this._updateJetpackMovement()
     } else {
       this._updateGravityMovement()
     }
-  }
+  }*/
 
   preRender(deltaTime) {
     if(this.jetpackActive) {
@@ -457,6 +451,9 @@ export default class PlayerController extends Controller {
       this._updateGravityRotation(deltaTime)
     }
     this.updateBuildPreview()
+
+    // todo: rate limit how fast we send this
+    this.link.sendInputState(this.#front_back, this.#left_right, this.#up_down, this.bodyQuaternion.x, this.bodyQuaternion.y, this.bodyQuaternion.z, this.bodyQuaternion.w)
   }
 
   _updateJetpackRotation(deltaTime) {
@@ -496,6 +493,29 @@ export default class PlayerController extends Controller {
     this.bodyQuaternion.copy(_q1)
     this.body.lookQuaternion.copy(_q1)
     this.lookQuaternion.copy(_q1)
+
+    // --- movement ---
+    if(Input.get('forward')) {
+      this.#front_back = 1
+    } else if(Input.get('backward')) {
+      this.#front_back = -1
+    } else {
+      this.#front_back = 0
+    }
+    if(Input.get('right')) {
+      this.#left_right = 1
+    } else if(Input.get('left')) {
+      this.#left_right = -1
+    } else {
+      this.#left_right = 0
+    }
+    if(Input.get('up')) {
+      this.#up_down = 1
+    } else if(Input.get('down')) {
+      this.#up_down = -1
+    } else {
+      this.#up_down = 0
+    }
   }
 
   _updateGravityRotation(deltaTime) {
@@ -541,9 +561,31 @@ export default class PlayerController extends Controller {
     this.bodyQuaternion.copy(_q1)       // gravity-aligned quaternion
     this.body.lookQuaternion.copy(_q2)  // gravity-aligned quaternion + pitch
     this.lookQuaternion.copy(_q2)
+
+    // --- movement ---
+
+    if(Input.get('forward')) {
+      this.#front_back = 1
+    } else if(Input.get('backward')) {
+      this.#front_back = -1
+    } else {
+      this.#front_back = 0
+    }
+    if(Input.get('right')) {
+      this.#left_right = 1
+    } else if(Input.get('left')) {
+      this.#left_right = -1
+    } else {
+      this.#left_right = 0
+    }
+    if(Input.get('up')) {
+      this.#up_down = 1
+    } else {
+      this.#up_down = 0
+    }
   }
 
-  _updateGravityMovement() {
+  /*_updateGravityMovement() {
     // reset material to default when in the air (STANDING_PLAYER vs. WALKING_PLAYER)
     if(!this.body.onGround) {
       this.body.rigidBody.material = Materials.STANDING_PLAYER
@@ -583,11 +625,10 @@ export default class PlayerController extends Controller {
     }
 
     _v1.add(this.body.velocity)
-    //this.link.playerMove(_v1)
     this.body.velocity.copy(_v1)
-  }
+  }*/
 
-  _updateJetpackMovement() {
+  /*_updateJetpackMovement() {
     _v1.set(0, 0, 0)
     // player velocity converted to camera-forward reference frame (camera forward = -Z)
     _v2.copy(this.body.velocity)
@@ -629,24 +670,5 @@ export default class PlayerController extends Controller {
     _v2.applyQuaternion(this.body.quaternion) // rotate back to world space
     //this.link.playerMove(_v2)
     this.body.velocity.copy(_v2)
-  }
-}
-
-/**
- * Converts a quaternion to an axis and angle
- * @param {Quaternion} q   The input quaternion
- * @param {Vector3} target The output axis
- * @returns {number}       The output angle
- */
-// https://discourse.threejs.org/t/how-to-convert-to-quaternion-to-axisangle/36975
-function toAxisAngle(q, target) {
-  const angle = 2 * Math.acos(q.w)
-  const s = Math.sqrt(1 - q.w * q.w)
-
-  const x = q.x / s
-  const y = q.y / s
-  const z = q.z / s
-
-  target.set(x, y, z)
-  return angle
+  }*/
 }

@@ -53,12 +53,12 @@ export default class Client {
 
   /** Sets this player's controller
    * @param {string} type     The controller type; one of `"player"`, `"contraption"`.
-   * @param {...any} options  Additional parameters to pass to the controller initalization.
+   * @param {CharacterServerBody|ControlSeatServer} thing  The thing being controlled.
    */
-  setController(type, ...options) {
+  setController(type, thing) {
     if(this.activeController) { this.activeController.deactivate() }
     this.activeController = this.controllers[type]
-    this.activeController.activate(...options)
+    this.activeController.activate(thing)
   }
 
   /** Sets this player's current Screen (the main GUI window)

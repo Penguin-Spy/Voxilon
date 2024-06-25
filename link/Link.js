@@ -1,12 +1,11 @@
 import { DT } from 'engine/util.js'
 
 export default class Link {
+  _world
   #accumulator = 0
 
   constructor() {
-    Object.defineProperties(this, {
-      callbacks: { enumerable: true, value: {} }
-    })
+    this.callbacks = {}
   }
 
   // packet event handling
@@ -20,16 +19,12 @@ export default class Link {
     }
   }
 
-  preRender() {
-    this.world.preRender()
-  }
-
   step(deltaTime) {
     this.#accumulator += deltaTime
     let maxSteps = 10;
 
     while(this.#accumulator > DT && maxSteps > 0) {
-      this.world.step()
+      this._world.step()
       this.postUpdate()
       this.#accumulator -= DT
       maxSteps--
@@ -60,6 +55,19 @@ export default class Link {
    */
   interact(component, alternate) {
     throw new TypeError(`interact not implemented for ${this.constructor.name}`)
+  }
+
+  /** Sends a packet updating the input state of the controller
+   * @param {-1|0|1} front_back
+   * @param {-1|0|1} left_right
+   * @param {-1|0|1} up_down
+   * @param {number} pitch_x    adjustment of pitch (`-1|0|1`) for contraption, quaternion x for character
+   * @param {number} yaw_y
+   * @param {number} roll_z
+   * @param {number} [w]
+   */
+  sendInputState(front_back, left_right, up_down, pitch_x, yaw_y, roll_z, w) {
+    throw new TypeError(`sendInputState not implemented for ${this.constructor.name}`)
   }
 
   // --- Screens ---
