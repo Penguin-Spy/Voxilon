@@ -25,13 +25,25 @@ export default class Player {
    * @param {CharacterServerBody|ControlSeatServer} thing  The thing being controlled.
    */
   setController(type, thing) {
+    if(this.character) this.character.detachPlayer()
+    this.character = null
+    if(this.controlSeat) this.controlSeat.detachPlayer()
+    this.controlSeat = null
     if(type === "player") {
       this.character = thing
-      this.controlSeat = null
+      this.character.attachPlayer(this)
     } else if(type === "contraption") {
       this.controlSeat = thing
-      this.character = null
+      this.controlSeat.attachPlayer(this)
     }
+  }
+
+  /** Sets the state of this player's controller
+   * @param {boolean} dampeners
+   * @param {boolean} jetpack
+   */
+  setControllerState(dampeners, jetpack) {
+
   }
 
   /** Sets this player's current Screen (the main GUI window)

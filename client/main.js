@@ -167,4 +167,5 @@ window.onerror = undefined
 Voxilon.animate = animate
 Voxilon.stop = stop
 Voxilon.showError = showError
+// @ts-ignore  literally can't type adding a property to the window ??
 window.Voxilon = Voxilon

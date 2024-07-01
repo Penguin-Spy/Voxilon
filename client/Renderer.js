@@ -1,3 +1,6 @@
+/** @typedef {import('link/Link.js').IClientLink} IClientLink */
+/** @typedef {import('engine/client/CharacterClientBody.js').default} CharacterClientBody */
+
 import * as THREE from 'three';
 
 const _v = new THREE.Vector3()
@@ -6,6 +9,7 @@ export default class Renderer {
   /** @typedef {THREE.Mesh} */
   #previewMesh = null
 
+  /** @param {IClientLink} link  */
   constructor(link) {
     this.camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 1000);
 
@@ -19,7 +23,7 @@ export default class Renderer {
     })
 
     this.body = null
-    this.scene = link._world.scene
+    this.scene = link.world.scene
 
     // initalize the scene
     this.scene.background = new THREE.CubeTextureLoader()
@@ -51,6 +55,7 @@ export default class Renderer {
     return this.renderer.domElement;
   }
 
+  /** @param {CharacterClientBody} body */
   attach(body, controller) {
     this.body = body
     this.controller = controller

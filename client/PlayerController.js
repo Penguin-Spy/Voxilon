@@ -254,7 +254,7 @@ export default class PlayerController extends Controller {
     } else if(this.selectedItem.type === "component") {
       _raycaster.setFromCamera(_fakePointer, this.renderer.camera)
 
-      const intersects = _raycaster.intersectBuildableBodies(this.link._world.buildableBodies)
+      const intersects = _raycaster.intersectBuildableBodies(this.link.world.buildableBodies)
       const intersect = intersects[0]
       this._debugIntersects = intersects
 
@@ -399,7 +399,7 @@ export default class PlayerController extends Controller {
     _raycaster.setFromCamera(_fakePointer, this.renderer.camera)
 
     // TODO: will need to change this method if other interactable bodies are added
-    const intersects = _raycaster.intersectBuildableBodies(this.link._world.interactableBodies)
+    const intersects = _raycaster.intersectBuildableBodies(this.link.world.interactableBodies)
     const intersect = intersects[0]
     this._debugIntersects = intersects
 
@@ -419,19 +419,11 @@ export default class PlayerController extends Controller {
   }
 
   toggleInertiaDamping() {
-    this.linearDampingActive = !this.linearDampingActive
-    this.hud.updateStatus(this)
+    this.link.sendControllerState(!this.linearDampingActive, this.jetpackActive)
   }
 
   toggleJetpack() {
-    this.jetpackActive = !this.jetpackActive
-    // if enabling jetpack,
-    if(this.jetpackActive) {
-      this.bodyQuaternion.copy(this.body.lookQuaternion)
-      this.pitch = 0
-      this.body.rigidBody.material = Materials.STANDING_PLAYER
-    }
-    this.hud.updateStatus(this)
+    this.link.sendControllerState(this.linearDampingActive, !this.jetpackActive)
   }
 
   // Take input data and apply it to the player's body
@@ -443,6 +435,17 @@ export default class PlayerController extends Controller {
       this._updateGravityMovement()
     }
   }*/
+
+  setState(dampeners, jetpack) {
+    this.linearDampingActive = dampeners
+    this.jetpackActive = jetpack
+    // if enabling jetpack,
+    if(this.jetpackActive) {
+      this.bodyQuaternion.copy(this.body.lookQuaternion)
+      this.pitch = 0
+    }
+    this.hud.updateStatus(this)
+  }
 
   preRender(deltaTime) {
     if(this.jetpackActive) {

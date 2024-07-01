@@ -1,5 +1,6 @@
-/** @typedef {import('engine/Component.js').default} Component */
+/** @typedef {import('engine/client/AbstractClientComponent.js').default} AbstractClientComponent */
 /** @typedef {import('engine/server/AbstractServerBody.js').default} AbstractServerBody */
+/** @typedef {import('link/Link.js').IClientLink} IClientLink */
 
 import HostWorld from 'engine/HostWorld.js'
 import { default as PacketEncoder, PacketType } from 'link/PacketEncoder.js'
@@ -11,9 +12,10 @@ import RemotePlayer from 'link/RemotePlayer.js'
 import { sessionPublishURL } from 'link/util.js'
 const { CHAT, SYNC_BODY, INTERACT } = PacketType
 
+/** @implements {IClientLink} */
 export default class DirectLink extends Link {
   /** @type {HostWorld}*/
-  _world = undefined
+  world = undefined
 
   /**
    * @param {Client} client
@@ -26,16 +28,16 @@ export default class DirectLink extends Link {
     this.remotePlayers = []
 
     // create/load server world
-    this._world = new HostWorld(this)
+    this.world = new HostWorld(this)
     if(worldOptions.type === "load") {
-      this._world.load(worldOptions.data)
+      this.world.load(worldOptions.data)
     } else if(worldOptions.type === "new") {
-      this._world.load({
+      this.world.load({
         VERSION: "alpha_1",
         name: worldOptions.name,
         spawn_point: [0, 44, 0],
         bodies: [
-          /*{
+          {
             type: "voxilon:celestial_body",
             radius: 40,
             surfaceGravity: 9.8,
@@ -46,7 +48,7 @@ export default class DirectLink extends Link {
             radius: 10,
             surfaceGravity: 9.8,
             contraptions: []
-          },*/ {
+          }, {
             type: "voxilon:test_body",
             position: [2, 44, -7],
             is_static: false, is_box: false
@@ -65,7 +67,7 @@ export default class DirectLink extends Link {
     this.localPlayer = new LocalPlayer(this, client)
     client.attach(this)
 
-    const playerServerBody = this._world.joinPlayer(this.localPlayer)
+    const playerServerBody = this.world.joinPlayer(this.localPlayer)
     console.info(`attaching player ${this.localPlayer.username} to body #${playerServerBody.id}`)
     this.localPlayer.setController("player", playerServerBody)
   }
@@ -101,11 +103,11 @@ export default class DirectLink extends Link {
             await player.ready
 
             // send world data
-            const world_data = this._world.serialize()
+            const world_data = this.world.serialize()
             player.sendSyncPacket(PacketEncoder.LOAD_WORLD(world_data))
 
             // add the player to the world. may load a new character body if necessary. always returns the player's body
-            const character = this._world.joinPlayer(player)
+            const character = this.world.joinPlayer(player)
 
             // tell the remote player to load in as their character
             console.log("setting player", player, "controller to player with netid", character)
@@ -153,7 +155,7 @@ export default class DirectLink extends Link {
           break
         }
         case INTERACT: {
-          const component = this._world.getComponentByID(packet.id)
+          const component = this.world.getComponentByID(packet.id)
           if(!component) {
             return console.warn(`player #${player.id} sent interact packet for unknown component:`, packet)
           }
@@ -179,7 +181,7 @@ export default class DirectLink extends Link {
 
   // ran after each DT world step
   postUpdate() {
-    const body = this._world.netSyncQueue.next()
+    const body = this.world.netSyncQueue.next()
     if(!body) return
     const bodySync = PacketEncoder.SYNC_BODY(body)
 
@@ -207,11 +209,11 @@ export default class DirectLink extends Link {
    */
   sendLoadBody(body) {
     this.broadcast(PacketEncoder.LOAD_BODY(body))
-    this._world.loadClientBody(body.serialize())
+    this.world.loadClientBody(body.serialize())
   }
 
   preRender() {
-    this._world.preRender()
+    this.world.preRender()
   }
 
   /* --- Link interface methods --- */
@@ -227,11 +229,12 @@ export default class DirectLink extends Link {
   }
 
   /** Informs the server that the player interacted with a component.
-   * @param {Component} component The component that was interacted with
+   * @param {AbstractClientComponent} component The component that was interacted with
    * @param {boolean} alternate   True if the 'alternate' interaction action should be taken (e.g. open gui instead of activating component)
    */
   interact(component, alternate) {
-    component.interact(this.localPlayer, alternate)
+    //component.interact(this.localPlayer, alternate)
+    throw new Error("cannot interact yet")
   }
 
   /** Sends a packet updating the input state of the controller
@@ -253,15 +256,22 @@ export default class DirectLink extends Link {
     }
   }
 
+  sendControllerState(dampeners, jetpack) {
+    if(this.localPlayer.character) {
+      this.localPlayer.character.setControllerState(dampeners, jetpack)
+    }
+  }
+
   // --- Screens ---
 
   /** Performs an action on a component due to interacting with a screen (click a button, component does something)
-   * @param {Component} component The component to perform an action on
+   * @param {AbstractClientComponent} component The component to perform an action on
    * @param {string} action       The action to perform on the component
    * @param {object} data         Arbitrary, serializable data to be passed to the component's screen action handler
    */
   screenAction(component, action, data) {
-    component.receiveScreenAction(this.localPlayer, action, data)
+    //component.receiveScreenAction(this.localPlayer, action, data)
+    throw new Error("cannot screen action yet")
   }
 
   // --- Building ---
@@ -273,7 +283,7 @@ export default class DirectLink extends Link {
 
   // debugging
   newTestBody(stuff) {
-    this._world.loadBody({
+    this.world.loadBody({
       type: "voxilon:test_body",
       position: stuff.position.toArray(),
       quaternion: stuff.quaternion.toArray(),
@@ -288,7 +298,7 @@ export default class DirectLink extends Link {
    * @param {object}           firstComponent data for the first component of the contraption
    */
   newStandaloneContraption(position, quaternion, firstComponent) {
-    this._world.loadBody({
+    this.world.loadBody({
       type: "voxilon:contraption_body",
       position: position.toArray(),
       quaternion: quaternion.toArray(),

@@ -21,4 +21,10 @@ export default class AbstractClientBody extends AbstractBody {
     this.mesh.quaternion.copy(this.rigidBody.interpolatedQuaternion)
     //}
   }
+
+  /** calculates & applies gravity */
+  step() {
+    super.calculateGravity()
+    super.applyGravity()
+  }
 }

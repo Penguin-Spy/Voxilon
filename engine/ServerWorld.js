@@ -5,6 +5,7 @@
 import * as THREE from 'three'
 import * as CANNON from 'cannon-es'
 
+import CelestialServerBody from 'engine/server/CelestialServerBody.js'
 import TestServerBody from 'engine/server/TestServerBody.js'
 import CharacterServerBody from 'engine/server/CharacterServerBody.js'
 import { CircularQueue, DT } from 'engine/util.js'
@@ -13,7 +14,7 @@ import { contactMaterials } from 'engine/PhysicsMaterials.js'
 const WORLD_VERSION = "alpha_1" // just the data version
 
 const constructors = {
-  "voxilon:celestial_body": () => { throw new TypeError("celestial body not implemented") },
+  "voxilon:celestial_body": CelestialServerBody,
   "voxilon:character_body": CharacterServerBody,
   "voxilon:test_body": TestServerBody,
   "voxilon:contraption_body": () => { throw new TypeError("contraption_body not implemented") }
@@ -102,6 +103,9 @@ export default class ServerWorld {
   activateBody(body) {
     this.physics.addBody(body.rigidBody)
     this.activeBodies.push(body)
+    if(body instanceof CelestialServerBody && body.rigidBody.mass > 0) {
+      this.gravityBodies.push(body)
+    }
   }
   /** Marks a body as inactive, such that is is no longer visible, interactable, or is updated. The Body continues to be loaded and be accessable by references or its ID.
    * @param {AbstractServerBody} body
@@ -204,7 +208,6 @@ export default class ServerWorld {
     // calculates gravity & updates bodies' additional behavior (i.e. contraptions' components)
     for(const body of this.activeBodies) {
       body.update()
-      body.postUpdate()
     }
 
     this.physics.fixedStep(DT)

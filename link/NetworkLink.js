@@ -92,9 +92,6 @@ export default class NetworkLink extends Link {
 
   get ready() { return this._readyPromise }
 
-  get playerBody() { return this._playerBody }
-  get world() { return this._world }
-
   /* --- Network Link methods --- */
   _handlePacket(data) {
     const packet = PacketDecoder.decode(data)
@@ -106,7 +103,7 @@ export default class NetworkLink extends Link {
         break;
 
       case LOAD_WORLD:
-        this._world = new World(packet.world_data)
+        this.world = new World(packet.world_data)
         this._readyState = LOADED
         console.log("loaded world")
         break;

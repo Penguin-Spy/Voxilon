@@ -1,13 +1,14 @@
+/** @typedef {import('link/Link.js').IClientLink} IClientLink */
+
 import HUD from 'client/HUD.js'
 import Renderer from 'client/Renderer.js'
-import Link from 'link/Link.js'
 
 import * as THREE from 'three'
 
 
 export default class Controller {
   /**
-   * @param {Link} link
+   * @param {IClientLink} link
    * @param {HUD} hud
    * @param {Renderer} renderer
   */

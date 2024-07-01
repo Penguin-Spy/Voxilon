@@ -1,3 +1,5 @@
+/** @typedef {import('link/Player.js').default} Player */
+
 import * as CANNON from 'cannon-es'
 import { Vector3, Quaternion } from 'three'
 import AbstractServerBody from 'engine/server/AbstractServerBody.js'
@@ -61,6 +63,8 @@ export default class CharacterServerBody extends AbstractServerBody {
     this.type = "voxilon:character_body"
 
     this.player_uuid = player_uuid
+    /** @type {Player} */
+    this.player = null
 
     this.onGround = false
     //this.rigidBody.collisionFilterMask = 1 // dont get raycast intersected by our own update()
@@ -108,6 +112,13 @@ export default class CharacterServerBody extends AbstractServerBody {
       this.sendSelfSync(PacketEncoder.SYNC_CHARACTER_STATE(this.id, "stopSitting", seat.id, null, null))
     }
   }*/
+  /** @param {Player} player  */
+  attachPlayer(player) {
+    this.player = player
+  }
+  detachPlayer() {
+    this.player = null
+  }
 
   /**
    * @param {-1|0|1} front_back
@@ -126,6 +137,16 @@ export default class CharacterServerBody extends AbstractServerBody {
     this.#y = y
     this.#z = z
     this.#w = w
+  }
+
+  setControllerState(dampeners, jetpack) {
+    this.linearDampingActive = dampeners
+    this.jetpackActive = jetpack
+    // if enabling jetpack,
+    if(this.jetpackActive) {
+      this.rigidBody.material = STANDING_PLAYER
+    }
+    this.player.setControllerState(dampeners, jetpack)
   }
 
   _updateGravityMovement() {
@@ -219,13 +240,15 @@ export default class CharacterServerBody extends AbstractServerBody {
   }
 
   update() {
-    super.update()
+    super.calculateGravity()
 
     if(this.jetpackActive) {
       this._updateJetpackMovement()
     } else {
       this._updateGravityMovement()
     }
+
+    super.applyGravity()
 
     // check if this player body is touching the ground
     // TODO: make this smarter: check if collision vector is pointing towards the down Frame of Reference (the dir of gravity)

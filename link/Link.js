@@ -1,7 +1,26 @@
+/** @typedef {import('engine/client/AbstractClientComponent.js').default} AbstractClientComponent */
+/** @typedef {import('engine/ClientWorld.js').IClientWorld} IClientWorld */
+
 import { DT } from 'engine/util.js'
 
+/** @typedef {-1|0|1} tristate */
+
+/**
+ * @typedef IClientLink
+ * @property {IClientWorld} world
+ * @property {(msg:string)=>void} sendChat
+ * @property {(component:AbstractClientComponent, alternate:boolean)=>void} interact
+ * @property {(front_back:tristate, left_right:tristate, up_down:tristate, pitch_x:number, yaw_y:number, roll_z:number, w:number?)=>void} sendInputState
+ * @property {(dampeners:boolean,jetpack:boolean)=>void} sendControllerState
+ * @property {(component:AbstractClientComponent, action:string, data:object)=>void} screenAction
+ * @property {(stuff)=>void} newTestBody
+ * @property {(position, quaternion, firstComponent)=>void} newStandaloneContraption
+ * @property {(parent, positionOffset, quaternion, firstComponent)=>void} newAnchoredContraption
+ * @property {(contraption, component)=>void} editContraption
+ */
+
 export default class Link {
-  _world
+  world
   #accumulator = 0
 
   constructor() {
@@ -24,7 +43,7 @@ export default class Link {
     let maxSteps = 10;
 
     while(this.#accumulator > DT && maxSteps > 0) {
-      this._world.step()
+      this.world.step()
       this.postUpdate()
       this.#accumulator -= DT
       maxSteps--
@@ -50,7 +69,7 @@ export default class Link {
   }
 
   /** Informs the server that the player interacted with a component.
-   * @param {Component} component The component that was interacted with
+   * @param {AbstractClientComponent} component The component that was interacted with
    * @param {boolean} alternate   True if the 'alternate' interaction action should be taken (e.g. open gui instead of activating component)
    */
   interact(component, alternate) {
@@ -73,7 +92,7 @@ export default class Link {
   // --- Screens ---
 
   /** Performs an action on a component due to interacting with a screen (click a button, component does something)
-   * @param {Component} component The component to perform an action on
+   * @param {AbstractClientComponent} component The component to perform an action on
    * @param {string} action       The action to perform on the component
    * @param {object} data         Arbitrary, serializable data to be passed to the component's screen action handler
    */

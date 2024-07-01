@@ -1,7 +1,11 @@
 // TODO: Vector3 stuff
 import * as THREE from 'three'
 import * as CANNON from 'cannon-es'
-import { check } from 'engine/util.js';
+import { check, DT } from 'engine/util.js'
+
+const _v = new THREE.Vector3()
+
+export const G = 6.6743e-11
 
 export default class AbstractBody {
   /** @type {CANNON.Body} */
@@ -49,9 +53,34 @@ export default class AbstractBody {
     this.totalGravityVector = new THREE.Vector3()
   }
 
-  // or step, or maybe a callback on the cannon rigidbody?
-  update() {
-    // gravity stuff
+  calculateGravity() {
+    if(this.rigidBody.type === CANNON.Body.DYNAMIC) {
+      this.gravityDirection.set(0, 0, 0)
+      this.totalGravityVector.set(0, 0, 0)
+      for(const otherBody of this.world.gravityBodies) {
+
+        _v.copy(otherBody.position).sub(this.position) // difference in position
+        const rSquared = _v.lengthSq() // distance squared
+        _v.normalize()                 // normalize for just the direction of force
+
+        // force
+        _v.multiplyScalar(G * this.rigidBody.mass * otherBody.rigidBody.mass / rSquared)
+
+        // acceleration
+        _v.multiplyScalar(DT)
+
+        // save the gravity vector with the highest magnitude
+        if(_v.lengthSq() >= this.gravityDirection.lengthSq()) {
+          this.gravityDirection.copy(_v)
+        }
+
+        // add to total gravity
+        this.totalGravityVector.add(_v)
+      }
+    }
   }
 
+  applyGravity() {
+    this.rigidBody.applyImpulse(this.totalGravityVector)
+  }
 }

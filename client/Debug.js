@@ -83,7 +83,7 @@ class Debug {
       this.#hud.showChatMessage("[debug] world quicksaving not implemented")
       /*let worldString
       try {
-        const worldData = this.#link._world.serialize()
+        const worldData = this.#link.world.serialize()
         worldString = JSON.stringify(worldData)
       } catch(e) {
         this.#hud.showChatMessage("[debug] failed to save world, see console")
@@ -111,8 +111,8 @@ class Debug {
     this.#link = link
     this.#hud = hud
 
-    const scene = link._world.scene
-    const physics = link._world.physics
+    const scene = link.world.scene
+    const physics = link.world.physics
 
     this.debugger = new CannonDebugger(scene, physics, {
       /**

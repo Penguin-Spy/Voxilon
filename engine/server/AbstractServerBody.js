@@ -27,9 +27,9 @@ export default class AbstractServerBody extends AbstractBody {
     return data
   }
 
+  // default implementation, may be replaced by subclasses
   update() {
-    // if we do gravity in AbstractBody, call super.update() here
+    this.calculateGravity()
+    this.applyGravity()
   }
-
-  postUpdate() { }
 }

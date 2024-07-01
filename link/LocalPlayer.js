@@ -20,11 +20,19 @@ export default class LocalPlayer extends Player {
   setController(type, thing) {
     super.setController(type, thing)
     if(type === "player") {
-      this.client.setController(type, this.link._world.getClientBodyByID(thing.id))
+      this.client.setController(type, this.link.world.getClientBodyByID(thing.id))
     } else if(type === "contraption") {
-      //this.client.setController(type, this.link._world.getClientComponentByID(thing.id))
+      //this.client.setController(type, this.link.world.getClientComponentByID(thing.id))
       throw new Error("not implemented")
     }
+  }
+
+  /** Sets the state of this player's controller
+   * @param {boolean} dampeners
+   * @param {boolean} jetpack
+   */
+  setControllerState(dampeners, jetpack) {
+    this.client.activeController.setState(dampeners, jetpack)
   }
 
   /** Sets this player's current Screen (the main GUI window)

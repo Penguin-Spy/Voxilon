@@ -7,14 +7,15 @@ import * as THREE from 'three'
 
 import ServerWorld from 'engine/ServerWorld.js'
 
+import CelestialClientBody from 'engine/client/CelestialClientBody.js'
 import TestClientBody from 'engine/client/TestClientBody.js'
 import CharacterClientBody from 'engine/client/CharacterClientBody.js'
 
 const clientConstructors = {
-  "voxilon:celestial_body": TestClientBody,
+  "voxilon:celestial_body": CelestialClientBody,
   "voxilon:character_body": CharacterClientBody,
   "voxilon:test_body": TestClientBody,
-  "voxilon:contraption_body": TestClientBody
+  "voxilon:contraption_body": () => { throw new TypeError("contraption_body not implemented") }
 }
 
 /** @implements {IClientWorld} */
@@ -58,12 +59,12 @@ export default class HostWorld extends ServerWorld {
   activateClientBody(body) {
     this.#activeClientBodies.push(body)
     this.scene.add(body.mesh)
-    /*if(body instanceof CelestialBody && body.rigidBody.mass > 0) {
-      this.gravityBodies.push(body)
-    }
-    if(body instanceof CelestialBody || body instanceof ContraptionBody) {
-      this.interactableBodies.push(body)
+    /*if(body instanceof CelestialClientBody && body.rigidBody.mass > 0) {
+      this.clientGravityBodies.push(body)
     }*/
+    if(body instanceof CelestialClientBody /*|| body instanceof ContraptionBody*/) {
+      this.interactableBodies.push(body)
+    }
   }
 
   /** Marks a body as inactive, such that is is no longer visible, interactable, or is updated. The Body continues to be loaded and be accessable by references or its ID.
